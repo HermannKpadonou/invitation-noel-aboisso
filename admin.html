@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Back office · Éclairer le Monde — Noël à Aboisso</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23c81d33"/><path d="M50 12 L55 42 L85 50 L55 58 L50 88 L45 58 L15 50 L45 42 Z" fill="white"/></svg>' />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css?v=2" />
+</head>
+<body>
+
+  <!-- ============ CONNEXION ============ -->
+  <div class="login-screen" id="login-screen">
+    <form class="login-card" id="login-form">
+      <img src="assets/light_the_world.webp" alt="Éclairer le Monde" class="login-logo" />
+      <h1>Back office</h1>
+      <p class="login-sub">Gestion des inscriptions · Noël à Aboisso 2026</p>
+      <div class="field">
+        <label for="l-pass">Mot de passe administrateur</label>
+        <input id="l-pass" type="password" required autocomplete="current-password" placeholder="••••••••" />
+      </div>
+      <p class="login-error hidden" id="l-error">Mot de passe incorrect 🙏</p>
+      <button class="btn btn-gold btn-wide" type="submit">Se connecter ✦</button>
+      <a class="login-back" href="/">← Retour au site d'invitation</a>
+    </form>
+  </div>
+
+  <!-- ============ TABLEAU DE BORD ============ -->
+  <div class="dash hidden" id="dash">
+    <header class="dash-head">
+      <div class="dash-brand">
+        <img src="assets/light_the_world.webp" alt="" />
+        <div>
+          <strong>Back office</strong>
+          <span>Noël à Aboisso · 19.12.2026</span>
+        </div>
+      </div>
+      <div class="dash-actions">
+        <button class="btn btn-ghost-dark btn-sm" id="btn-refresh" type="button">🔄 Actualiser</button>
+        <a class="btn btn-red btn-sm" href="/" target="_blank" rel="noopener">🏠 Voir le site</a>
+        <button class="btn btn-ghost-dark btn-sm" id="btn-logout" type="button">Déconnexion</button>
+      </div>
+    </header>
+
+    <main class="dash-main">
+      <!-- Statistiques -->
+      <section class="stats" id="stats">
+        <article class="stat">
+          <span class="s-icon">💌</span>
+          <strong id="st-total">0</strong>
+          <small>Réponses reçues</small>
+        </article>
+        <article class="stat ok">
+          <span class="s-icon">🎄</span>
+          <strong id="st-presents">0</strong>
+          <small>Présents</small>
+        </article>
+        <article class="stat ko">
+          <span class="s-icon">💔</span>
+          <strong id="st-absents">0</strong>
+          <small>Absents</small>
+        </article>
+        <article class="stat">
+          <span class="s-icon">👨‍👩‍👧‍👦</span>
+          <strong id="st-people">0</strong>
+          <small>Personnes attendues</small>
+        </article>
+        <article class="stat gold">
+          <span class="s-icon">✍️</span>
+          <strong id="st-messages">0</strong>
+          <small>Mots doux</small>
+        </article>
+      </section>
+
+      <!-- Onglets -->
+      <nav class="tabs" id="tabs">
+        <button class="tab on" data-tab="rsvps" type="button">💌 Inscriptions <span class="count" id="c-rsvps">0</span></button>
+        <button class="tab" data-tab="guestbook" type="button">✍️ Livre d'or <span class="count" id="c-gb">0</span></button>
+        <button class="tab" data-tab="wall" type="button">📸 Mur photo <span class="count" id="c-wall">0</span></button>
+        <button class="tab" data-tab="outils" type="button">🧰 Outils</button>
+      </nav>
+
+      <!-- Onglet Inscriptions -->
+      <section class="panel" id="panel-rsvps">
+        <div class="toolbar">
+          <input type="search" id="f-search" placeholder="🔍 Rechercher un nom…" />
+          <select id="f-filter">
+            <option value="all">Toutes les réponses</option>
+            <option value="present">Présent·e seulement</option>
+            <option value="absent">Absents seulement</option>
+          </select>
+          <a class="btn btn-gold btn-sm" id="btn-csv" href="/api/admin/export.csv" download>⬇️ Export CSV</a>
+          <button class="btn btn-green btn-sm" id="btn-copy-phones" type="button">📋 Copier les numéros</button>
+        </div>
+        <div class="table-wrap">
+          <table class="table" id="tbl-rsvps">
+            <thead>
+              <tr><th>Billet</th><th>Nom</th><th>Présence</th><th>Personnes</th><th>Téléphone</th><th>Note</th><th>Date</th><th></th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="empty hidden" id="empty-rsvps">Aucune inscription pour le moment — les réponses du formulaire du site arriveront ici ✨</p>
+        </div>
+      </section>
+
+      <!-- Onglet Livre d'or -->
+      <section class="panel hidden" id="panel-guestbook">
+        <div class="gb-grid" id="gb-grid"></div>
+        <p class="empty hidden" id="empty-gb">Aucun mot doux pour le moment 💌</p>
+      </section>
+
+      <!-- Onglet Mur photo -->
+      <section class="panel hidden" id="panel-wall">
+        <p class="panel-hint">Les membres annoncent leur présence avec leur photo — modérez le mur ici.</p>
+        <div class="wall-admin-grid" id="wall-grid"></div>
+        <p class="empty hidden" id="empty-wall">Aucune photo pour le moment 📸</p>
+      </section>
+
+      <!-- Onglet Outils -->
+      <section class="panel hidden" id="panel-outils">
+        <div class="tools-grid">
+          <article class="tool">
+            <h3>⬇️ Sauvegarder les données</h3>
+            <p>Téléchargez les inscriptions et les messages en fichiers CSV / JSON pour ne rien perdre.</p>
+            <a class="btn btn-red btn-sm" href="/api/admin/export.csv" download>Export CSV des inscriptions</a>
+          </article>
+          <article class="tool">
+            <h3>💬 Relances WhatsApp</h3>
+            <p>L'onglet Inscriptions permet d'ouvrir WhatsApp pour chaque invité. « Copier les numéros » prépare une liste pour un envoi groupé.</p>
+          </article>
+          <article class="tool">
+            <h3>🔐 Sécurité</h3>
+            <p>Le mot de passe se règle dans <code>server.js</code> (variable <code>ADMIN_PASSWORD</code>) ou via la variable d'environnement sur Render.</p>
+          </article>
+          <article class="tool">
+            <h3>📊 Les données</h3>
+            <p>Elles sont stockées dans le dossier <code>data/</code> du serveur (<code>rsvps.json</code>, <code>guestbook.json</code>, <code>photo-wall.json</code>) — pensez à les sauvegarder régulièrement.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+  <script src="admin.js?v=2"></script>
+</body>
+</html>

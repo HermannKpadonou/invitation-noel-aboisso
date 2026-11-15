@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <g fill="none" stroke="#c81d33" stroke-opacity="0.08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Grand flocon -->
+    <g transform="translate(38 34)">
+      <path d="M0 -16V16M-14 -8L14 8M-14 8L14 -8"/>
+      <path d="M0 -16l-3.5 5.5M0 -16l3.5 5.5M0 16l-3.5-5.5M0 16l3.5-5.5"/>
+      <circle r="2.6"/>
+    </g>
+    <!-- Moyen flocon -->
+    <g transform="translate(118 96)">
+      <path d="M0 -11V11M-9.5 -5.5L9.5 5.5M-9.5 5.5L9.5 -5.5"/>
+      <circle r="1.8"/>
+    </g>
+    <!-- Petit flocon -->
+    <g transform="translate(78 130)">
+      <path d="M0 -8V8M-7 -4L7 4M-7 4L7 -4"/>
+    </g>
+    <!-- Sapin -->
+    <g transform="translate(120 30)">
+      <path d="M0 -10L6 -1H-6Z"/>
+      <path d="M0 -4L8 6H-8Z"/>
+      <path d="M0 6v4"/>
+    </g>
+    <!-- Étoile à quatre branches -->
+    <g transform="translate(30 112)">
+      <path d="M0 -8L2 -2 8 0 2 2 0 8 -2 2 -8 0 -2 -2Z"/>
+    </g>
+    <!-- Points -->
+    <circle cx="78" cy="70" r="2"/>
+    <circle cx="148" cy="146" r="2.4"/>
+    <circle cx="14" cy="66" r="1.6"/>
+  </g>
+</svg>

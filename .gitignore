@@ -1,0 +1,8 @@
+# Données des invités — ne JAMAIS les publier (noms, téléphones, photos)
+data/
+
+# Système
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

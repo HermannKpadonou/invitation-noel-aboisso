@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Éclairer le Monde · Noël à Aboisso — 19 décembre 2026</title>
+  <meta name="description" content="Vous êtes invité·e au grand événement de Noël « Éclairer le Monde » : théâtre, chants, cadeaux pour les enfants et bien d'autres surprises. Samedi 19 décembre 2026, 10h–15h, salle des fêtes de la mairie d'Aboisso." />
+  <meta name="theme-color" content="#8f1320" />
+  <meta property="og:title" content="Éclairer le Monde · Noël à Aboisso" />
+  <meta property="og:description" content="Théâtre, chants, cadeaux pour les enfants et bien d'autres surprises. 19 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso." />
+  <meta property="og:image" content="assets/photo-event.jpg" />
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23c81d33"/><path d="M50 12 L55 42 L85 50 L55 58 L50 88 L45 58 L15 50 L45 42 Z" fill="white"/></svg>' />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=5" />
+</head>
+<body>
+
+  <!-- Barre de progression du scroll -->
+  <div id="progress" aria-hidden="true"></div>
+
+  <!-- Décor : neige & étoiles -->
+  <canvas id="snow" aria-hidden="true"></canvas>
+  <div class="stars" aria-hidden="true">
+    <span class="star s1">✦</span><span class="star s2">✧</span><span class="star s3">✦</span>
+    <span class="star s4">✧</span><span class="star s5">✦</span><span class="star s6">✧</span>
+  </div>
+
+  <!-- ============ ÉCRAN D'OUVERTURE ============ -->
+  <div id="intro" class="intro" role="dialog" aria-label="Invitation à ouvrir">
+    <div class="intro-inner">
+      <div class="logo-glow" aria-hidden="true"></div>
+      <img class="intro-logo" src="assets/light_the_world.webp" alt="Éclairer le Monde" />
+      <div class="envelope" id="envelope">
+        <div class="envelope-back"></div>
+        <div class="envelope-letter">
+          <p class="letter-line">Notre plus belle nouvelle</p>
+          <p class="letter-big">Noël <em>à</em> Aboisso</p>
+          <p class="letter-date">19 · 12 · 2026</p>
+        </div>
+        <div class="envelope-front"></div>
+        <div class="envelope-seal"><span>✦</span></div>
+      </div>
+      <p class="intro-hint">Touchez pour ouvrir votre invitation 💌</p>
+    </div>
+  </div>
+
+  <!-- ============ NAVIGATION RAPIDE ============ -->
+  <nav class="topnav" id="topnav" aria-label="Navigation rapide">
+    <a href="#programme">Programme</a><span aria-hidden="true">✦</span>
+    <a href="#lieu">Lieu</a><span aria-hidden="true">✦</span>
+    <a href="#rsvp">RSVP</a>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <header class="hero" id="accueil">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="logo-glow" aria-hidden="true"></div>
+    <img class="hero-logo" src="assets/light_the_world.webp" alt="Éclairer le Monde" />
+    <p class="hero-kicker">« Vous êtes la lumière du monde » — Matthieu 5:14</p>
+    <h1 class="hero-title">
+      <span class="line"><span class="line-in">Grand Noël</span></span>
+      <span class="line"><span class="line-in gold">des Enfants</span></span>
+      <span class="line"><span class="line-in">&amp; Familles</span></span>
+    </h1>
+    <p class="hero-sub">
+      <span>Théâtre</span><i>·</i><span>Chants</span><i>·</i><span>Cadeaux</span><i>·</i><span>Surprises</span>
+    </p>
+    <div class="hero-date">
+      <span class="d">Samedi</span><span class="n">19</span><span class="m">Décembre</span><span class="y">2026</span>
+      <span class="h">10h00 – 15h00</span>
+    </div>
+    <div class="hero-actions">
+      <a class="btn btn-gold" href="#rsvp">Confirmer ma présence</a>
+      <a class="btn btn-ghost" href="#programme">Voir le programme</a>
+    </div>
+    <a class="scroll-cue" href="#compte-a-rebours" aria-label="Descendre"><span></span></a>
+    <div class="wave" aria-hidden="true">
+      <svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path fill="#fff6ec" d="M0 32 C 200 64 400 0 620 24 C 840 48 1040 8 1240 24 C 1340 32 1400 28 1440 26 L 1440 64 L 0 64 Z"/></svg>
+    </div>
+  </header>
+
+  <!-- ============ BANDEAU DÉFILANT ============ -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Joyeux Noël ✦ Éclairer le Monde ✦ Théâtre ✦ Chants ✦ Cadeaux ✦ Surprises ✦ Aboisso 2026 ✦&nbsp;</span>
+      <span>Joyeux Noël ✦ Éclairer le Monde ✦ Théâtre ✦ Chants ✦ Cadeaux ✦ Surprises ✦ Aboisso 2026 ✦&nbsp;</span>
+    </div>
+  </div>
+
+  <main>
+    <!-- ============ COMPTE À REBOURS ============ -->
+    <section class="section" id="compte-a-rebours">
+      <p class="section-kicker">Réservez le grand jour</p>
+      <h2 class="section-title reveal">J-<span id="days-inline">—</span> avant la fête</h2>
+      <div class="countdown" id="countdown">
+        <div class="cd-card"><span id="cd-days">--</span><small>Jours</small></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-card"><span id="cd-hours">--</span><small>Heures</small></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-card"><span id="cd-mins">--</span><small>Minutes</small></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-card"><span id="cd-secs">--</span><small>Secondes</small></div>
+      </div>
+      <div class="calendar-links" data-stagger>
+        <a id="btn-gcal" class="cal-link" target="_blank" rel="noopener">📅 Google Agenda</a>
+        <a id="btn-ics" class="cal-link" download="noel-aboisso-2026.ics">🗓️ Fichier .ics</a>
+      </div>
+    </section>
+
+    <!-- ============ PROGRAMME ============ -->
+    <section class="section alt" id="programme">
+      <p class="section-kicker">Le programme de la journée</p>
+      <h2 class="section-title reveal">Cinq heures de magie ✨</h2>
+      <ol class="timeline" data-stagger>
+        <li class="tl-item reveal">
+          <div class="tl-time">10h00</div>
+          <div class="tl-card">
+            <span class="tl-emoji">🎉</span>
+            <h3>Accueil &amp; parade</h3>
+            <p>Arrivée des familles, musique, ballons et photos devant le <strong>mur lumineux « Éclairer le Monde »</strong>.</p>
+          </div>
+        </li>
+        <li class="tl-item reveal">
+          <div class="tl-time">10h30</div>
+          <div class="tl-card">
+            <span class="tl-emoji">🎭</span>
+            <h3>Grande pièce de théâtre</h3>
+            <p>« La lumière du monde » : l'histoire de Noël racontée par les jeunes de la paroisse, avec décors et costumes.</p>
+          </div>
+        </li>
+        <li class="tl-item reveal">
+          <div class="tl-time">11h30</div>
+          <div class="tl-card">
+            <span class="tl-emoji">🎶</span>
+            <h3>Chants de Noël</h3>
+            <p>Chorale d'enfants, chants en français et en langue locale — reprise en chœur avec le public.</p>
+          </div>
+        </li>
+        <li class="tl-item reveal">
+          <div class="tl-time">12h30</div>
+          <div class="tl-card">
+            <span class="tl-emoji">🍽️</span>
+            <h3>Repas de partage</h3>
+            <p>Un moment convivial autour d'un bon repas pour toutes les familles présentes.</p>
+          </div>
+        </li>
+        <li class="tl-item reveal">
+          <div class="tl-time">13h30</div>
+          <div class="tl-card">
+            <span class="tl-emoji">🎁</span>
+            <h3>Cadeaux pour les enfants</h3>
+            <p>Chaque enfant repart avec un cadeau — distribution avec le Père Noël et ses assistants 🎅.</p>
+          </div>
+        </li>
+        <li class="tl-item reveal">
+          <div class="tl-time">14h30</div>
+          <div class="tl-card">
+            <span class="tl-emoji">✨</span>
+            <h3>Surprises &amp; clôture</h3>
+            <p>Jeux, tirage au sort, remise de diplômes « petite lumière » et photo de groupe lumineuse.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ============ ACTIVITÉS ============ -->
+    <section class="section" id="activites">
+      <p class="section-kicker">Pourquoi vous ne devez pas manquer ça</p>
+      <h2 class="section-title reveal">Une journée pour <em>éclairer</em> nos cœurs</h2>
+      <div class="grid-3" data-stagger>
+        <article class="feature reveal">
+          <span class="f-icon">🎭</span>
+          <h3>Théâtre vivant</h3>
+          <p>Une mise en scène émouvante de la naissance de Jésus-Christ, jouée par les enfants et les jeunes.</p>
+        </article>
+        <article class="feature reveal">
+          <span class="f-icon">🎤</span>
+          <h3>Chants &amp; chorales</h3>
+          <p>Des chants de Noël qui font vibrer petits et grands, avec des moments chantés tous ensemble.</p>
+        </article>
+        <article class="feature reveal">
+          <span class="f-icon">🎁</span>
+          <h3>Cadeaux aux enfants</h3>
+          <p>Des jouets et des sourires garantis : chaque enfant présent repartira avec un cadeau.</p>
+        </article>
+        <article class="feature reveal">
+          <span class="f-icon">🎊</span>
+          <h3>Surprises</h3>
+          <p>Ballons, jeux, photos, animations… et quelques surprises que nous gardons secrètes !</p>
+        </article>
+        <article class="feature reveal">
+          <span class="f-icon">👨‍👩‍👧‍👦</span>
+          <h3>Esprit de famille</h3>
+          <p>Une journée pensée pour toute la famille — voisins, amis et visiteurs sont les bienvenus.</p>
+        </article>
+        <article class="feature reveal">
+          <span class="f-icon">💫</span>
+          <h3>Gratuit &amp; ouvert</h3>
+          <p>L'entrée est entièrement <strong>gratuite</strong>, comme le dit Matthieu 5:16 : que tous voient nos bonnes œuvres.</p>
+        </article>
+      </div>
+      <figure class="photo-band reveal">
+        <img src="assets/photo-event.jpg" alt="Écharpe Light the World et ballons, ambiance de fête" loading="lazy" />
+        <figcaption>L'ambiance « Light the World » — rouge, blanc et lumière ✦</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ LIEU ============ -->
+    <section class="section alt" id="lieu">
+      <p class="section-kicker">Le lieu de la célébration</p>
+      <h2 class="section-title reveal">Salle des fêtes de la mairie d'Aboisso</h2>
+      <div class="place reveal">
+        <div class="place-map" aria-hidden="true">
+          <div class="map-pin">📍<span>Église de Jésus-Christ des SDJ</span></div>
+        </div>
+        <div class="place-info">
+          <h3>🏠 Salle des fêtes · Mairie d'Aboisso</h3>
+          <p>Aboisso, Région du Sud-Comoé — <strong>Côte d'Ivoire</strong></p>
+          <p class="muted">Samedi 19 décembre 2026 · 10h00 – 15h00. Arrivez un peu en avance : la distribution des cadeaux commence après le repas et nous voulons un appareil photo plein de sourires ! 📸</p>
+          <div class="place-actions" data-stagger>
+            <a class="btn btn-red" target="_blank" rel="noopener"
+               href="https://www.google.com/maps/search/?api=1&query=Mairie%20d%27Aboisso%2C%20C%C3%B4te%20d%27Ivoire">🧭 Google Maps</a>
+            <a class="btn btn-red" target="_blank" rel="noopener"
+               href="https://waze.com/ul?q=Mairie%20d%27Aboisso%2C%20C%C3%B4te%20d%27Ivoire">🚗 Waze</a>
+            <button class="btn btn-ghost-dark" id="copy-address" type="button">📋 Copier l'adresse</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TENUE ============ -->
+    <section class="section" id="tenue">
+      <p class="section-kicker">Dress code &amp; thème</p>
+      <h2 class="section-title reveal">Venez brillant·e ✨</h2>
+      <p class="center">Pas de contrainte stricte — mais une suggestion : <strong>une touche de rouge ou de blanc</strong>, comme la lumière de Noël. Les enfants peuvent venir déguisés en anges, étoiles, bergers ou petits sapins 🌟</p>
+      <div class="palette reveal" data-stagger>
+        <span class="swatch" style="--c:#c81d33">Rouge lumière</span>
+        <span class="swatch" style="--c:#ffffff; color:#8f1320; border-color:#e9d9cf">Blanc neige</span>
+        <span class="swatch" style="--c:#f5c04e">Or étoile</span>
+        <span class="swatch" style="--c:#2c4a3e">Vert sapin</span>
+      </div>
+    </section>
+
+    <!-- ============ RSVP ============ -->
+    <section class="section alt" id="rsvp">
+      <p class="section-kicker">Répondez-nous !</p>
+      <h2 class="section-title reveal">Serez-vous parmi nous ?</h2>
+      <p class="center">Merci de répondre avant le <strong>12 décembre 2026</strong> — du fond du cœur ❤️</p>
+
+      <div id="rsvp-done" class="rsvp-done hidden">
+        <div class="done-badge">💌</div>
+        <h3>Merci <span id="done-name"></span> !</h3>
+        <p>Votre réponse est enregistrée. <button class="link-btn" id="view-invite" type="button">Revoir ma carte d'invitation</button></p>
+      </div>
+
+      <form id="rsvp-form" class="rsvp-form reveal" novalidate>
+        <div class="field">
+          <label for="f-nom">Nom &amp; prénom</label>
+          <input id="f-nom" name="nom" type="text" required placeholder="Ex. Kouassi Aya" autocomplete="name" />
+        </div>
+        <div class="field choice" role="radiogroup" aria-label="Présence">
+          <label class="choice-item">
+            <input type="radio" name="presence" value="present" required checked />
+            <span>🎄 Je serai présent·e</span>
+          </label>
+          <label class="choice-item">
+            <input type="radio" name="presence" value="absent" />
+            <span>💔 Je ne pourrai pas venir</span>
+          </label>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="f-tel">Téléphone / WhatsApp</label>
+            <input id="f-tel" name="tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" />
+          </div>
+          <div class="field">
+            <label for="f-accomp">Nombre de personnes</label>
+            <input id="f-accomp" name="accomp" type="number" min="1" max="20" value="1" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="f-note">Petit mot (facultatif)</label>
+          <input id="f-note" name="note" type="text" maxlength="120" placeholder="Ex. Je viens avec 2 enfants" />
+        </div>
+        <p class="form-error hidden" id="rsvp-error">Merci d'indiquer au moins votre nom 🙏</p>
+        <button class="btn btn-gold btn-wide" type="submit">Envoyer ma réponse 💌</button>
+      </form>
+
+      <!-- Carte d'invitation officielle -->
+      <div class="invite-modal hidden" id="invite-modal" role="dialog" aria-label="Votre carte d'invitation">
+        <div class="invite-scene">
+          <div class="invite-card" id="invite-card">
+            <!-- Couverture (se ferme/ouvre) -->
+            <div class="invite-cover">
+              <img class="ic-logo" src="assets/light_the_world.webp" alt="" aria-hidden="true" />
+              <span class="ic-star" aria-hidden="true">✦</span>
+              <p class="ic-title">Invitation</p>
+              <p class="ic-sub">Éclairer le Monde</p>
+              <p class="ic-hint">Touchez pour ouvrir ✨</p>
+            </div>
+            <!-- Intérieur (style carte officielle) -->
+            <div class="invite-inside">
+              <div class="ii-arch">
+                <span class="ii-arch-star" aria-hidden="true">✦</span>
+                <p class="ii-invite">Invitation</p>
+                <h3 class="ii-main">Célébrez la naissance<br />de Jésus-Christ<br />avec nous</h3>
+                <p class="ii-date"><strong>Date</strong> · 19 Décembre 2026</p>
+                <p class="ii-guest">Invitation pour <strong id="i-name">—</strong></p>
+                <p class="ii-time">10h00 – 15h00</p>
+                <p class="ii-place">Salle des fêtes de la mairie<br />d'ABOISSO</p>
+              </div>
+              <div class="ii-qr">
+                <img id="i-qr" alt="QR code de votre invitation" />
+                <p>Scannez pour rouvrir cette invitation</p>
+              </div>
+              <p class="ii-church">Église de Jésus-Christ des Saints des Derniers Jours</p>
+              <p class="ii-badge">ÉclairerLeMonde.org</p>
+            </div>
+          </div>
+        </div>
+        <div class="invite-actions" data-stagger>
+          <button class="btn btn-red" id="dl-invite" type="button">⬇️ Télécharger la carte</button>
+          <button class="btn btn-green" id="wa-invite" type="button">💬 Partager par WhatsApp</button>
+          <button class="btn btn-ghost-dark" id="close-invite" type="button">Fermer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LIVRE D'OR ============ -->
+    <section class="section" id="mots-doux">
+      <p class="section-kicker">Mots doux</p>
+      <h2 class="section-title reveal">Laissez-nous un petit mot 💌</h2>
+      <form id="guestbook-form" class="gb-form reveal">
+        <div class="field">
+          <label for="g-nom">Votre nom</label>
+          <input id="g-nom" type="text" required maxlength="40" placeholder="Ex. Famille Kouamé" />
+        </div>
+        <div class="field">
+          <label for="g-msg">Votre message <span id="g-count">0/200</span></label>
+          <textarea id="g-msg" rows="3" maxlength="200" placeholder="Vos vœux, votre enthousiasme…"></textarea>
+        </div>
+        <button class="btn btn-red btn-wide" type="submit">Signer le livre d'or ✍️</button>
+      </form>
+      <ul class="gb-list" id="gb-list" data-stagger></ul>
+    </section>
+
+    <!-- ============ MUR PHOTO — JE SERAI LÀ ! ============ -->
+    <section class="section alt" id="mur-photo">
+      <div class="wall-lights" aria-hidden="true">
+        <span style="--i:0"></span><span style="--i:1"></span><span style="--i:2"></span><span style="--i:3"></span>
+        <span style="--i:4"></span><span style="--i:5"></span><span style="--i:6"></span><span style="--i:7"></span>
+        <span style="--i:8"></span><span style="--i:9"></span><span style="--i:10"></span><span style="--i:11"></span>
+        <span style="--i:12"></span><span style="--i:13"></span><span style="--i:14"></span><span style="--i:15"></span>
+      </div>
+      <p class="section-kicker">Je serai là !</p>
+      <h2 class="section-title reveal">Le mur des lumières 📸</h2>
+      <p class="center">Membres de l'église, ajoutez votre photo et annoncez à tous que <strong>vous serez là</strong> le 19 décembre ✨</p>
+      <p class="wall-count hidden" id="wall-count"><strong id="wall-count-n">0</strong> <span id="wall-count-txt">lumière brille déjà sur le mur — et la vôtre ?</span></p>
+
+      <form id="wall-form" class="wall-form reveal" novalidate>
+        <div class="wall-upload" id="wall-drop" role="button" tabindex="0" aria-label="Choisir une photo">
+          <img id="wall-preview" class="wall-preview hidden" alt="Aperçu de votre photo" />
+          <div class="wall-placeholder" id="wall-placeholder">
+            <span class="wp-emoji">📷</span>
+            <p>Cliquez pour choisir votre photo</p>
+            <small>Elle sera recadrée en joli cadre polaroïd</small>
+            <span class="wp-drop">✋ ou glissez-déposez-la ici</span>
+          </div>
+          <input id="wall-photo" type="file" accept="image/*" hidden />
+        </div>
+        <div class="field">
+          <label for="w-nom">Votre nom</label>
+          <input id="w-nom" type="text" required maxlength="40" placeholder="Ex. Sœur Adjoua" />
+        </div>
+        <div class="field">
+          <label for="w-msg">Votre petit mot (facultatif)</label>
+          <input id="w-msg" type="text" maxlength="80" placeholder="Ex. J'arrive avec toute ma famille ! 🎄" />
+        </div>
+        <p class="form-error hidden" id="wall-error">Choisissez d'abord une photo et indiquez votre nom 🙏</p>
+        <button class="btn btn-gold btn-wide" type="submit">✨ Annoncer que je serai là !</button>
+      </form>
+
+      <div class="wall-grid" id="wall-grid"></div>
+      <p class="wall-empty" id="wall-empty">Soyez la première lumière sur le mur ✨</p>
+    </section>
+
+    <!-- ============ PARTAGE ============ -->
+    <section class="section alt share" id="partage">
+      <p class="section-kicker">Faites passer l'invitation 💌</p>
+      <h2 class="section-title reveal">Que votre lumière luise devant les hommes</h2>
+      <blockquote class="verse reveal">« Que votre lumière luise ainsi devant les hommes, afin qu'ils voient vos bonnes œuvres, et qu'ils glorifient votre Père qui est dans les cieux. » <cite>— Matthieu 5:16</cite></blockquote>
+      <p class="center">Un proche qui n'a pas encore reçu l'invitation ? Envoyez-lui ce petit mot signé <strong>Éclairer le Monde · Aboisso</strong>.</p>
+      <div class="share-actions reveal" data-stagger>
+        <a class="btn btn-green" id="btn-share-wa" target="_blank" rel="noopener">💬 Partager sur WhatsApp</a>
+        <button class="btn btn-ghost-dark" id="btn-copy-link" type="button">🔗 Copier le lien</button>
+      </div>
+      <p class="hashtag">#ÉclairerLeMonde #NoelAboisso2026</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wave wave-top" aria-hidden="true">
+      <svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path fill="#fdf0e0" d="M0 32 C 200 64 400 0 620 24 C 840 48 1040 8 1240 24 C 1340 32 1400 28 1440 26 L 1440 64 L 0 64 Z"/></svg>
+    </div>
+    <img class="footer-logo" src="assets/light_the_world.webp" alt="" aria-hidden="true" />
+    <p>Avec toute notre joie, <strong>Éclairer le Monde — Aboisso</strong></p>
+    <p class="muted">Église de Jésus-Christ des Saints des Derniers Jours · Salle des fêtes de la mairie d'Aboisso · 19 décembre 2026</p>
+    <p class="muted small">Fait avec ❤️ pour éclairer le monde, une lumière à la fois.</p>
+  </footer>
+
+  <!-- ============ LECTEUR DE MUSIQUE ============ -->
+  <button class="music-fab" id="music-fab" aria-label="Lecteur de musique" title="Cantiques de Noël">
+    <span class="eq"><i></i><i></i><i></i><i></i></span>
+  </button>
+
+  <div class="music-panel hidden" id="music-panel" role="dialog" aria-label="Cantiques de Noël">
+    <div class="mp-head">
+      <span>🎶 Cantiques de Noël</span>
+      <button id="mp-close" class="mp-x" type="button" aria-label="Fermer">✕</button>
+    </div>
+    <p class="mp-title" id="mp-title">Choisissez un cantique ✨</p>
+    <div class="mp-progress" id="mp-progress" role="slider" aria-label="Progression">
+      <div class="mp-bar" id="mp-bar"></div>
+    </div>
+    <div class="mp-times"><span id="mp-cur">0:00</span><span id="mp-dur">0:00</span></div>
+    <div class="mp-controls">
+      <button id="mp-prev" type="button" title="Chant précédent">⏮</button>
+      <button id="mp-play" class="mp-play" type="button" title="Lecture / pause">▶</button>
+      <button id="mp-next" type="button" title="Chant suivant">⏭</button>
+      <button id="mp-shuffle" class="mp-shuffle on" type="button" title="Lecture aléatoire">🔀</button>
+    </div>
+    <div class="mp-volume">
+      <span>🔈</span>
+      <input id="mp-vol" type="range" min="0" max="100" value="70" aria-label="Volume" />
+      <span>🔊</span>
+    </div>
+    <ul class="mp-list" id="mp-list"></ul>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="assets/qrcode-generator.js"></script>
+  <script src="script.js?v=7"></script>
+</body>
+</html>
