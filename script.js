@@ -9,9 +9,18 @@ const CONFIG = {
   rsvpDeadline: "2026-12-12",
   eventName: "Grand Noël des Enfants & Familles — Éclairer le Monde",
   place: "Salle des fêtes de la mairie d'Aboisso, Côte d'Ivoire",
-  // Numéro WhatsApp du contact (format international sans +) — à adapter :
-  contactPhone: "2250700000000",
+  // Numéro WhatsApp du contact (format international sans +) :
+  contactPhone: "2250574152955",
 };
+
+/* Numéro local ivoirien → format international pour les liens WhatsApp */
+function normalizePhone(t) {
+  let p = String(t || "").replace(/\D/g, "");
+  if (p.startsWith("225")) return p;           // déjà au format international
+  if (p.startsWith("0")) return "225" + p;     // numéro local 0X XX XX XX XX
+  if (p.length === 8) return "225" + p;        // ancien format ivoirien à 8 chiffres
+  return p;
+}
 
 /* ---------- Playlist de cantiques de Noël ----------
    Fichiers dans Playlists/ — lecture aléatoire par défaut,
@@ -493,7 +502,7 @@ function getRsvps() {
     if (!currentInvite) { toast("Répondez d'abord au formulaire 🙏"); return; }
     const d = currentInvite;
     const msg = `✦ Éclairer le Monde ✦\nCher·ère ${d.nom}, vous êtes invité·e à célébrer la naissance de Jésus-Christ avec nous 🎄\n📅 Samedi 19 décembre 2026 · 10h–15h\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Votre invitation : ${inviteLink(d)}`;
-    const wa = d.tel ? d.tel.replace(/\D/g, "") : CONFIG.contactPhone;
+    const wa = d.tel ? normalizePhone(d.tel) : CONFIG.contactPhone;
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
   });
 

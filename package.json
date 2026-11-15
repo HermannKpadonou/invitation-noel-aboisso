@@ -1,0 +1,16 @@
+{
+  "name": "invitation-noel-aboisso",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Invitation « Éclairer le Monde » — Grand Noël des Enfants & Familles, Aboisso 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

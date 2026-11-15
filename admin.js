@@ -105,8 +105,8 @@ function render() {
   tbody.innerHTML = "";
   rows.forEach((r) => {
     const tr = document.createElement("tr");
-    const tel = r.tel ? r.tel.replace(/\D/g, "").replace(/^0+/, "") : "";
-    const wa = tel ? `https://wa.me/225${tel.replace(/^225/, "")}` : "";
+    const tel = r.tel ? normalizePhone(r.tel) : "";
+    const wa = tel ? `https://wa.me/${tel}` : "";
     tr.innerHTML = `
       <td class="t-num">N°${r.num}</td>
       <td class="t-name">${escapeHTML(r.nom)}</td>
@@ -220,7 +220,7 @@ document.addEventListener("click", async (e) => {
 $("#btn-copy-phones").addEventListener("click", async () => {
   const phones = STATE.rsvps
     .filter((r) => r.presence === "present" && r.tel)
-    .map((r) => r.tel.replace(/\D/g, ""));
+    .map((r) => normalizePhone(r.tel));
   if (!phones.length) return toast("Aucun numéro disponible 🙏");
   try {
     await navigator.clipboard.writeText(phones.join(", "));

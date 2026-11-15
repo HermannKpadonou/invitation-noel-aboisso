@@ -1,6 +1,7 @@
 /* =========================================================
    Serveur du site + API — Éclairer le Monde · Noël à Aboisso
-   Zéro dépendance : Node.js pur (npm install inutile)
+   Stockage : PostgreSQL (Neon) si DATABASE_URL est défini,
+   sinon fichiers JSON locaux (data/). Zéro autre dépendance.
    Démarrage local :  node server.js  →  http://localhost:3000
    Déploiement Render : commande "node server.js" (PORT auto)
    ========================================================= */
@@ -12,7 +13,7 @@ const crypto = require("crypto");
 /* ---------- CONFIGURATION ---------- */
 const CONFIG = {
   port: process.env.PORT || 3000,
-  // ⚠️ À CHANGER : mot de passe du back office (ou variable d'environnement ADMIN_PASSWORD)
+  // ⚠️ Mot de passe du back office : variable d'environnement ADMIN_PASSWORD
   adminPassword: process.env.ADMIN_PASSWORD || "noel2026",
   dataDir: path.join(__dirname, "data"),
 };
@@ -33,15 +34,86 @@ const MIME = {
   ".woff2": "font/woff2",
 };
 
-/* ---------- STOCKAGE (fichiers JSON) ---------- */
-function ensureDataDir() { fs.mkdirSync(CONFIG.dataDir, { recursive: true }); }
+/* =========================================================
+   STOCKAGE — PostgreSQL (Neon) ou fichiers JSON
+   ========================================================= */
+let db = null; // Pool Postgres si disponible
+if (process.env.DATABASE_URL) {
+  try {
+    const { Pool } = require("pg");
+    db = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }, // exigé par Neon
+      max: 5,
+    });
+  } catch {
+    console.warn("⚠️  Package pg absent (npm install) — stockage local utilisé");
+    db = null;
+  }
+}
+
+/* Fichiers JSON (mode local / repli) */
 function readJSON(file, fallback) {
   try { return JSON.parse(fs.readFileSync(path.join(CONFIG.dataDir, file), "utf8")); }
   catch { return fallback; }
 }
 function writeJSON(file, data) {
-  ensureDataDir();
+  fs.mkdirSync(CONFIG.dataDir, { recursive: true });
   fs.writeFileSync(path.join(CONFIG.dataDir, file), JSON.stringify(data, null, 2));
+}
+
+/* Création des tables + import des anciennes données JSON (1re fois) */
+async function initDB() {
+  if (!db) return;
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS rsvps (
+      id SERIAL PRIMARY KEY,
+      num INT NOT NULL,
+      nom TEXT NOT NULL,
+      presence TEXT NOT NULL DEFAULT 'present',
+      tel TEXT DEFAULT '',
+      people INT NOT NULL DEFAULT 1,
+      note TEXT DEFAULT '',
+      at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS guestbook (
+      id SERIAL PRIMARY KEY,
+      nom TEXT NOT NULL,
+      msg TEXT NOT NULL,
+      at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS photo_wall (
+      id SERIAL PRIMARY KEY,
+      nom TEXT NOT NULL,
+      msg TEXT DEFAULT '',
+      photo TEXT NOT NULL,
+      at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );`);
+
+  /* Import automatique des données locales si les tables sont vides */
+  const local = {
+    rsvps: readJSON("rsvps.json", []),
+    guestbook: readJSON("guestbook.json", []),
+    "photo-wall": readJSON("photo-wall.json", []),
+  };
+  for (const [table, rows] of Object.entries(local)) {
+    if (!rows.length) continue;
+    const c = await db.query(`SELECT COUNT(*)::int AS n FROM ${table}`);
+    if (c.rows[0].n > 0) continue;
+    for (const r of rows) {
+      if (table === "rsvps") {
+        await db.query(
+          `INSERT INTO rsvps (num, nom, presence, tel, people, note, at) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+          [r.num, r.nom, r.presence === "absent" ? "absent" : "present", r.tel || "", r.people || 1, r.note || "", r.at]
+        );
+      } else if (table === "guestbook") {
+        await db.query(`INSERT INTO guestbook (nom, msg, at) VALUES ($1,$2,$3)`, [r.nom, r.msg, r.at]);
+      } else {
+        await db.query(`INSERT INTO photo_wall (nom, msg, photo, at) VALUES ($1,$2,$3,$4)`, [r.nom, r.msg || "", r.photo, r.at]);
+      }
+    }
+    console.log(`✦ Import local → Neon : ${rows.length} ligne(s) dans ${table}`);
+  }
 }
 
 /* ---------- SESSIONS ADMIN ---------- */
@@ -76,7 +148,7 @@ function readBody(req, max = 1e6) {
 function clean(s, max = 200) { return String(s ?? "").trim().slice(0, max); }
 
 /* ---------- FICHIERS STATIQUES (avec garde-fous) ---------- */
-const BLOCKED = ["server.js", "data", "package.json", ".git", "rename.ps1"];
+const BLOCKED = ["server.js", "data", "package.json", "node_modules", ".git", "rename.ps1"];
 function serveStatic(req, res, urlPath) {
   const safe = path.normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[\/\\])+/, "");
   if (BLOCKED.some((b) => safe.toLowerCase().startsWith(b) || ("/" + safe).includes("/" + b))) {
@@ -94,6 +166,92 @@ function serveStatic(req, res, urlPath) {
       });
     });
   });
+}
+
+/* ---------- API : couche données ---------- */
+async function addRsvp(d) {
+  if (db) {
+    const r = await db.query(
+      `INSERT INTO rsvps (num, nom, presence, tel, people, note)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING id, num, nom, presence, tel, people, note, at`,
+      [d.num, d.nom, d.presence, d.tel, d.people, d.note]
+    );
+    return r.rows[0];
+  }
+  const all = readJSON("rsvps.json", []);
+  const entry = {
+    id: (all.reduce((m, r) => Math.max(m, r.id || 0), 0) || 0) + 1,
+    ...d,
+    at: new Date().toISOString(),
+  };
+  all.push(entry);
+  writeJSON("rsvps.json", all);
+  return entry;
+}
+
+async function listRsvps() {
+  if (db) return (await db.query(`SELECT id, num, nom, presence, tel, people, note, at FROM rsvps ORDER BY id ASC`)).rows;
+  return readJSON("rsvps.json", []);
+}
+
+async function listGuestbook() {
+  if (db) {
+    /* les 80 derniers messages, du plus ancien au plus récent */
+    const r = await db.query(
+      `SELECT id, nom, msg, at FROM (SELECT id, nom, msg, at FROM guestbook ORDER BY id DESC LIMIT 80) t ORDER BY id ASC`
+    );
+    return r.rows;
+  }
+  return readJSON("guestbook.json", []).slice(-80);
+}
+
+async function addGuestbook(entry) {
+  if (db) {
+    const r = await db.query(
+      `INSERT INTO guestbook (nom, msg) VALUES ($1,$2) RETURNING id, nom, msg, at`,
+      [entry.nom, entry.msg]
+    );
+    return r.rows[0];
+  }
+  const all = readJSON("guestbook.json", []);
+  all.push(entry);
+  writeJSON("guestbook.json", all);
+  return entry;
+}
+
+async function listWall() {
+  if (db) return (await db.query(`SELECT id, nom, msg, photo, at FROM photo_wall ORDER BY id ASC`)).rows;
+  return readJSON("photo-wall.json", []);
+}
+
+async function addWall(entry) {
+  if (db) {
+    const r = await db.query(
+      `INSERT INTO photo_wall (nom, msg, photo) VALUES ($1,$2,$3) RETURNING id, nom, msg, photo, at`,
+      [entry.nom, entry.msg, entry.photo]
+    );
+    return r.rows[0];
+  }
+  const all = readJSON("photo-wall.json", []);
+  if (all.length >= 300) all.shift();
+  all.push(entry);
+  writeJSON("photo-wall.json", all);
+  return entry;
+}
+
+async function deleteRow(table, id) {
+  if (db) {
+    const allowed = { rsvp: "rsvps", guestbook: "guestbook", "photo-wall": "photo_wall" };
+    const t = allowed[table];
+    if (!t) return;
+    await db.query(`DELETE FROM ${t} WHERE id = $1`, [id]);
+    return;
+  }
+  const files = { rsvp: "rsvps.json", guestbook: "guestbook.json", "photo-wall": "photo-wall.json" };
+  const file = files[table];
+  if (!file) return;
+  writeJSON(file, readJSON(file, []).filter((r) => r.id !== parseInt(id)));
 }
 
 /* ---------- API ---------- */
@@ -116,42 +274,33 @@ async function handleAPI(req, res, url) {
     const body = await readBody(req);
     const nom = clean(body.nom, 80);
     if (!nom) return send(res, 400, { ok: false, error: "Nom requis" });
-    const rsvps = readJSON("rsvps.json", []);
-    const entry = {
-      id: (rsvps.reduce((m, r) => Math.max(m, r.id || 0), 0) || 0) + 1,
+    const entry = await addRsvp({
       num: Math.floor(100 + Math.random() * 900),
       nom,
       presence: body.presence === "absent" ? "absent" : "present",
       tel: clean(body.tel, 30),
       people: Math.min(Math.max(parseInt(body.people) || 1, 1), 30),
       note: clean(body.note, 150),
-      at: new Date().toISOString(),
-    };
-    rsvps.push(entry);
-    writeJSON("rsvps.json", rsvps);
+    });
     return send(res, 200, { ok: true, entry });
   }
 
   /* --- Livre d'or (public : lire / écrire) --- */
   if (pathname === "/api/guestbook" && req.method === "GET") {
-    const all = readJSON("guestbook.json", []);
-    return send(res, 200, all.slice(-80));
+    return send(res, 200, await listGuestbook());
   }
   if (pathname === "/api/guestbook" && req.method === "POST") {
     const body = await readBody(req);
     const nom = clean(body.nom, 60);
     const msg = clean(body.msg, 250);
     if (!nom || !msg) return send(res, 400, { ok: false, error: "Nom et message requis" });
-    const all = readJSON("guestbook.json", []);
-    const entry = { id: Date.now(), nom, msg, at: new Date().toISOString() };
-    all.push(entry);
-    writeJSON("guestbook.json", all);
+    const entry = await addGuestbook({ id: Date.now(), nom, msg, at: new Date().toISOString() });
     return send(res, 200, { ok: true, entry });
   }
 
   /* --- Mur photo « Je serai là ! » (public : lire / ajouter) --- */
   if (pathname === "/api/photo-wall" && req.method === "GET") {
-    return send(res, 200, readJSON("photo-wall.json", []));
+    return send(res, 200, await listWall());
   }
   if (pathname === "/api/photo-wall" && req.method === "POST") {
     const body = await readBody(req, 5e5); // ~500 Ko max (photo base64)
@@ -161,11 +310,7 @@ async function handleAPI(req, res, url) {
     if (!nom) return send(res, 400, { ok: false, error: "Nom requis" });
     if (!photo.startsWith("data:image/")) return send(res, 400, { ok: false, error: "Photo requise" });
     if (photo.length > 45e4) return send(res, 413, { ok: false, error: "Photo trop lourde — choisissez-en une plus petite" });
-    const all = readJSON("photo-wall.json", []);
-    if (all.length >= 300) all.shift(); // garde-fou : 300 photos maximum
-    const entry = { id: Date.now(), nom, msg, photo, at: new Date().toISOString() };
-    all.push(entry);
-    writeJSON("photo-wall.json", all);
+    const entry = await addWall({ id: Date.now(), nom, msg, photo, at: new Date().toISOString() });
     return send(res, 200, { ok: true, entry });
   }
 
@@ -174,9 +319,7 @@ async function handleAPI(req, res, url) {
     if (!isAuth(req)) return send(res, 401, { ok: false, error: "Non autorisé" });
 
     if (pathname === "/api/admin/summary" && req.method === "GET") {
-      const rsvps = readJSON("rsvps.json", []);
-      const guestbook = readJSON("guestbook.json", []);
-      const wall = readJSON("photo-wall.json", []);
+      const [rsvps, guestbook, wall] = await Promise.all([listRsvps(), listGuestbook(), listWall()]);
       const stats = {
         total: rsvps.length,
         presents: rsvps.filter((r) => r.presence === "present").length,
@@ -188,7 +331,7 @@ async function handleAPI(req, res, url) {
     }
 
     if (pathname === "/api/admin/export.csv" && req.method === "GET") {
-      const rsvps = readJSON("rsvps.json", []);
+      const rsvps = await listRsvps();
       const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
       const lines = [
         ["N° billet", "Nom", "Présence", "Personnes", "Téléphone", "Note", "Date"].join(";"),
@@ -204,23 +347,17 @@ async function handleAPI(req, res, url) {
     }
 
     if (pathname === "/api/admin/rsvp" && req.method === "DELETE") {
-      const id = parseInt(searchParams.get("id"));
-      const rsvps = readJSON("rsvps.json", []).filter((r) => r.id !== id);
-      writeJSON("rsvps.json", rsvps);
+      await deleteRow("rsvp", searchParams.get("id"));
       return send(res, 200, { ok: true });
     }
 
     if (pathname === "/api/admin/guestbook" && req.method === "DELETE") {
-      const id = parseInt(searchParams.get("id"));
-      const all = readJSON("guestbook.json", []).filter((g) => g.id !== id);
-      writeJSON("guestbook.json", all);
+      await deleteRow("guestbook", searchParams.get("id"));
       return send(res, 200, { ok: true });
     }
 
     if (pathname === "/api/admin/photo-wall" && req.method === "DELETE") {
-      const id = parseInt(searchParams.get("id"));
-      const all = readJSON("photo-wall.json", []).filter((p) => p.id !== id);
-      writeJSON("photo-wall.json", all);
+      await deleteRow("photo-wall", searchParams.get("id"));
       return send(res, 200, { ok: true });
     }
     return send(res, 404, { ok: false, error: "Route inconnue" });
@@ -236,13 +373,26 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname.startsWith("/api/")) return await handleAPI(req, res, url);
     return serveStatic(req, res, url.pathname);
   } catch (e) {
+    console.error(e);
     return send(res, 500, { ok: false, error: "Erreur serveur" });
   }
 });
 
-ensureDataDir();
-server.listen(CONFIG.port, () => {
-  console.log(`✦ Site    : http://localhost:${CONFIG.port}`);
-  console.log(`✦ Back office : http://localhost:${CONFIG.port}/admin.html`);
-  console.log(`✦ Mot de passe admin : ${CONFIG.adminPassword === "noel2026" ? "noel2026 (PENSEZ À LE CHANGER)" : "(personnalisé)"}`);
-});
+initDB()
+  .then(() => {
+    ensureNothing();
+    server.listen(CONFIG.port, () => {
+      console.log(`✦ Site    : http://localhost:${CONFIG.port}`);
+      console.log(`✦ Back office : http://localhost:${CONFIG.port}/admin.html`);
+      console.log(db
+        ? "✦ Stockage : PostgreSQL (Neon) ✨"
+        : `✦ Stockage : fichiers JSON locaux (data/) — définissez DATABASE_URL pour Neon`);
+      console.log(`✦ Mot de passe admin : ${CONFIG.adminPassword === "noel2026" ? "noel2026 (PENSEZ À LE CHANGER)" : "(personnalisé)"}`);
+    });
+  })
+  .catch((e) => {
+    console.error("⚠️  Impossible d'initialiser la base :", e.message);
+    server.listen(CONFIG.port, () => console.log(`✦ Démarré en mode dégradé : http://localhost:${CONFIG.port}`));
+  });
+
+function ensureNothing() { /* réservé pour extensions futures */ }
