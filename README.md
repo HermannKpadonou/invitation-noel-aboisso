@@ -107,6 +107,21 @@ git push -u origin main
 # → Render redéploie automatiquement à chaque push
 ```
 
+### Stockage des données — PostgreSQL sur Neon 🐘
+Le serveur utilise **Neon** (base PostgreSQL gratuite) si la variable
+`DATABASE_URL` est définie — vos données survivent aux redéploiements :
+
+1. Créez un compte sur **neon.tech** (bouton « Sign up with GitHub »)
+2. **Create project** (nom : `noel-aboisso`, région la plus proche)
+3. Copiez la **chaîne de connexion** (Connection string, format
+   `postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require`)
+4. Sur Render : **Environment** → ajoutez la variable **`DATABASE_URL`**
+   avec cette chaîne → le serveur crée ses tables tout seul et
+   **importe automatiquement** vos anciennes données JSON au premier démarrage
+
+Sans `DATABASE_URL` (local, tests), le serveur replie sur des fichiers
+JSON dans `data/` — le site fonctionne toujours, juste non partagé.
+
 ### Déployer sur Render (gratuit, comme l'exemple mariage)
 1. Mettez le dossier sur GitHub
 2. Sur render.com : **New → Web Service** → connectez le dépôt
@@ -131,8 +146,8 @@ const PLAYLIST = [
 - Le volume choisi est mémorisé sur l'appareil du visiteur.
 
 ## Données RSVP
-Les réponses sont enregistrées dans le **localStorage** du navigateur de chaque
-visiteur (pas de serveur). Pour centraliser les réponses sans serveur, vous
-pouvez utiliser le bouton « Confirmer par WhatsApp » — ou déployer le site sur
-une plateforme gratuite (Netlify / GitHub Pages / Render) et ajouter un service
-de formulaires comme Formspree.
+Avec le serveur (`node server.js`) ou sur Render, les réponses, messages
+et photos sont centralisés (Neon PostgreSQL) et consultables dans le
+**back office** `/admin.html`. Sans serveur (double-clic sur `index.html`),
+le site fonctionne en mode local : les données restent sur l'appareil du
+visiteur.
