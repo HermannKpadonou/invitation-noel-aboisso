@@ -98,6 +98,15 @@ régulièrement.
 Sans serveur (site ouvert en double-cliquant sur `index.html`), le site
 fonctionne quand même en mode local (données sur l'appareil du visiteur).
 
+### Pousser sur GitHub
+```bash
+# 1. Créez le dépôt vide sur github.com (privé recommandé), puis :
+git remote add origin https://github.com/VOTRE-PSEUDO/invitation-noel-aboisso.git
+git push -u origin main
+# 2. À chaque mise à jour : git add . ; git commit -m "…" ; git push
+# → Render redéploie automatiquement à chaque push
+```
+
 ### Déployer sur Render (gratuit, comme l'exemple mariage)
 1. Mettez le dossier sur GitHub
 2. Sur render.com : **New → Web Service** → connectez le dépôt
