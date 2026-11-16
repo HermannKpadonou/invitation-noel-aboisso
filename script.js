@@ -89,7 +89,7 @@ function toast(msg) {
   const canvas = $("#snow");
   const ctx = canvas.getContext("2d");
   let flakes = [];
-  const COLORS = ["#ffffff", "#ffe3a3", "#ffd9d9"];
+  const COLORS = ["#ffffff", "#EBDCC3", "#DCE6E0"];
 
   function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
   resize();
@@ -143,7 +143,7 @@ function launchConfetti() {
     vx: Math.random() * 2 - 1,
     rot: Math.random() * Math.PI,
     vr: (Math.random() - 0.5) * 0.2,
-    c: ["#f5c04e", "#c81d33", "#ffffff", "#e63950", "#ffe3a3"][(Math.random() * 5) | 0],
+    c: ["#C8A97E", "#3D5A4C", "#ffffff", "#8FB0A0", "#EBDCC3"][(Math.random() * 5) | 0],
   }));
   let frames = 0;
   (function anim() {
@@ -711,49 +711,49 @@ function getRsvps() {
     /* fond crème */
     x.fillStyle = "#fffdf8"; x.fillRect(0, 0, W, H);
 
-    /* arche rouge */
+    /* arche vert sauge */
     const AG = x.createLinearGradient(0, 50, 0, H - 210);
-    AG.addColorStop(0, "#e63950"); AG.addColorStop(.5, "#c81d33"); AG.addColorStop(1, "#8f1320");
+    AG.addColorStop(0, "#4A6E5D"); AG.addColorStop(.5, "#3D5A4C"); AG.addColorStop(1, "#2C4238");
     archPath(x, W / 2, 50, W - 90, H - 260);
     x.fillStyle = AG; x.fill();
 
     /* liseré doré intérieur */
-    x.strokeStyle = "rgba(245,192,78,.75)"; x.lineWidth = 3;
+    x.strokeStyle = "rgba(200,169,126,.75)"; x.lineWidth = 3;
     archPath(x, W / 2, 64, W - 118, H - 288);
     x.stroke();
 
     /* étoile dorée */
-    x.fillStyle = "#f5c04e";
+    x.fillStyle = "#C8A97E";
     drawStar(x, W / 2, 215, 44, 18);
 
     x.textAlign = "center";
-    x.fillStyle = "#ffe3a3";
+    x.fillStyle = "#EBDCC3";
     x.font = "italic 600 36px 'Playfair Display', Georgia, serif";
     x.fillText("Invitation", W / 2, 305);
 
     x.fillStyle = "#ffffff";
-    x.font = "700 40px Poppins, sans-serif";
+    x.font = "700 40px Plus Jakarta Sans, sans-serif";
     let y = wrapText(x, "Célébrez la naissance de Jésus-Christ avec nous", W / 2, 365, W - 220, 52);
 
     /* badge date */
-    x.fillStyle = "#f5c04e";
+    x.fillStyle = "#C8A97E";
     roundRect(x, W / 2 - 190, y + 36, 380, 48, 24); x.fill();
-    x.fillStyle = "#5d0a13";
-    x.font = "800 24px Poppins, sans-serif";
+    x.fillStyle = "#1E2F27";
+    x.font = "800 24px Plus Jakarta Sans, sans-serif";
     x.fillText("DATE · 19 DÉCEMBRE 2026", W / 2, y + 69);
 
-    x.fillStyle = "#ffd9d9";
-    x.font = "500 26px Poppins, sans-serif";
+    x.fillStyle = "#DCE6E0";
+    x.font = "500 26px Plus Jakarta Sans, sans-serif";
     x.fillText("Invitation pour", W / 2, y + 128);
     x.fillStyle = "#ffffff";
-    x.font = "800 44px Poppins, sans-serif";
+    x.font = "800 44px Plus Jakarta Sans, sans-serif";
     x.fillText(d.nom.length > 22 ? d.nom.slice(0, 22) + "…" : d.nom, W / 2, y + 178);
 
-    x.fillStyle = "#ffe3a3";
-    x.font = "600 28px Poppins, sans-serif";
+    x.fillStyle = "#EBDCC3";
+    x.font = "600 28px Plus Jakarta Sans, sans-serif";
     x.fillText("10h00 – 15h00", W / 2, y + 232);
     x.fillStyle = "#ffffff";
-    x.font = "600 28px Poppins, sans-serif";
+    x.font = "600 28px Plus Jakarta Sans, sans-serif";
     wrapText(x, "Salle des fêtes de la mairie d'ABOISSO", W / 2, y + 276, W - 200, 38);
 
     /* QR code */
@@ -770,11 +770,11 @@ function getRsvps() {
         x.fillStyle = "#ffffff";
         roundRect(x, W / 2 - 70, H - 225, 140, 140, 14); x.fill();
         x.drawImage(img, W / 2 - 60, H - 215, 120, 120);
-        x.fillStyle = "#ffe3a3";
-        x.font = "400 20px Poppins, sans-serif";
+        x.fillStyle = "#EBDCC3";
+        x.font = "400 20px Plus Jakarta Sans, sans-serif";
         x.fillText("Scannez pour rouvrir votre invitation", W / 2, H - 60);
-        x.fillStyle = "#ffd9d9";
-        x.font = "500 22px Poppins, sans-serif";
+        x.fillStyle = "#DCE6E0";
+        x.font = "500 22px Plus Jakarta Sans, sans-serif";
         x.fillText("Église de Jésus-Christ des Saints des Derniers Jours", W / 2, H - 92);
         finish();
       };
@@ -1056,16 +1056,16 @@ function getRsvps() {
     c.width = W; c.height = H;
     const x = c.getContext("2d");
 
-    /* Cadre rouge extérieur */
+    /* Cadre sauge extérieur */
     const RG = x.createLinearGradient(0, 0, 0, H);
-    RG.addColorStop(0, "#e63950"); RG.addColorStop(.55, "#c81d33"); RG.addColorStop(1, "#8f1320");
+    RG.addColorStop(0, "#4A6E5D"); RG.addColorStop(.55, "#3D5A4C"); RG.addColorStop(1, "#2C4238");
     roundedRect(x, 0, 0, W, H, 30); x.fillStyle = RG; x.fill();
 
     /* Fond crème intérieur */
     roundedRect(x, 16, 16, W - 32, H - 32, 18); x.fillStyle = "#fffdf8"; x.fill();
 
     /* Liseré doré */
-    x.strokeStyle = "rgba(245,192,78,.9)"; x.lineWidth = 2.5;
+    x.strokeStyle = "rgba(200,169,126,.9)"; x.lineWidth = 2.5;
     roundedRect(x, 28, 28, W - 56, H - 56, 14); x.stroke();
 
     /* Photo recadrée en carré */
@@ -1086,11 +1086,11 @@ function getRsvps() {
       x.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, px, py, pw, pw);
       x.restore();
       /* fin contour doré de la photo */
-      x.strokeStyle = "rgba(245,192,78,.95)"; x.lineWidth = 3;
+      x.strokeStyle = "rgba(200,169,126,.95)"; x.lineWidth = 3;
       roundedRect(x, px, py, pw, pw, 12); x.stroke();
 
       /* Étoile dorée */
-      x.fillStyle = "#f5c04e";
+      x.fillStyle = "#C8A97E";
       const cx = W / 2, cy = py + pw + 50, R = 17, r2 = 7;
       x.beginPath();
       for (let i = 0; i < 10; i++) {
@@ -1102,27 +1102,27 @@ function getRsvps() {
 
       /* Titre */
       x.textAlign = "center";
-      x.fillStyle = "#8f1320";
+      x.fillStyle = "#2C4238";
       x.font = "italic 600 40px 'Playfair Display', Georgia, serif";
       x.fillText("Éclairer le Monde", W / 2, cy + 56);
 
       /* Nom du participant */
       if (e.nom) {
-        x.fillStyle = "#3b2a2a";
-        x.font = "700 26px Poppins, sans-serif";
+        x.fillStyle = "#2D2D2D";
+        x.font = "700 26px Plus Jakarta Sans, sans-serif";
         x.fillText(e.nom.length > 30 ? e.nom.slice(0, 30) + "…" : e.nom, W / 2, cy + 94);
       }
 
       /* Date & lieu */
-      x.fillStyle = "#8a6a6a";
-      x.font = "500 18px Poppins, sans-serif";
+      x.fillStyle = "#8C8479";
+      x.font = "500 18px Plus Jakarta Sans, sans-serif";
       x.fillText("19 · 12 · 2026  ·  Salle des fêtes de la mairie d'Aboisso", W / 2, cy + 126);
 
-      /* Hashtag sur pastille rouge */
-      x.fillStyle = "#c81d33";
+      /* Hashtag sur pastille sauge */
+      x.fillStyle = "#3D5A4C";
       roundedRect(x, W / 2 - 150, cy + 150, 300, 40, 20); x.fill();
       x.fillStyle = "#ffffff";
-      x.font = "700 19px Poppins, sans-serif";
+      x.font = "700 19px Plus Jakarta Sans, sans-serif";
       x.fillText("#ÉclairerLeMonde", W / 2, cy + 176);
 
       finish();
