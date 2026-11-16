@@ -1,0 +1,25 @@
+{
+  "name": "Éclairer le Monde — Noël à Aboisso 2026",
+  "short_name": "Noël Aboisso",
+  "description": "Invitation officielle et billet nominatif — Grand Noël des Enfants & Familles, Samedi 19 décembre 2026 à Aboisso.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FDF9FA",
+  "theme_color": "#D70B33",
+  "icons": [
+    {
+      "src": "assets/light_the_world.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/light_the_world.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}

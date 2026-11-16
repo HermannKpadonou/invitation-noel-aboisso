@@ -24,6 +24,7 @@ const MIME = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
   ".jpg": "image/jpeg",
@@ -35,7 +36,7 @@ const MIME = {
   ".woff2": "font/woff2",
 };
 
-const COMPRESSIBLE = new Set([".html", ".css", ".js", ".json", ".svg", ".ics"]);
+const COMPRESSIBLE = new Set([".html", ".css", ".js", ".json", ".webmanifest", ".svg", ".ics"]);
 
 /* =========================================================
    STOCKAGE — PostgreSQL (Neon) ou fichiers JSON
@@ -99,13 +100,21 @@ async function initDB() {
       nom TEXT NOT NULL,
       tel TEXT DEFAULT '',
       at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS lights (
+      id SERIAL PRIMARY KEY,
+      nom TEXT DEFAULT '',
+      inspiration TEXT DEFAULT '',
+      at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );`);
 
   /* Colonnes RSVP ajoutées avec le formulaire enrichi (statut, branche,
-     localite, invités : ami + membre inactif) — sans casser l'existant */
+     localite, invités : ami + membre inactif + pointage Jour J) — sans casser l'existant */
   for (const col of ["statut", "branche", "localite", "ami_nom", "ami_tel", "inactif_nom", "inactif_tel"]) {
     await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS ${col} TEXT DEFAULT ''`);
   }
+  await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS checked_in BOOLEAN DEFAULT FALSE`);
+  await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ`);
 
   /* Import automatique des données locales si les tables sont vides */
   const local = {
@@ -246,8 +255,9 @@ function serveStatic(req, res, urlPath) {
 
 function streamStaticFile(req, res, filePath, st) {
   const ext = path.extname(filePath).toLowerCase();
+  const baseName = path.basename(filePath).toLowerCase();
   const contentType = MIME[ext] || "application/octet-stream";
-  const cacheControl = ext === ".html" ? "no-cache" : "public, max-age=86400";
+  const cacheControl = (ext === ".html" || baseName === "sw.js") ? "no-cache" : "public, max-age=86400";
 
   /* Support HTTP 206 Partial Content (streaming fluide des MP3 sur mobile/Safari) */
   if (ext === ".mp3" && req.headers.range) {
@@ -312,7 +322,7 @@ async function addRsvp(d) {
     const r = await db.query(
       `INSERT INTO rsvps (num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-       RETURNING id, num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, at`,
+       RETURNING id, num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, checked_in, checked_in_at, at`,
       [d.num, d.nom, d.presence, d.tel, d.people, d.note, d.statut || "membre", d.branche || "", d.localite || "",
        d.ami_nom || "", d.ami_tel || "", d.inactif_nom || "", d.inactif_tel || ""]
     );
@@ -322,6 +332,8 @@ async function addRsvp(d) {
   const entry = {
     id: (all.reduce((m, r) => Math.max(m, r.id || 0), 0) || 0) + 1,
     ...d,
+    checked_in: false,
+    checked_in_at: null,
     at: new Date().toISOString(),
   };
   all.push(entry);
@@ -331,9 +343,30 @@ async function addRsvp(d) {
 
 async function listRsvps() {
   if (db) return (await db.query(
-    `SELECT id, num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, at FROM rsvps ORDER BY id ASC`
+    `SELECT id, num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, checked_in, checked_in_at, at FROM rsvps ORDER BY id ASC`
   )).rows;
   return readJSON("rsvps.json", []);
+}
+
+async function setRsvpCheckin({ id, num, checked_in = true }) {
+  const flag = !!checked_in;
+  const ts = flag ? new Date().toISOString() : null;
+  if (db) {
+    const query = id
+      ? `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE id = $3 RETURNING id, num, nom, presence, tel, people, note, statut, branche, localite, checked_in, checked_in_at, at`
+      : `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE num = $3 RETURNING id, num, nom, presence, tel, people, note, statut, branche, localite, checked_in, checked_in_at, at`;
+    const param = id ? parseInt(id, 10) : parseInt(num, 10);
+    if (!param) return null;
+    const r = await db.query(query, [flag, ts, param]);
+    return r.rows[0] || null;
+  }
+  const all = readJSON("rsvps.json", []);
+  const target = all.find((r) => (id ? String(r.id) === String(id) : String(r.num) === String(num)));
+  if (!target) return null;
+  target.checked_in = flag;
+  target.checked_in_at = ts;
+  writeJSON("rsvps.json", all);
+  return target;
 }
 
 async function findTicketByNum(num) {
@@ -341,7 +374,7 @@ async function findTicketByNum(num) {
   if (!n) return null;
   if (db) {
     const r = await db.query(
-      `SELECT num, nom, presence, people, statut, at FROM rsvps WHERE num = $1 ORDER BY id DESC LIMIT 1`,
+      `SELECT num, nom, presence, people, statut, branche, checked_in, at FROM rsvps WHERE num = $1 ORDER BY id DESC LIMIT 1`,
       [n]
     );
     return r.rows[0] || null;
@@ -355,6 +388,8 @@ async function findTicketByNum(num) {
     presence: found.presence,
     people: found.people,
     statut: found.statut || "membre",
+    branche: found.branche || "",
+    checked_in: !!found.checked_in,
     at: found.at,
   };
 }
@@ -382,6 +417,31 @@ async function addGuestbook(entry) {
   all.push(entry);
   writeJSON("guestbook.json", all);
   return entry;
+}
+
+/* ---------- Constellation d'Aboisso (Bougies allumées — Défi Éclairer le Monde) ---------- */
+const BASE_LIGHTS_COUNT = 25; // 25 lumières initiales symbolisant les 25 jours de décembre
+async function getLightsSummary() {
+  if (db) {
+    const [c, recent] = await Promise.all([
+      db.query(`SELECT COUNT(*)::int AS n FROM lights`),
+      db.query(`SELECT id, nom, inspiration, at FROM lights ORDER BY id DESC LIMIT 12`),
+    ]);
+    return { count: BASE_LIGHTS_COUNT + (c.rows[0]?.n || 0), recent: recent.rows };
+  }
+  const all = readJSON("lights.json", []);
+  return { count: BASE_LIGHTS_COUNT + all.length, recent: all.slice(-12).reverse() };
+}
+
+async function addLight({ nom, inspiration }) {
+  if (db) {
+    await db.query(`INSERT INTO lights (nom, inspiration) VALUES ($1, $2)`, [nom, inspiration]);
+    return getLightsSummary();
+  }
+  const all = readJSON("lights.json", []);
+  all.push({ id: Date.now(), nom, inspiration, at: new Date().toISOString() });
+  writeJSON("lights.json", all);
+  return getLightsSummary();
 }
 
 /* Liste légère des métadonnées du Mur Photo (sans renvoyer les Mo de Base64 à chaque poll) */
@@ -555,6 +615,22 @@ async function handleAPI(req, res, url) {
     return send(req, res, 200, { ok: true, entry });
   }
 
+  /* --- Constellation d'Aboisso : Bougies allumées (public : lire / allumer) --- */
+  if (pathname === "/api/lights" && req.method === "GET") {
+    const summary = await getLightsSummary();
+    return send(req, res, 200, { ok: true, ...summary });
+  }
+  if (pathname === "/api/lights" && req.method === "POST") {
+    if (!checkRateLimit(req, "lights", 15, 60_000)) {
+      return send(req, res, 429, { ok: false, error: "Patientez un instant avant de rallumer une bougie." });
+    }
+    const body = await readBody(req);
+    const nom = clean(body.nom, 50) || "Une âme bienveillante";
+    const inspiration = clean(body.inspiration, 160);
+    const summary = await addLight({ nom, inspiration });
+    return send(req, res, 200, { ok: true, ...summary });
+  }
+
   /* --- RSVP (public : envoi) --- */
   if (pathname === "/api/rsvp" && req.method === "POST") {
     if (!checkRateLimit(req, "rsvp", 20, 60_000)) {
@@ -670,15 +746,32 @@ async function handleAPI(req, res, url) {
         listWallMeta(),
         listInvitesRaw(),
       ]);
+      const checkedInList = rsvps.filter((r) => r.checked_in);
       const stats = {
         total: rsvps.length,
         presents: rsvps.filter((r) => r.presence === "present").length,
         absents: rsvps.filter((r) => r.presence === "absent").length,
         people: rsvps.filter((r) => r.presence === "present").reduce((s, r) => s + (r.people || 1), 0),
+        checkedInRsvps: checkedInList.length,
+        checkedInPeople: checkedInList.reduce((s, r) => s + (r.people || 1), 0),
         messages: guestbook.length,
         invites: invites.length,
       };
       return send(req, res, 200, { ok: true, rsvps, guestbook, wall, invites, stats });
+    }
+
+    /* Pointage Jour J (Check-in par ID ou par N° de billet scanné au QR code) */
+    if (pathname === "/api/admin/checkin" && req.method === "POST") {
+      const body = await readBody(req);
+      const updated = await setRsvpCheckin({
+        id: body.id,
+        num: body.num,
+        checked_in: body.checked_in !== undefined ? !!body.checked_in : true,
+      });
+      if (!updated) {
+        return send(req, res, 404, { ok: false, error: "Aucun billet correspondant trouvé" });
+      }
+      return send(req, res, 200, { ok: true, entry: updated });
     }
 
     if (pathname === "/api/admin/export.csv" && req.method === "GET") {
@@ -691,7 +784,7 @@ async function handleAPI(req, res, url) {
       }
       const lines = [
         [
-          "N° billet", "Nom", "Statut", "Présence", "Personnes", "Téléphone", "Branche", "Localité",
+          "N° billet", "Nom", "Statut", "Présence", "Pointage Jour J", "Personnes", "Téléphone", "Branche", "Localité",
           "Personnes invitées (toutes)", "Ami invité (1er)", "Contact ami", "Membre inactif invité (1er)", "Contact membre", "Note", "Date",
         ].join(";"),
         ...rsvps.map((r) => {
@@ -707,6 +800,7 @@ async function handleAPI(req, res, url) {
             escCSV(r.nom),
             escCSV(r.statut === "ami" ? "Ami·e / visiteur·se" : "Membre"),
             r.presence === "present" ? "Présent(e)" : "Absent(e)",
+            r.checked_in ? "Arrivé(e)" : "En attente",
             r.people,
             escCSV(r.tel),
             escCSV(r.branche || ""),

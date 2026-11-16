@@ -478,9 +478,11 @@ button{font-family:inherit}
 
 /* ---------- Révélations au scroll ---------- */
 .reveal{opacity:0;transform:translateY(22px) scale(.985);transition:opacity .8s ease,transform .9s var(--ease-out)}
-.reveal.in{opacity:1;transform:none}
-.reveal.from-left{transform:translateX(-40px)}
-.reveal.from-right{transform:translateX(40px)}
+.reveal.from-left{transform:translateX(-36px)}
+.reveal.from-right{transform:translateX(36px)}
+.reveal.in,
+.reveal.from-left.in,
+.reveal.from-right.in{opacity:1;transform:none}
 
 /* =========================================================
    RÉCIT — LE PREMIER CADEAU
@@ -576,27 +578,31 @@ button{font-family:inherit}
 @media(prefers-reduced-motion:reduce){.rsvp-step.is-active{animation:none}}
 
 /* =========================================================
-   PROGRAMME (timeline)
+   PROGRAMME (timeline parfaitement alignée)
    ========================================================= */
-.timeline{list-style:none;max-width:640px;margin:0 auto;position:relative;padding-left:2px;--line:0%}
+.timeline,
+.section.alt>.timeline{
+  list-style:none;max-width:680px;margin:0 auto;position:relative;padding-left:0;--line:0%;
+}
 .timeline::before{
-  content:"";position:absolute;left:56px;top:10px;height:var(--line);width:3px;border-radius:3px;
+  content:"";position:absolute;left:32.5px;top:14px;height:var(--line);width:3px;border-radius:3px;
   background:linear-gradient(var(--rose),var(--crimson),var(--rose));
   transition:height .3s linear;
 }
 .timeline::after{
-  content:"";position:absolute;left:56px;top:calc(10px + var(--line));bottom:10px;width:3px;border-radius:3px;
-  background:rgba(215,11,51,.12);
+  content:"";position:absolute;left:32.5px;top:calc(14px + var(--line));bottom:14px;width:3px;border-radius:3px;
+  background:rgba(215,11,51,.14);
 }
-.tl-item{position:relative;display:flex;gap:1.1rem;margin-bottom:1.5rem;align-items:flex-start}
-.tl-item:nth-child(even) .tl-card{margin-left:1.2rem}
+.tl-item{position:relative;display:flex;gap:1.25rem;margin-bottom:1.5rem;align-items:flex-start}
+.tl-item:last-child{margin-bottom:0}
 .tl-time{
-  flex:0 0 58px;text-align:center;font-weight:800;color:var(--bordeaux);
-  font-variant-numeric:tabular-nums;padding-top:.35rem;position:relative;z-index:1;
-  background:var(--cream-2);border-radius:8px;
+  flex:0 0 68px;text-align:center;font-weight:800;font-size:.9rem;color:var(--bordeaux);
+  font-variant-numeric:tabular-nums;padding:.32rem .4rem;margin-top:.85rem;position:relative;z-index:1;
+  background:var(--cream-2);border:1.5px solid rgba(215,11,51,.2);border-radius:999px;
+  box-shadow:0 4px 10px rgba(58,13,24,.06);
 }
 .tl-card{
-  flex:1;background:#fff;border-radius:var(--radius);padding:1.2rem 1.4rem;
+  flex:1;background:#fff;border-radius:var(--radius);padding:1.25rem 1.45rem;
   box-shadow:var(--shadow-sm);border:1px solid rgba(215,11,51,.08);
   transition:transform .35s var(--ease-out),box-shadow .35s;
 }
@@ -1327,6 +1333,251 @@ button{font-family:inherit}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* =========================================================
+   NOUVEAUTÉS « CHEF-D'ŒUVRE » :
+   1. Étiquette nominative sur l'enveloppe & Studio
+   2. Constellation d'Aboisso & Bougie interactive
+   3. Bascule d'Ambiance « Aurore Douce / Nuit de Bethléem »
+   ========================================================= */
+
+/* --- 1. Étiquette calligraphique sur l'enveloppe fermée --- */
+.envelope-tag{
+  position:absolute;z-index:6;left:50%;bottom:11%;
+  transform:translateX(-50%);
+  background:rgba(253,249,250,.96);
+  color:var(--bordeaux);
+  border:1.5px solid rgba(242,181,193,.9);
+  border-radius:999px;
+  padding:.3rem .95rem;
+  font-family:var(--font-display);font-style:italic;font-weight:600;
+  font-size:.82rem;white-space:nowrap;max-width:92%;
+  overflow:hidden;text-overflow:ellipsis;
+  box-shadow:0 8px 20px rgba(58,13,24,.28);
+  transition:opacity .35s ease,transform .35s ease;
+}
+.envelope-tag strong{color:var(--crimson);font-family:var(--font-body);font-style:normal;font-weight:700}
+.env-open .envelope-tag{opacity:0;transform:translateX(-50%) translateY(8px)}
+.ir-from{
+  font-size:.82rem;font-weight:600;color:var(--rose-deep);
+  background:var(--cream-2);display:inline-block;padding:.24rem .85rem;
+  border-radius:999px;margin:-.2rem auto .75rem;
+}
+.gen-btn-row{display:flex;gap:.55rem;flex-wrap:wrap}
+.gen-btn-row .btn{flex:1;min-width:165px}
+.gc-by{font-size:.66rem;color:var(--rose-soft);font-style:italic;margin-top:-.1rem}
+
+/* --- 2. Constellation d'Aboisso & Bougie Interactive --- */
+.constellation-box{
+  position:relative;overflow:hidden;border-radius:28px;
+  background:
+    radial-gradient(80% 70% at 22% 30%,rgba(242,181,193,.22) 0%,transparent 60%),
+    radial-gradient(70% 80% at 85% 80%,rgba(215,11,51,.32) 0%,transparent 65%),
+    linear-gradient(155deg,#2A0711 0%,#4A0E1F 52%,#1F050C 100%);
+  color:#fff;padding:2.4rem 2rem;
+  box-shadow:0 24px 56px rgba(58,13,24,.25),inset 0 0 0 1px rgba(242,181,193,.35);
+}
+.cb-sky{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cb-star-dot{
+  position:absolute;width:4px;height:4px;border-radius:50%;
+  background:#FFF5D6;box-shadow:0 0 10px 2px rgba(255,224,140,.8);
+  animation:twinkle 3.2s ease-in-out infinite;
+}
+.cb-content{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:230px 1fr;gap:2rem;align-items:center;
+}
+@media(max-width:720px){
+  .cb-content{grid-template-columns:1fr;text-align:center;gap:1.4rem}
+  .constellation-box{padding:1.8rem 1.3rem}
+}
+.cb-candle-wrap{display:flex;flex-direction:column;align-items:center;gap:.8rem}
+.cb-candle{
+  position:relative;width:110px;height:150px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  cursor:pointer;
+}
+.cb-halo{
+  position:absolute;top:2px;left:50%;width:120px;height:120px;border-radius:50%;
+  transform:translateX(-50%) scale(.75);
+  background:radial-gradient(circle,rgba(255,210,105,.55) 0%,rgba(242,181,193,.22) 45%,transparent 72%);
+  opacity:.45;transition:transform .6s var(--ease-spring),opacity .6s;pointer-events:none;
+}
+.cb-candle.lit .cb-halo{
+  opacity:1;transform:translateX(-50%) scale(1.25);
+  animation:haloBreath 2.8s ease-in-out infinite;
+}
+@keyframes haloBreath{
+  0%,100%{transform:translateX(-50%) scale(1.18);opacity:.85}
+  50%{transform:translateX(-50%) scale(1.34);opacity:1}
+}
+.cb-flame{
+  width:24px;height:42px;
+  background:radial-gradient(ellipse at 50% 72%,#FFFFFF 0%,#FFE484 38%,#FF9824 72%,rgba(215,11,51,0) 100%);
+  border-radius:50% 50% 36% 36% / 65% 65% 35% 35%;
+  box-shadow:0 0 22px 6px rgba(255,190,70,.65);
+  transform-origin:50% 90%;
+  animation:flameDance 2.2s ease-in-out infinite;
+  transition:transform .45s var(--ease-spring),filter .45s;
+}
+.cb-candle.lit .cb-flame{
+  transform:scale(1.22);
+  box-shadow:0 0 34px 12px rgba(255,205,90,.92);
+}
+@keyframes flameDance{
+  0%,100%{transform:scaleX(1) scaleY(1) rotate(-1.5deg)}
+  33%{transform:scaleX(.94) scaleY(1.06) rotate(2deg)}
+  66%{transform:scaleX(1.04) scaleY(.96) rotate(-2deg)}
+}
+.cb-wick{width:3px;height:8px;background:#3A1D24;border-radius:2px;margin-top:-2px}
+.cb-wax{
+  width:58px;height:78px;border-radius:10px 10px 14px 14px;
+  background:linear-gradient(90deg,#FDF9FA 0%,#F9ECEF 48%,#E8CED5 100%);
+  box-shadow:inset 0 6px 12px rgba(255,210,120,.45),0 12px 26px rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.65);
+}
+.cb-counter{text-align:center;line-height:1.35}
+.cb-counter strong{
+  display:block;font-family:var(--font-display);font-size:2.3rem;font-weight:700;
+  color:#FFE49E;text-shadow:0 0 18px rgba(255,210,110,.45);
+}
+.cb-counter span{font-size:.78rem;color:var(--rose-soft)}
+
+.cb-card{
+  background:rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(242,181,193,.28);border-radius:22px;padding:1.6rem 1.5rem;
+}
+.cb-badge{
+  display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  background:rgba(242,181,193,.2);color:#FFE49E;border-radius:999px;padding:.24rem .8rem;margin-bottom:.7rem;
+}
+.cb-insp{
+  font-family:var(--font-display);font-style:italic;font-size:clamp(1.1rem,2.6vw,1.35rem);
+  line-height:1.55;color:#FFFFFF;margin-bottom:.55rem;
+  transition:opacity .25s ease,transform .25s ease;
+}
+.cb-verse{display:block;font-size:.82rem;color:var(--rose-soft);font-style:normal;margin-bottom:1.2rem}
+.cb-actions{display:flex;flex-wrap:wrap;gap:.7rem}
+@media(max-width:720px){.cb-actions{justify-content:center}}
+.cb-recent{
+  margin-top:.9rem;font-size:.78rem;color:#FFE49E;
+  border-top:1px dashed rgba(242,181,193,.25);padding-top:.65rem;
+}
+
+/* --- 3. Boutons de bascule Mode Aurore / Nuit de Bethléem --- */
+.nav-right{display:flex;align-items:center;gap:.55rem}
+.theme-toggle{
+  display:inline-flex;align-items:center;gap:.38rem;
+  background:var(--cream-2);color:var(--bordeaux);
+  border:1.5px solid rgba(215,11,51,.18);border-radius:999px;
+  padding:.45rem .85rem;font-size:.8rem;font-weight:700;cursor:pointer;
+  transition:transform .2s,background .25s,color .25s,border-color .25s;
+}
+.theme-toggle:hover{transform:translateY(-1.5px);border-color:var(--crimson)}
+.hero-theme-pill{
+  position:absolute;top:1.1rem;right:1.2rem;z-index:5;
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:rgba(255,255,255,.14);color:#fff;
+  border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-radius:999px;padding:.42rem .9rem;font-size:.78rem;font-weight:600;cursor:pointer;
+  transition:background .25s,transform .25s;
+}
+.hero-theme-pill:hover{background:rgba(255,255,255,.24);transform:translateY(-1.5px)}
+@media(max-width:640px){
+  .tt-label{display:none}
+  .theme-toggle{padding:.45rem .65rem}
+  .hero-theme-pill{top:.8rem;right:.8rem;font-size:.72rem;padding:.35rem .75rem}
+}
+
+/* =========================================================
+   MODE « NUIT ÉTOILÉE DE BETHLÉEM » (data-theme="night")
+   ========================================================= */
+html[data-theme="night"]{
+  --cream:#17050B;
+  --cream-2:#250913;
+  --bg-soft:#17050B;
+  --surface-soft:#250913;
+  --bordeaux:#FDF5F7;
+  --ink:#FDF5F7;
+  --ink-soft:#E5CCD3;
+  --muted-c:#C8A6B0;
+  --subtle-c:#B8949F;
+  --rose-deep:#F2B5C1;
+  --shadow:0 20px 50px rgba(0,0,0,.55);
+  --shadow-sm:0 10px 26px rgba(0,0,0,.4);
+}
+html[data-theme="night"] body{
+  background:#17050B;
+  color:#E5CCD3;
+}
+html[data-theme="night"] .wave-fill{fill:#17050B}
+html[data-theme="night"] .topnav{
+  background:rgba(23,5,11,.88);
+  border-bottom-color:rgba(242,181,193,.18);
+}
+html[data-theme="night"] .theme-toggle{
+  background:#2C0B17;color:#FFE49E;border-color:rgba(255,228,158,.35);
+}
+html[data-theme="night"] .section,
+html[data-theme="night"] .section.alt{
+  background-image:url("assets/pattern-white.svg");
+}
+html[data-theme="night"] .section.alt{
+  background-color:#1E070F;
+  box-shadow:inset 0 1px 0 rgba(242,181,193,.1),inset 0 -1px 0 rgba(242,181,193,.1);
+}
+html[data-theme="night"] .tl-card,
+html[data-theme="night"] .feature,
+html[data-theme="night"] .place-info,
+html[data-theme="night"] .gen-box,
+html[data-theme="night"] .rsvp-form,
+html[data-theme="night"] .gb-form,
+html[data-theme="night"] .wall-form,
+html[data-theme="night"] .rsvp-done,
+html[data-theme="night"] .invite-modal,
+html[data-theme="night"] .gb-item,
+html[data-theme="night"] .swatch{
+  background:#260A14;
+  border-color:rgba(242,181,193,.22);
+  color:#E5CCD3;
+}
+html[data-theme="night"] .don-card,
+html[data-theme="night"] .invite-block{
+  background:linear-gradient(160deg,#260A14,#1E070F);
+  border-color:rgba(242,181,193,.32);
+}
+html[data-theme="night"] .invite-block legend{
+  background:#260A14;border-color:rgba(242,181,193,.4);
+}
+html[data-theme="night"] .inv-row{
+  background:#1E070F;border-color:rgba(242,181,193,.2);
+}
+html[data-theme="night"] .field input,
+html[data-theme="night"] .field textarea,
+html[data-theme="night"] .field select,
+html[data-theme="night"] .choice-item span{
+  background:#1A060D;
+  border-color:rgba(242,181,193,.28);
+  color:#FDF5F7;
+}
+html[data-theme="night"] .wall-upload{
+  background:linear-gradient(160deg,#260A14 0%,#1B060E 100%);
+  border-color:rgba(242,181,193,.4);
+}
+html[data-theme="night"] .wall-card{
+  background:#2B0C17;
+  box-shadow:0 16px 36px rgba(0,0,0,.6);
+}
+html[data-theme="night"] .btn-ghost-dark{
+  color:#F2B5C1;border-color:rgba(242,181,193,.55);
+}
+html[data-theme="night"] .btn-ghost-dark:hover{
+  background:#F2B5C1;color:#260A14;
+}
+html[data-theme="night"] .music-panel{
+  background:rgba(34,8,18,.95);
+  border-color:rgba(242,181,193,.28);
+}
+
+/* =========================================================
    RESPONSIVE
    ========================================================= */
 @media(max-width:520px){
@@ -1339,9 +1590,9 @@ button{font-family:inherit}
   .hero .cd-card span{font-size:1.45rem}
   .hero .cal-link{padding:.5rem .9rem;font-size:.78rem}
   .scroll-cue{display:none}
-  .timeline::before,.timeline::after{left:50px}
-  .tl-time{flex-basis:52px;font-size:.9rem}
-  .tl-item:nth-child(even) .tl-card{margin-left:.6rem}
+  .timeline::before,.timeline::after{left:27.5px}
+  .tl-time{flex:0 0 58px;font-size:.82rem;padding:.28rem .3rem}
+  .tl-item{gap:.85rem}
   .invite-card{width:100%;max-width:340px}
   .ii-arch{padding:1.4rem .9rem .9rem}
   .ii-main{font-size:.95rem}

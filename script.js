@@ -27,6 +27,9 @@ const normalizePhone = ELW.normalizePhone || function (t) {
 };
 const invKey = ELW.normKey || ((s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ""));
 const telKey = ELW.telKey || ((s) => String(s || "").replace(/\D/g, ""));
+const escapeHTML = ELW.escapeHTML || function (s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+};
 const toast = ELW.toast || function (msg) {
   const t = $("#toast");
   if (!t) return;
@@ -39,12 +42,57 @@ const drawRoundRect = ELW.drawRoundRect || function (x, px, py, w, h, r) {
   x.beginPath();
   x.moveTo(px + r, py);
   x.arcTo(px + w, py, px + w, py + h, r);
-  x.arcTo(px + w, py + h, px, py + h, r);
-  x.arcTo(px, py + h, px, py, r);
+  x.arcTo(px + w, py + h, x, y + h, r);
+  x.arcTo(px, y + h, px, py, r);
   x.arcTo(px, py, px + w, py, r);
   x.closePath();
 };
+const playChime = ELW.playChime || (() => {});
 const isReducedMotion = ELW.isReducedMotion || (() => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+/* ---------- Enregistrement du Service Worker (Mode PWA & Billet Hors-Ligne) ---------- */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
+/* ---------- Bascule d'Ambiance « Aurore Douce ☀️ / Nuit de Bethléem 🌙 » ---------- */
+(function initTheme() {
+  const THEME_KEY = "noel-aboisso-theme";
+  const html = document.documentElement;
+  const metaTheme = $("#meta-theme-color");
+
+  function applyTheme(mode) {
+    const isNight = mode === "night";
+    if (isNight) html.setAttribute("data-theme", "night");
+    else html.removeAttribute("data-theme");
+    if (metaTheme) metaTheme.setAttribute("content", isNight ? "#17050B" : "#FDF9FA");
+
+    const icon = isNight ? "☀️" : "🌙";
+    const label = isNight ? "Aurore Douce" : "Nuit de Bethléem";
+    if ($("#tt-icon")) $("#tt-icon").textContent = icon;
+    if ($("#tt-label")) $("#tt-label").textContent = label;
+    if ($("#ht-icon")) $("#ht-icon").textContent = icon;
+    if ($("#ht-text")) $("#ht-text").textContent = isNight ? "Mode Aurore Douce" : "Mode Nuit de Bethléem";
+  }
+
+  let current = "day";
+  try {
+    current = localStorage.getItem(THEME_KEY) || "day";
+  } catch {}
+  applyTheme(current);
+
+  function toggle() {
+    current = current === "night" ? "day" : "night";
+    try { localStorage.setItem(THEME_KEY, current); } catch {}
+    applyTheme(current);
+    toast(current === "night" ? "🌙 Ambiance Nuit Étoilée de Bethléem activée ✨" : "☀️ Ambiance Aurore Douce activée ✨");
+  }
+
+  $("#theme-toggle")?.addEventListener("click", toggle);
+  $("#hero-theme-btn")?.addEventListener("click", toggle);
+})();
 
 /* ---------- Playlist de cantiques de Noël ----------
    Fichiers dans Playlists/ — lecture aléatoire par défaut,
@@ -90,7 +138,7 @@ function getLastRsvp() {
 }
 
 /* =========================================================
-   ÉCRAN D'OUVERTURE
+   ÉCRAN D'OUVERTURE (Nominatif + Carillon Web Audio + Fondu Musical)
    ========================================================= */
 (function initIntro() {
   const intro = $("#intro");
@@ -99,6 +147,31 @@ function getLastRsvp() {
   envelope.setAttribute("tabindex", "0");
   envelope.setAttribute("role", "button");
   envelope.setAttribute("aria-label", "Ouvrir l'invitation");
+
+  /* Lecture des paramètres nominatifs (?pour=Koffi&de=Hermann ou ?invite=Koffi) */
+  const params = new URLSearchParams(location.search);
+  const urlPour = (params.get("pour") || params.get("invite") || "").trim();
+  const urlDe = (params.get("de") || params.get("par") || "").trim();
+  const lastR = getLastRsvp();
+  const recipientName = urlPour || (lastR && lastR.nom ? lastR.nom.split(" ")[0] : "");
+
+  /* Afficher l'étiquette nominative directement sur l'enveloppe fermée */
+  const envTag = $("#envelope-tag");
+  if (envTag && (recipientName || urlDe)) {
+    if (recipientName && urlDe) {
+      envTag.innerHTML = `Pour <strong>${escapeHTML(recipientName)}</strong> · De <strong>${escapeHTML(urlDe)}</strong>`;
+    } else if (recipientName) {
+      envTag.innerHTML = `Remis spécialement pour <strong>${escapeHTML(recipientName)}</strong> ✦`;
+    } else if (urlDe) {
+      envTag.innerHTML = `Invitation de la part de <strong>${escapeHTML(urlDe)}</strong> ✦`;
+    }
+    envTag.classList.remove("hidden");
+  }
+
+  /* Pré-remplir le nom du destinataire dans le formulaire RSVP s'il vient d'un lien personnalisé */
+  if (urlPour && $("#f-nom") && !$("#f-nom").value.trim()) {
+    $("#f-nom").value = urlPour;
+  }
 
   let opened = false;
   function finish() {
@@ -111,20 +184,24 @@ function getLastRsvp() {
   function open() {
     if (opened) return;
     opened = true;
-    if (window.__startMusic) window.__startMusic(); // 🎵 la fête commence en musique
-    /* Message personnalisé : paramètre d'URL (?invite=Nom) ou dernière réponse enregistrée */
+    /* 1) Carillon cristallin (Web Audio API) + Démarrage en fondu progressif de la musique */
+    if (!isReducedMotion()) playChime("envelope");
+    if (window.__startMusic) window.__startMusic(true);
+
+    /* 2) Personnalisation du message révélé */
     try {
-      const params = new URLSearchParams(location.search);
-      const urlGuest = (params.get("invite") || params.get("pour") || "").trim();
-      const lastR = getLastRsvp();
-      const greetName = urlGuest || (lastR && lastR.nom ? lastR.nom.split(" ")[0] : "ami·e");
-      $("#ir-nom").textContent = greetName;
+      $("#ir-nom").textContent = recipientName || "ami·e";
+      const fromEl = $("#ir-from");
+      if (fromEl && urlDe) {
+        fromEl.textContent = `✦ Invitation partagée avec joie par ${urlDe}`;
+        fromEl.classList.remove("hidden");
+      }
     } catch { /* nom par défaut */ }
 
-    intro.classList.add("env-open"); // 1) le rabat s'ouvre en 3D, la lettre monte
+    intro.classList.add("env-open"); // le rabat s'ouvre en 3D, la lettre monte
     const delay = isReducedMotion() ? 0 : 900;
     setTimeout(() => {
-      intro.classList.add("env-anim"); // 2) l'enveloppe se replie sans laisser de vide, le message apparaît
+      intro.classList.add("env-anim"); // l'enveloppe se replie sans laisser de vide, le message apparaît
       $("#intro-cta")?.focus({ preventScroll: true });
     }, delay);
 
@@ -232,6 +309,155 @@ function launchConfetti() {
     requestAnimationFrame(anim);
   })();
 }
+
+/* =========================================================
+   LA CONSTELLATION D'ABOISSO (Défi Spirituel « Éclairer le Monde »)
+   ========================================================= */
+(function initConstellation() {
+  const sky = $("#cb-sky");
+  const candle = $("#cb-candle");
+  const countEl = $("#lights-count");
+  const tagEl = $("#insp-tag");
+  const textEl = $("#insp-text");
+  const verseEl = $("#insp-verse");
+  const recentEl = $("#cb-recent");
+  const btnLight = $("#btn-light-candle");
+  const btnDraw = $("#btn-draw-insp");
+  if (!sky || !candle || !countEl || !btnLight || !btnDraw) return;
+
+  const INSPIRATIONS = [
+    {
+      tag: "✦ Geste de Lumière #1 · Réconciliation",
+      text: "« Aujourd'hui, envoyez un message de paix ou de reconnaissance à un membre de votre famille ou à un ami qui compte pour vous. »",
+      verse: "— « Heureux ceux qui procurent la paix, car ils seront appelés fils de Dieu ! » (Matthieu 5:9)",
+    },
+    {
+      tag: "✦ Geste de Lumière #2 · Partage",
+      text: "« Préparez un vêtement neuf ou un présent symbolique à offrir à un enfant ou une famille d'Aboisso le 19 décembre. »",
+      verse: "— « Toutes les fois que vous avez fait ces choses à l'un de ces plus petits de mes frères, c'est à moi que vous les avez faites. » (Matthieu 25:40)",
+    },
+    {
+      tag: "✦ Geste de Lumière #3 · Invitation",
+      text: "« Pensez à une personne qui se sent seule en cette fin d'année et invitez-la personnellement à célébrer Noël avec nous. »",
+      verse: "— « Venez à moi, vous tous qui êtes fatigués et chargés, et je vous donnerai du repos. » (Matthieu 11:28)",
+    },
+    {
+      tag: "✦ Geste de Lumière #4 · Prière",
+      text: "« Ce soir, priez par son prénom pour un voisin, un ami ou un membre moins actif de votre branche à Aboisso. »",
+      verse: "— « Priez les uns pour les autres, afin que vous soyez guéris. » (Jacques 5:16)",
+    },
+    {
+      tag: "✦ Geste de Lumière #5 · Gratitude",
+      text: "« Remerciez sincèrement une personne dont le travail quotidien ou le sourire bénit discrètement votre quartier. »",
+      verse: "— « Rendez grâces en toutes choses. » (1 Thessaloniciens 5:18)",
+    },
+    {
+      tag: "✦ Geste de Lumière #6 · Pardon",
+      text: "« Libérez votre cœur d'une ancienne offense et offrez au Sauveur le cadeau du pardon véritable avant Noël. »",
+      verse: "— « Pardonnez-vous réciproquement, comme Dieu vous a pardonné en Christ. » (Éphésiens 4:32)",
+    },
+    {
+      tag: "✦ Geste de Lumière #7 · Écoute",
+      text: "« Accordez dix minutes d'écoute attentive et bienveillante à un enfant ou à une personne âgée de votre entourage. »",
+      verse: "— « Que chacun soit prompt à écouter, lent à parler. » (Jacques 1:19)",
+    },
+    {
+      tag: "✦ Geste de Lumière #8 · Témoignage",
+      text: "« Partagez votre cantique de Noël préféré ou un verset sur la naissance du Christ avec vos proches sur WhatsApp. »",
+      verse: "— « Car un enfant nous est né, un fils nous est donné. » (Ésaïe 9:5)",
+    },
+  ];
+
+  let inspIdx = 0;
+  const LIT_KEY = "noel-aboisso-candle-lit";
+
+  /* Dessiner les étoiles initiales de la constellation */
+  function addStarDot(animate = false) {
+    const dot = document.createElement("span");
+    dot.className = "cb-star-dot";
+    dot.style.left = `${6 + Math.random() * 88}%`;
+    dot.style.top = `${8 + Math.random() * 84}%`;
+    dot.style.animationDelay = `${(Math.random() * 3).toFixed(2)}s`;
+    if (animate) {
+      dot.style.transform = "scale(2.5)";
+      setTimeout(() => { dot.style.transform = ""; }, 400);
+    }
+    sky.appendChild(dot);
+  }
+  for (let i = 0; i < 22; i++) addStarDot(false);
+
+  function showInspiration(idx) {
+    const item = INSPIRATIONS[idx % INSPIRATIONS.length];
+    textEl.style.opacity = "0";
+    setTimeout(() => {
+      tagEl.textContent = item.tag;
+      textEl.textContent = item.text;
+      verseEl.textContent = item.verse;
+      textEl.style.opacity = "1";
+    }, 180);
+  }
+
+  btnDraw.addEventListener("click", () => {
+    inspIdx = (inspIdx + 1) % INSPIRATIONS.length;
+    showInspiration(inspIdx);
+  });
+
+  function updateDisplay(data) {
+    if (data && typeof data.count === "number") {
+      countEl.textContent = data.count;
+    }
+    if (data && Array.isArray(data.recent) && data.recent.length && recentEl) {
+      const last = data.recent[0];
+      recentEl.textContent = `🕯️ Dernière lumière allumée par ${last.nom || "un membre d'Aboisso"}`;
+      recentEl.classList.remove("hidden");
+    }
+  }
+
+  /* Charger le compteur depuis le serveur */
+  (async () => {
+    try {
+      const res = await fetch("/api/lights");
+      if (res.ok) updateDisplay(await res.json());
+    } catch {}
+  })();
+
+  /* État local si le visiteur a déjà allumé sa bougie */
+  try {
+    if (localStorage.getItem(LIT_KEY)) {
+      candle.classList.add("lit");
+      btnLight.textContent = "🕯️ Allumer une nouvelle bougie d'amour";
+    }
+  } catch {}
+
+  async function igniteCandle() {
+    candle.classList.add("lit");
+    if (!isReducedMotion()) playChime("candle");
+    addStarDot(true);
+
+    const lastR = getLastRsvp();
+    const nom = lastR?.nom ? lastR.nom.split(" ")[0] : ($("#f-nom")?.value.trim() || "Un ami d'Aboisso");
+    const currentInsp = INSPIRATIONS[inspIdx % INSPIRATIONS.length].tag;
+
+    const currentN = parseInt(countEl.textContent, 10) || 25;
+    countEl.textContent = currentN + 1;
+    btnLight.textContent = "🕯️ Bougie allumée — Merci d'éclairer Aboisso ✨";
+
+    try { localStorage.setItem(LIT_KEY, "1"); } catch {}
+    toast("🕯️ Votre lumière brille dans la Constellation d'Aboisso ✨");
+
+    try {
+      const res = await fetch("/api/lights", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nom, inspiration: currentInsp }),
+      });
+      if (res.ok) updateDisplay(await res.json());
+    } catch {}
+  }
+
+  btnLight.addEventListener("click", igniteCandle);
+  candle.addEventListener("click", igniteCandle);
+})();
 
 /* =========================================================
    APPARITIONS AU SCROLL + DÉCALAGES EN CASCADE
@@ -601,7 +827,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     addInviteRow(t);
   });
 
-  /* Boutons WhatsApp pour chaque personne invitée (après envoi de la réponse) */
+  /* Boutons WhatsApp avec lien d'enveloppe nominatif (?pour=Invité&de=Membre) */
   function renderInvitesShare(invites, membreNom) {
     const box = $("#invites-share");
     box.innerHTML = "";
@@ -609,12 +835,13 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     if (!list.length) { box.classList.add("hidden"); return; }
     const h = document.createElement("p");
     h.className = "is-title";
-    h.textContent = "💌 Envoyez-leur l'invitation personnalisée par WhatsApp :";
+    h.textContent = "💌 Envoyez-leur leur enveloppe nominative par WhatsApp :";
     box.appendChild(h);
     const base = location.protocol.startsWith("http") ? location.origin + location.pathname : "https://invitation-noel-aboisso.onrender.com/";
     for (const inv of list) {
-      const personalUrl = `${base}?invite=${encodeURIComponent(inv.nom.split(" ")[0])}`;
-      const msg = `✦ Éclairer le Monde ✦\nCher·ère ${inv.nom},\n${membreNom} vous invite à la fête de Noël « Éclairer le Monde » 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n✨ Entrée gratuite — toute la famille est la bienvenue !\n💌 Votre invitation : ${personalUrl}`;
+      const qs = new URLSearchParams({ pour: inv.nom, de: membreNom });
+      const personalUrl = `${base}?${qs.toString()}`;
+      const msg = `✦ Éclairer le Monde ✦\nCher·ère ${inv.nom},\n${membreNom} vous a préparé une enveloppe d'invitation personnelle pour la fête de Noël « Éclairer le Monde » 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Touchez pour ouvrir votre enveloppe : ${personalUrl}`;
       const num = telKey(inv.tel) ? normalizePhone(inv.tel) : "";
       const a = document.createElement("a");
       a.className = "btn btn-green is-btn";
@@ -871,7 +1098,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
     x.fillStyle = "#F7DCE1";
     x.font = "500 24px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Invitation personnelle de", W / 2, y + 114);
+    x.fillText(d.de ? "Invitation personnelle pour" : "Invitation personnelle de", W / 2, y + 112);
 
     /* Adaptation dynamique de la taille du nom pour éviter les coupures brusques */
     const rawName = String(d.nom || "Invité·e").trim();
@@ -879,18 +1106,25 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     x.fillStyle = "#ffffff";
     x.font = `800 ${fontSize}px 'Plus Jakarta Sans', sans-serif`;
     const displayNom = rawName.length > 36 ? rawName.slice(0, 35) + "…" : rawName;
-    x.fillText(displayNom, W / 2, y + 164);
+    x.fillText(displayNom, W / 2, y + 160);
+
+    if (d.de) {
+      x.fillStyle = "#FBE3E9";
+      x.font = "italic 600 22px 'Playfair Display', Georgia, serif";
+      x.fillText(`De la part de ${d.de}`, W / 2, y + 194);
+      y += 26;
+    }
 
     x.fillStyle = "#FBE3E9";
     x.font = "600 26px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("10h00 – 15h00", W / 2, y + 214);
+    x.fillText("10h00 – 15h00", W / 2, y + 208);
     x.fillStyle = "#ffffff";
     x.font = "600 26px 'Plus Jakarta Sans', sans-serif";
-    y = wrapText(x, "Salle des fêtes de la mairie d'ABOISSO", W / 2, y + 254, W - 220, 36);
+    y = wrapText(x, "Salle des fêtes de la mairie d'ABOISSO", W / 2, y + 246, W - 220, 36);
 
     /* séparateur doux en bas d'arche */
     x.strokeStyle = "rgba(255,255,255,.35)"; x.lineWidth = 2;
-    x.beginPath(); x.moveTo(W / 2 - 60, y + 40); x.lineTo(W / 2 + 60, y + 40); x.stroke();
+    x.beginPath(); x.moveTo(W / 2 - 60, y + 36); x.lineTo(W / 2 + 60, y + 36); x.stroke();
 
     /* Bande blanche sous l'arche : QR (billet) ou pastille hashtag (carte express) */
     return new Promise((resolve) => {
@@ -970,29 +1204,57 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     if (d) { downloadInvite(d); toast("⬇️ Carte d'invitation téléchargée !"); }
   });
 
-  /* ---------- Générateur de carte express (aperçu en temps réel) ---------- */
+  /* ---------- Studio d'Invitation Nominative (Carte HD + Lien d'enveloppe magique WhatsApp) ---------- */
   const genInput = $("#gen-nom");
+  const genDeInput = $("#gen-de");
   const genPreview = $("#gen-preview-name");
+  const genPreviewBy = $("#gen-preview-by");
   function genName() {
     const v = genInput.value.trim();
+    const de = genDeInput ? genDeInput.value.trim() : "";
     genPreview.textContent = v || "—";
     genPreview.style.opacity = v ? "1" : ".6";
-    /* Pré-remplir le formulaire RSVP avec ce nom */
-    if (v && !$("#f-nom").value.trim()) $("#f-nom").value = v;
+    if (genPreviewBy) {
+      genPreviewBy.textContent = de ? `De la part de ${de}` : "";
+      genPreviewBy.classList.toggle("hidden", !de);
+    }
+    /* Pré-remplir le formulaire RSVP avec ce nom si ce n'est pas pour quelqu'un d'autre */
+    if (v && !de && !$("#f-nom").value.trim()) $("#f-nom").value = v;
   }
   genInput.addEventListener("input", genName);
   genInput.addEventListener("change", genName);
+  genDeInput?.addEventListener("input", genName);
+  genDeInput?.addEventListener("change", genName);
+
   $("#gen-dl").addEventListener("click", async () => {
     const v = genInput.value.trim();
-    if (!v) { toast("Indiquez d'abord votre prénom ✍️"); genInput.focus(); return; }
+    const de = genDeInput ? genDeInput.value.trim() : "";
+    if (!v) { toast("Indiquez d'abord le prénom sur la carte ✍️"); genInput.focus(); return; }
     toast("📤 Préparation de votre carte HD…");
-    const c = await buildInviteCanvas({ nom: v, num: 0 }, false);
+    const c = await buildInviteCanvas({ nom: v, de, num: 0 }, false);
     const a = document.createElement("a");
     a.download = `invitation-noel-aboisso-${v.replace(/\s+/g, "-").toLowerCase()}.png`;
     a.href = c.toDataURL("image/png");
     a.click();
-    toast("⬇️ Votre carte est téléchargée — partagez-la sur WhatsApp 💌");
+    toast("⬇️ Votre carte HD est téléchargée — partagez-la sur WhatsApp 💌");
   });
+
+  /* Envoyer le lien d'enveloppe nominative (?pour=...&de=...) sur WhatsApp */
+  $("#gen-wa-link")?.addEventListener("click", () => {
+    const pour = genInput.value.trim();
+    const de = genDeInput ? genDeInput.value.trim() : "";
+    if (!pour) { toast("Indiquez d'abord le prénom de votre invité·e ✍️"); genInput.focus(); return; }
+    const base = location.protocol.startsWith("http") ? location.origin + location.pathname : "https://invitation-noel-aboisso.onrender.com/";
+    const qs = new URLSearchParams({ pour });
+    if (de) qs.set("de", de);
+    const magicUrl = `${base}?${qs.toString()}`;
+    const introLine = de
+      ? `Cher·ère ${pour}, ${de} vous a préparé une enveloppe d'invitation personnelle pour Noël 🎄`
+      : `Cher·ère ${pour}, une enveloppe d'invitation personnelle vous attend pour Noël 🎄`;
+    const msg = `✦ Éclairer le Monde · Noël à Aboisso ✦\n${introLine}\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Touchez pour ouvrir votre enveloppe : ${magicUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  });
+
   $("#gen-use").addEventListener("click", () => {
     const v = genInput.value.trim();
     if (!v) { toast("Indiquez d'abord votre prénom ✍️"); genInput.focus(); return; }
@@ -1545,7 +1807,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 })();
 
 /* =========================================================
-   LECTEUR DE MUSIQUE — cantiques de Noël
+   LECTEUR DE MUSIQUE — cantiques de Noël (avec Fondu Progressif 3s)
    ========================================================= */
 (function initMusic() {
   const KEY_VOL = "noel-aboisso-volume";
@@ -1559,11 +1821,13 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     savedVol = parseFloat(localStorage.getItem(KEY_VOL) ?? "0.7") || 0.7;
   } catch {}
   if (savedVol > 1) savedVol = savedVol / 100;
-  audio.volume = Math.min(Math.max(savedVol, 0), 1);
+  let targetVolume = Math.min(Math.max(savedVol, 0), 1);
+  audio.volume = targetVolume;
 
   let idx = -1;
   let shuffle = true;
   let started = false;
+  let fadeTimer = null;
 
   const fab = $("#music-fab");
   const panel = $("#music-panel");
@@ -1579,7 +1843,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   PLAYLIST.forEach((t, i) => {
     const li = document.createElement("li");
     li.innerHTML = `<span>${i + 1}. ${t.title}</span><span class="dur"></span>`;
-    li.addEventListener("click", () => playIndex(i));
+    li.addEventListener("click", () => playIndex(i, false));
     list.appendChild(li);
   });
 
@@ -1598,15 +1862,35 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     updateActive();
   }
 
+  /* Fondu sonore progressif (fade-in sur 3 secondes à l'ouverture de l'enveloppe) */
+  function startFadeIn() {
+    clearInterval(fadeTimer);
+    audio.volume = Math.min(0.03, targetVolume);
+    const steps = 30;
+    const stepTime = 100; // 30 * 100ms = 3 secondes
+    let currentStep = 0;
+    fadeTimer = setInterval(() => {
+      currentStep += 1;
+      const nextVol = (targetVolume * currentStep) / steps;
+      audio.volume = Math.min(targetVolume, Math.max(0, nextVol));
+      if (currentStep >= steps) clearInterval(fadeTimer);
+    }, stepTime);
+  }
+
   let loadToken = 0;
-  function playIndex(i) {
+  function playIndex(i, withFade = false) {
     idx = (i + PLAYLIST.length) % PLAYLIST.length;
     const token = ++loadToken;
+    clearInterval(fadeTimer);
     audio.pause();
     audio.src = PLAYLIST[idx].src;
+    audio.volume = withFade ? Math.min(0.03, targetVolume) : targetVolume;
     started = true;
     loadMeta();
-    audio.play().catch((err) => {
+    audio.play().then(() => {
+      if (withFade && token === loadToken) startFadeIn();
+    }).catch((err) => {
+      audio.volume = targetVolume;
       if (err.name === "NotAllowedError" && token === loadToken) {
         els.title.textContent = "Appuyez sur ▶ pour écouter ✨";
       }
@@ -1614,15 +1898,15 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     });
   }
 
-  function playRandom() {
-    if (PLAYLIST.length < 2) return playIndex(0);
+  function playRandom(withFade = false) {
+    if (PLAYLIST.length < 2) return playIndex(0, withFade);
     let next;
     do { next = Math.floor(Math.random() * PLAYLIST.length); } while (next === idx);
-    playIndex(next);
+    playIndex(next, withFade);
   }
 
-  function nextTrack() { shuffle ? playRandom() : playIndex(idx + 1); }
-  function prevTrack() { shuffle ? playRandom() : playIndex(idx - 1); }
+  function nextTrack() { shuffle ? playRandom(false) : playIndex(idx + 1, false); }
+  function prevTrack() { shuffle ? playRandom(false) : playIndex(idx - 1, false); }
 
   function updatePlayState() {
     const playing = !audio.paused && !audio.ended;
@@ -1633,7 +1917,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
   /* --- Contrôles --- */
   els.play.addEventListener("click", () => {
-    if (!started) return playRandom();
+    if (!started) return playRandom(false);
     audio.paused ? audio.play() : audio.pause();
   });
   els.next.addEventListener("click", nextTrack);
@@ -1649,10 +1933,12 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   });
 
   els.vol.addEventListener("input", () => {
-    audio.volume = els.vol.value / 100;
-    try { localStorage.setItem(KEY_VOL, String(audio.volume)); } catch {}
+    clearInterval(fadeTimer);
+    targetVolume = els.vol.value / 100;
+    audio.volume = targetVolume;
+    try { localStorage.setItem(KEY_VOL, String(targetVolume)); } catch {}
   });
-  els.vol.value = Math.round(audio.volume * 100);
+  els.vol.value = Math.round(targetVolume * 100);
 
   audio.addEventListener("timeupdate", () => {
     if (audio.duration) {
@@ -1681,14 +1967,14 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     if (panelOpen) updatePlayState();
   }
   fab.addEventListener("click", () => {
-    if (!started) { playRandom(); togglePanel(true); return; }
+    if (!started) { playRandom(false); togglePanel(true); return; }
     togglePanel();
   });
   els.close.addEventListener("click", () => togglePanel(false));
 
-  /* --- Démarrage automatique à l'ouverture de l'enveloppe --- */
-  window.__startMusic = () => {
+  /* --- Démarrage automatique à l'ouverture de l'enveloppe (avec fondu 3s) --- */
+  window.__startMusic = (withFade = true) => {
     if (started) return;
-    playRandom();
+    playRandom(withFade);
   };
 })();

@@ -71,6 +71,42 @@
     }
   }
 
+  /* Synthèse sonore cristalline via Web Audio API (0 Ko d'asset externe) */
+  let audioCtx = null;
+  function playChime(kind = "envelope") {
+    try {
+      const Ctx = global.AudioContext || global.webkitAudioContext;
+      if (!Ctx) return;
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+
+      const now = audioCtx.currentTime;
+      /* Arpèges célestes adaptés à l'action */
+      const notes =
+        kind === "candle"
+          ? [523.25, 659.25, 783.99, 1046.5]               // Do5 - Mi5 - Sol5 - Do6 (chaleureux)
+          : kind === "checkin"
+          ? [587.33, 880.0, 1174.66]                       // Ré5 - La5 - Ré6 (validation claire)
+          : [523.25, 659.25, 783.99, 987.77, 1318.51];     // Do5 - Mi5 - Sol5 - Si5 - Mi6 (ouverture féerique)
+
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = i % 2 === 0 ? "sine" : "triangle";
+        osc.frequency.setValueAtTime(freq, now + i * 0.085);
+
+        gain.gain.setValueAtTime(0.0001, now + i * 0.085);
+        gain.gain.exponentialRampToValueAtTime(0.075, now + i * 0.085 + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.085 + 1.15);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + i * 0.085);
+        osc.stop(now + i * 0.085 + 1.2);
+      });
+    } catch { /* audio non autorisé */ }
+  }
+
   global.ELW = {
     $,
     $$,
@@ -81,6 +117,7 @@
     escapeHTML,
     toast,
     drawRoundRect,
+    playChime,
     isReducedMotion: () => !!reducedMotionQuery.matches,
   };
 })(window);

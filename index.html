@@ -5,16 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Éclairer le Monde · Noël à Aboisso — 19 décembre 2026</title>
   <meta name="description" content="Vous êtes invité·e au grand événement de Noël « Éclairer le Monde » : théâtre, chants, cadeaux pour les enfants et bien d'autres surprises. Samedi 19 décembre 2026, 10h–15h, salle des fêtes de la mairie d'Aboisso." />
-  <meta name="theme-color" content="#FDF9FA" />
+  <meta name="theme-color" content="#FDF9FA" id="meta-theme-color" />
   <meta property="og:title" content="Éclairer le Monde · Noël à Aboisso" />
   <meta property="og:description" content="L'Esprit de Noël : paix, partage & réconciliation. 19 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso." />
   <meta property="og:image" content="assets/photo-event.jpg" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="assets/light_the_world.webp" />
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23D70B33"/><path d="M50 12 L55 42 L85 50 L55 58 L50 88 L45 58 L15 50 L45 42 Z" fill="white"/></svg>' />
   <link rel="preload" as="image" href="assets/light_the_world.webp" fetchpriority="high" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=21" />
+  <link rel="stylesheet" href="styles.css?v=23" />
 </head>
 <body>
 
@@ -45,6 +47,8 @@
         <div class="envelope-body"></div>
         <div class="envelope-flap"></div>
         <div class="envelope-seal"><span>✦</span></div>
+        <!-- Étiquette nominative dorée sur l'enveloppe fermée -->
+        <div class="envelope-tag hidden" id="envelope-tag" aria-live="polite"></div>
       </div>
       <p class="intro-hint">Une attention particulière vous attend… Touchez pour ouvrir 💌</p>
       <button class="btn intro-open-btn" id="intro-open-btn" type="button">Ouvrir mon invitation ✨</button>
@@ -52,6 +56,7 @@
       <div class="intro-reveal" id="intro-reveal" aria-live="polite">
         <span class="ir-star" aria-hidden="true">✦</span>
         <p class="ir-to">Cher·ère <strong id="ir-nom">ami·e</strong></p>
+        <p class="ir-from hidden" id="ir-from"></p>
         <p class="ir-msg">En cette saison de lumière, nous avons une pensée toute particulière pour vous. Ce n'est pas seulement une invitation, c'est un cadeau : celui de partager ensemble la joie de la naissance du Christ. Nous serions profondément heureux de vous compter parmi nous.</p>
         <a class="btn intro-cta" id="intro-cta" href="#programme">Découvrir le programme ✨</a>
       </div>
@@ -63,14 +68,24 @@
     <a class="nav-brand" href="#accueil">✦ District d'Aboisso</a>
     <div class="nav-links">
       <a href="#programme">Programme</a>
+      <a href="#constellation">Lumière</a>
       <a href="#lieu">Lieu</a>
       <a href="#mur-photo">Mur photo</a>
     </div>
-    <a class="btn btn-gold nav-cta" href="#rsvp">RSVP</a>
+    <div class="nav-right">
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Basculer en mode Nuit de Bethléem" title="Basculer l'ambiance Aurore / Nuit de Bethléem">
+        <span class="tt-icon" id="tt-icon" aria-hidden="true">🌙</span>
+        <span class="tt-label" id="tt-label">Nuit de Bethléem</span>
+      </button>
+      <a class="btn btn-gold nav-cta" href="#rsvp">RSVP</a>
+    </div>
   </nav>
 
   <!-- ============ HERO (épuré, compte à rebours intégré) ============ -->
   <header class="hero" id="accueil">
+    <button class="hero-theme-pill" id="hero-theme-btn" type="button" aria-label="Changer l'ambiance lumineuse">
+      <span id="ht-icon" aria-hidden="true">🌙</span> <span id="ht-text">Mode Nuit de Bethléem</span>
+    </button>
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="logo-glow" aria-hidden="true"></div>
     <img class="hero-logo" src="assets/light_the_world.webp" alt="Éclairer le Monde" width="190" height="190" />
@@ -100,7 +115,7 @@
     </div>
     <a class="scroll-cue" href="#programme" aria-label="Descendre au programme"><span></span></a>
     <div class="wave" aria-hidden="true">
-      <svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path fill="#FDF9FA" d="M0 32 C 200 64 400 0 620 24 C 840 48 1040 8 1240 24 C 1340 32 1400 28 1440 26 L 1440 64 L 0 64 Z"/></svg>
+      <svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path class="wave-fill" fill="#FDF9FA" d="M0 32 C 200 64 400 0 620 24 C 840 48 1040 8 1240 24 C 1340 32 1400 28 1440 26 L 1440 64 L 0 64 Z"/></svg>
     </div>
   </header>
 
@@ -169,6 +184,44 @@
           </div>
         </li>
       </ol>
+    </section>
+
+    <!-- ============ LA CONSTELLATION D'ABOISSO (Défi Éclairer le Monde) ============ -->
+    <section class="section" id="constellation">
+      <p class="section-kicker">Défi spirituel · #ÉclairerLeMonde</p>
+      <h2 class="section-title reveal">Allumez une lumière à Aboisso 🕯️</h2>
+      <p class="center">En attendant le 19 décembre, préparons nos cœurs par un geste concret d'amour, de pardon ou de service à l'exemple du Sauveur.</p>
+
+      <div class="constellation-box reveal" id="constellation-box">
+        <div class="cb-sky" id="cb-sky" aria-hidden="true"></div>
+        <div class="cb-content">
+          <!-- Bougie interactive -->
+          <div class="cb-candle-wrap">
+            <div class="cb-candle" id="cb-candle" role="img" aria-label="Bougie de Noël">
+              <div class="cb-halo"></div>
+              <div class="cb-flame" id="cb-flame"></div>
+              <div class="cb-wick"></div>
+              <div class="cb-wax"></div>
+            </div>
+            <p class="cb-counter" aria-live="polite">
+              <strong id="lights-count">25</strong>
+              <span>lumières allumées dans le District d'Aboisso ✨</span>
+            </p>
+          </div>
+
+          <!-- Carte d'inspiration quotidienne -->
+          <div class="cb-card">
+            <span class="cb-badge" id="insp-tag">✦ Geste de Lumière #1</span>
+            <p class="cb-insp" id="insp-text">« Aujourd'hui, envoyez un message de paix ou de reconnaissance à un membre de votre famille ou à un ami qui compte pour vous. »</p>
+            <cite class="cb-verse" id="insp-verse">— « Vous êtes la lumière du monde. » (Matthieu 5:14)</cite>
+            <div class="cb-actions">
+              <button class="btn btn-gold" id="btn-light-candle" type="button">🕯️ J'allume ma bougie &amp; je relève le défi</button>
+              <button class="btn btn-ghost" id="btn-draw-insp" type="button">✨ Autre inspiration</button>
+            </div>
+            <p class="cb-recent hidden" id="cb-recent" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- ============ UN GESTE D'AMOUR ============ -->
@@ -268,16 +321,25 @@
       <h2 class="section-title reveal">Serez-vous parmi nous ?</h2>
       <p class="center">Merci de répondre avant le <strong>12 décembre 2026</strong> — du fond du cœur ❤️</p>
 
-      <!-- Générateur de carte d'invitation express (aperçu en temps réel) -->
+      <!-- Studio de carte & lien d'invitation nominatif express (aperçu en temps réel) -->
       <div class="gen-box reveal">
         <div class="gen-form">
-          <h3 class="gen-title">✨ Créez votre carte en un clin d'œil</h3>
-          <p class="gen-hint">Tapez votre prénom : votre carte d'invitation officielle se crée sous vos yeux, prête à être envoyée sur WhatsApp.</p>
-          <div class="field">
-            <label for="gen-nom">Votre prénom</label>
-            <input id="gen-nom" type="text" maxlength="40" placeholder="Ex. Hermann" autocomplete="given-name" />
+          <h3 class="gen-title">✨ Studio d'Invitation Nominative</h3>
+          <p class="gen-hint">Créez une carte officielle ou un <strong>lien d'enveloppe personnalisé</strong> (qui s'ouvrira au nom de votre invité·e sur WhatsApp !).</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="gen-nom">Pour (prénom invité·e)</label>
+              <input id="gen-nom" type="text" maxlength="40" placeholder="Ex. Koffi Yao" autocomplete="given-name" />
+            </div>
+            <div class="field">
+              <label for="gen-de">De la part de (facultatif)</label>
+              <input id="gen-de" type="text" maxlength="40" placeholder="Ex. Frère Hermann" />
+            </div>
           </div>
-          <button class="btn btn-red" id="gen-dl" type="button">⬇️ Télécharger ma carte</button>
+          <div class="gen-btn-row">
+            <button class="btn btn-red" id="gen-dl" type="button">⬇️ Carte HD (PNG)</button>
+            <button class="btn btn-green" id="gen-wa-link" type="button">💌 Envoyer l'enveloppe sur WhatsApp</button>
+          </div>
           <button class="btn btn-ghost-dark" id="gen-use" type="button">Utiliser ce nom pour confirmer ma présence →</button>
         </div>
         <div class="gen-card" id="gen-card" aria-label="Aperçu de votre carte d'invitation">
@@ -285,8 +347,9 @@
           <p class="gc-invitation">Invitation</p>
           <p class="gc-main">Célébrez la naissance<br />de Jésus-Christ<br />avec nous</p>
           <p class="gc-date">Samedi 19 Décembre 2026</p>
-          <p class="gc-for">Invitation personnelle de</p>
+          <p class="gc-for" id="gen-preview-for">Invitation personnelle pour</p>
           <p class="gc-name" id="gen-preview-name">—</p>
+          <p class="gc-by hidden" id="gen-preview-by"></p>
           <p class="gc-time">10h00 – 15h00</p>
           <p class="gc-place">Salle des fêtes de la mairie<br />d'ABOISSO</p>
         </div>
@@ -295,7 +358,7 @@
       <div id="rsvp-done" class="rsvp-done hidden" aria-live="polite">
         <div class="done-badge" aria-hidden="true">💌</div>
         <h3>Merci <span id="done-name"></span> !</h3>
-        <p>Votre réponse est enregistrée. <button class="link-btn" id="view-invite" type="button">Revoir ma carte d'invitation</button></p>
+        <p>Votre réponse est enregistrée (accessible même hors-ligne). <button class="link-btn" id="view-invite" type="button">Revoir ma carte d'invitation</button></p>
         <div class="invites-share hidden" id="invites-share"></div>
       </div>
 
@@ -422,7 +485,7 @@
               </div>
               <div class="ii-qr">
                 <img id="i-qr" alt="QR code de votre invitation" width="58" height="58" />
-                <p>Scannez pour rouvrir cette invitation</p>
+                <p>Billet disponible hors-ligne · Présentez ce QR à l'entrée</p>
               </div>
               <p class="ii-church">Église de Jésus-Christ des Saints des Derniers Jours</p>
               <p class="ii-badge">ÉclairerLeMonde.org</p>
@@ -605,8 +668,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/shared.js?v=21" defer></script>
+  <script src="assets/shared.js?v=23" defer></script>
   <script src="assets/qrcode-generator.js" defer></script>
-  <script src="script.js?v=21" defer></script>
+  <script src="script.js?v=23" defer></script>
 </body>
 </html>

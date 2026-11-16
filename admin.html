@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=7" />
+  <link rel="stylesheet" href="admin.css?v=8" />
 </head>
 <body>
 
@@ -71,16 +71,18 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3"/><path d="m8 6 8 3-4.5 2L9 14l6 2-3 5"/></svg>
           </span>
           <strong id="st-presents">0</strong>
-          <small>Présents</small>
+          <small>Présents annoncés</small>
           <div class="s-progress" aria-hidden="true"><span id="st-present-bar" style="width:0%"></span></div>
           <em class="s-progress-label" id="st-present-label">—</em>
         </article>
-        <article class="stat ko">
+        <article class="stat ok">
           <span class="s-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6.3a5 5 0 1 1 7.5 6.3Z"/><path d="m7 12 3 3 3-3"/><path d="m13 9 3 3"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
           </span>
-          <strong id="st-absents">0</strong>
-          <small>Absents</small>
+          <strong id="st-checkedin">0</strong>
+          <small>Arrivés (Jour J)</small>
+          <div class="s-progress" aria-hidden="true"><span id="st-checkin-bar" style="width:0%"></span></div>
+          <em class="s-progress-label" id="st-checkin-label">0 pers. en salle</em>
         </article>
         <article class="stat">
           <span class="s-icon">
@@ -111,6 +113,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m2 7 10 6L22 7"/></svg>
           Inscriptions <span class="count" id="c-rsvps">0</span>
         </button>
+        <button class="tab" data-tab="checkin" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+          Pointage Jour J <span class="count" id="c-checkin">0</span>
+        </button>
         <button class="tab" data-tab="guestbook" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
           Vœux <span class="count" id="c-gb">0</span>
@@ -140,6 +146,7 @@
             <select id="f-filter" aria-label="Filtrer les réponses">
               <option value="all">Toutes les réponses</option>
               <option value="present">Présent·es seulement</option>
+              <option value="checkedin">Arrivé·es en salle (Jour J)</option>
               <option value="absent">Absent·es seulement</option>
               <option value="membre">Membres seulement</option>
               <option value="ami">Ami·es / visiteur·ses</option>
@@ -178,6 +185,40 @@
         <div class="rsvp-cards" id="rsvp-cards"></div>
       </section>
 
+      <!-- Onglet Pointage Jour J (Scanner QR Code & Accueil Mairie d'Aboisso) -->
+      <section class="panel hidden" id="panel-checkin">
+        <div class="checkin-grid">
+          <article class="checkin-card">
+            <h3>📲 Pointage des arrivées — Samedi 19 décembre 2026</h3>
+            <p class="panel-hint">Scannez le QR code du billet avec la caméra de votre téléphone ou saisissez directement le numéro de billet à 3 chiffres.</p>
+            <form class="checkin-form" id="checkin-form">
+              <input type="number" id="checkin-num" min="100" max="9999" placeholder="N° billet (ex. 482)" aria-label="Numéro de billet" required />
+              <button class="btn btn-red" type="submit">✅ Pointer l'arrivée</button>
+              <button class="btn btn-outline" id="btn-scan-qr" type="button">📷 Scanner un QR Code</button>
+            </form>
+
+            <!-- Caméra de scan QR en direct -->
+            <div class="qr-scanner hidden" id="qr-scanner">
+              <div class="qr-video-box">
+                <video id="qr-video" autoplay playsinline muted></video>
+                <div class="qr-frame" aria-hidden="true"></div>
+              </div>
+              <p class="panel-hint" style="margin:.5rem 0">Placez le QR code du billet dans le cadre…</p>
+              <button class="btn btn-outline btn-sm" id="btn-stop-qr" type="button">Fermer la caméra</button>
+            </div>
+
+            <!-- Résultat instantané du scan / pointage -->
+            <div class="checkin-result hidden" id="checkin-result" aria-live="polite"></div>
+          </article>
+
+          <article class="checkin-card">
+            <h3>🎉 Dernières familles accueillies en salle</h3>
+            <div class="checkin-list" id="checkin-list"></div>
+            <p class="empty" id="empty-checkin">Aucun billet pointé pour le moment — prêts pour l'accueil à 10h00 ✨</p>
+          </article>
+        </div>
+      </section>
+
       <!-- Onglet Vœux (livre d'or) -->
       <section class="panel hidden" id="panel-guestbook">
         <div class="gb-grid" id="gb-grid"></div>
@@ -211,12 +252,12 @@
         <div class="tools-grid">
           <article class="tool">
             <h3>Sauvegarder les données</h3>
-            <p>Téléchargez les inscriptions et toutes leurs personnes invitées en fichier CSV (compatible Excel) pour ne rien perdre.</p>
+            <p>Téléchargez les inscriptions, le statut de pointage Jour J et toutes les personnes invitées en fichier CSV (compatible Excel).</p>
             <a class="btn btn-red btn-sm" href="/api/admin/export.csv" download>Export CSV des inscriptions</a>
           </article>
           <article class="tool">
-            <h3>Relances WhatsApp</h3>
-            <p>Cliquez sur n'importe quel inscrit pour ouvrir son tiroir latéral de détails et contacter ses invités sur WhatsApp en un clic.</p>
+            <h3>Accueil Jour J (Scanner QR)</h3>
+            <p>L'onglet « Pointage Jour J » permet à l'équipe d'accueil de scanner les billets à l'entrée de la mairie d'Aboisso et de suivre le remplissage de la salle en direct.</p>
           </article>
           <article class="tool">
             <h3>Sécurité</h3>
@@ -246,7 +287,7 @@
   </aside>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="assets/shared.js?v=7" defer></script>
-  <script src="admin.js?v=7" defer></script>
+  <script src="assets/shared.js?v=8" defer></script>
+  <script src="admin.js?v=8" defer></script>
 </body>
 </html>

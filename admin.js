@@ -1,5 +1,5 @@
 /* =========================================================
-   Back office — logique du tableau de bord
+   Back office — logique du tableau de bord & Pointage Jour J
    ========================================================= */
 const ELW = window.ELW || {};
 const $ = ELW.$ || ((sel, root = document) => root.querySelector(sel));
@@ -23,6 +23,7 @@ const toast = ELW.toast || function (msg) {
   t._timer = setTimeout(() => t.classList.remove("show"), 3200);
 };
 const normKey = ELW.normKey || ((s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ""));
+const playChime = ELW.playChime || (() => {});
 
 /* ---------- Petites icônes (style Lucide) ---------- */
 const ICON = {
@@ -30,6 +31,7 @@ const ICON = {
   wa: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-4.9a8.4 8.4 0 1 1 16-4.6Z"/></svg>`,
   trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`,
   users: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`,
 };
 
 /* ---------- Authentification ---------- */
@@ -59,6 +61,7 @@ function showDash() {
 function logout() {
   token = null;
   sessionStorage.removeItem(TOKEN_KEY);
+  stopQrScanner();
   closeGuestDrawer();
   $("#dash").classList.add("hidden");
   $("#login-screen").classList.remove("hidden");
@@ -160,6 +163,38 @@ function getGuestsForRsvp(r) {
   return list;
 }
 
+/* ---------- Action de pointage Jour J (Check-in) ---------- */
+async function toggleCheckin({ id = null, num = null, checked_in = true, showBanner = false }) {
+  try {
+    const res = await api("/api/admin/checkin", {
+      method: "POST",
+      body: JSON.stringify({ id, num, checked_in }),
+    });
+    const entry = res.entry;
+    if (checked_in) playChime("checkin");
+    await refresh(true);
+    if (showBanner && $("#checkin-result")) {
+      const box = $("#checkin-result");
+      box.classList.remove("hidden", "err");
+      box.innerHTML = `
+        <strong>✅ Bienvenue à ${escapeHTML(entry.nom)} (Billet N°${entry.num}) !</strong>
+        <span>${entry.people} personne${entry.people > 1 ? "s" : ""} · ${escapeHTML(entry.branche || (entry.statut === "ami" ? "Ami·e / visiteur·se" : "Membre"))}</span>
+      `;
+    }
+    toast(checked_in ? `✅ Arrivée pointée : ${entry.nom} (N°${entry.num})` : `↩️ Pointage annulé pour ${entry.nom}`);
+    return entry;
+  } catch (err) {
+    if (showBanner && $("#checkin-result")) {
+      const box = $("#checkin-result");
+      box.classList.remove("hidden");
+      box.classList.add("err");
+      box.innerHTML = `<strong>⚠️ Billet introuvable</strong><span>Aucun inscrit ne correspond à ce numéro de billet.</span>`;
+    }
+    toast(`⚠️ ${err.message || "Billet introuvable"}`);
+    return null;
+  }
+}
+
 /* ---------- Tiroir latéral (Drawer) pour afficher tous les détails d'un inscrit ---------- */
 function openGuestDrawer(rsvpId) {
   const r = (STATE.rsvps || []).find((x) => String(x.id) === String(rsvpId));
@@ -181,6 +216,16 @@ function openGuestDrawer(rsvpId) {
       <span class="pill ${r.statut === "ami" ? "ami" : "membre"}">${r.statut === "ami" ? "Ami·e / visiteur·se" : "Membre"}</span>
       <span class="pill ${r.presence === "present" ? "present" : "absent"}">${r.presence === "present" ? "Présent·e" : "Absent·e"}</span>
       <span class="pill inactif">${r.people} personne${r.people > 1 ? "s" : ""}</span>
+      ${r.checked_in ? `<span class="pill checkedin">✅ Arrivé·e (${fmtDate(r.checked_in_at)})</span>` : ""}
+    </div>
+    <div class="d-item">
+      <small>Pointage Jour J (Accueil Mairie d'Aboisso)</small>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-top:.2rem">
+        <p>${r.checked_in ? "✅ Présence confirmée en salle" : "⏳ En attente d'arrivée"}</p>
+        <button class="btn ${r.checked_in ? "btn-outline" : "btn-red"} btn-sm" type="button" data-checkin-id="${r.id}" data-checkin-val="${r.checked_in ? "0" : "1"}">
+          ${r.checked_in ? "↩️ Annuler" : "✅ Pointer l'arrivée"}
+        </button>
+      </div>
     </div>
     <div class="d-item">
       <small>Téléphone / WhatsApp</small>
@@ -249,16 +294,26 @@ function render() {
   /* Statistiques */
   $("#st-total").textContent = stats.total ?? 0;
   $("#st-presents").textContent = stats.presents ?? 0;
-  $("#st-absents").textContent = stats.absents ?? 0;
   $("#st-people").textContent = stats.people ?? 0;
   $("#st-messages").textContent = stats.messages ?? 0;
   $("#st-invites").textContent = stats.invites ?? 0;
 
-  /* Barre de progression « Présents » : présent·es sur l'ensemble des réponses */
+  /* Barre de progression « Présents annoncés » */
   const total = stats.total ?? 0, pres = stats.presents ?? 0;
   const pct = total > 0 ? Math.round((pres / total) * 100) : 0;
   $("#st-present-bar").style.width = pct + "%";
   $("#st-present-label").textContent = total ? `${pres} sur ${total} réponses · ${pct} %` : "En attente de réponses";
+
+  /* Statistiques de pointage Jour J */
+  const checkedRsvps = stats.checkedInRsvps ?? rsvps.filter((r) => r.checked_in).length;
+  const checkedPeople = stats.checkedInPeople ?? rsvps.filter((r) => r.checked_in).reduce((s, r) => s + (r.people || 1), 0);
+  const expectedPeople = stats.people || 0;
+  const checkinPct = expectedPeople > 0 ? Math.min(100, Math.round((checkedPeople / expectedPeople) * 100)) : 0;
+  if ($("#st-checkedin")) $("#st-checkedin").textContent = checkedRsvps;
+  if ($("#st-checkin-bar")) $("#st-checkin-bar").style.width = checkinPct + "%";
+  if ($("#st-checkin-label")) $("#st-checkin-label").textContent = `${checkedPeople} pers. en salle sur ${expectedPeople || 0}`;
+  if ($("#c-checkin")) $("#c-checkin").textContent = checkedRsvps;
+
   $("#c-rsvps").textContent = rsvps.length;
   $("#c-gb").textContent = guestbook.length;
   $("#c-wall").textContent = (STATE.wall ?? []).length;
@@ -269,6 +324,7 @@ function render() {
   const filter = $("#f-filter").value;
   const matchesFilter = (r) => {
     if (filter === "all") return true;
+    if (filter === "checkedin") return !!r.checked_in;
     if (filter === "present" || filter === "absent") return r.presence === filter;
     if (filter === "membre") return (r.statut || "membre") === "membre";
     if (filter === "ami") return r.statut === "ami";
@@ -327,6 +383,7 @@ function render() {
         <div class="t-pills">
           <span class="pill ${r.statut === "ami" ? "ami" : "membre"}">${r.statut === "ami" ? "Ami·e" : "Membre"}</span>
           <span class="pill ${r.presence === "present" ? "present" : "absent"}">${r.presence === "present" ? "Présent·e" : "Absent·e"}</span>
+          ${r.checked_in ? `<span class="pill checkedin">✅ En salle</span>` : ""}
         </div>
       </td>
       <td><strong>${r.people}</strong></td>
@@ -340,6 +397,7 @@ function render() {
         <button class="btn-detail" type="button" data-open-drawer="${r.id}">Détails</button>
         <button class="icon-btn" type="button" data-menu="m${r.id}" title="Actions" aria-label="Actions pour ${escapeHTML(r.nom)}">${ICON.dots}</button>
         <div class="menu hidden" id="menu-m${r.id}">
+          <button type="button" data-checkin-id="${r.id}" data-checkin-val="${r.checked_in ? "0" : "1"}">${ICON.check} ${r.checked_in ? "Annuler pointage" : "Pointer l'arrivée"}</button>
           ${wa ? `<a href="${wa}" target="_blank" rel="noopener">${ICON.wa} WhatsApp</a>` : ""}
           <button type="button" class="danger" data-del-rsvp="${r.id}">${ICON.trash} Supprimer</button>
         </div>
@@ -359,6 +417,7 @@ function render() {
         <span class="pill ${r.statut === "ami" ? "ami" : "membre"}">${r.statut === "ami" ? "Ami·e" : "Membre"}</span>
         <span class="pill ${r.presence === "present" ? "present" : "absent"}">${r.presence === "present" ? "Présent·e" : "Absent·e"}</span>
         <span class="pill inactif">${r.people} personne${r.people > 1 ? "s" : ""}</span>
+        ${r.checked_in ? `<span class="pill checkedin">✅ En salle</span>` : ""}
       </div>
       <div class="rsvp-card-meta">
         <p><small>Tél</small><span>${r.tel ? `<a href="tel:${tel}">${escapeHTML(r.tel)}</a>` : "—"}</span></p>
@@ -368,13 +427,38 @@ function render() {
         <p><small>Date</small><span>${fmtDate(r.at)}</span></p>
       </div>
       <div class="rsvp-card-foot">
-        <button class="btn btn-outline btn-sm" type="button" data-open-drawer="${r.id}">📋 Détails (${guests.length} inv.)</button>
-        ${wa ? `<a class="btn btn-outline btn-sm" href="${wa}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ""}
-        <button class="btn btn-outline btn-sm danger" type="button" data-del-rsvp="${r.id}" style="color:var(--crimson)">🗑️</button>
+        <button class="btn btn-outline btn-sm" type="button" data-open-drawer="${r.id}">📋 Détails</button>
+        <button class="btn ${r.checked_in ? "btn-outline" : "btn-red"} btn-sm" type="button" data-checkin-id="${r.id}" data-checkin-val="${r.checked_in ? "0" : "1"}">
+          ${r.checked_in ? "↩️ Pointé" : "✅ Pointer"}
+        </button>
+        ${wa ? `<a class="btn btn-outline btn-sm" href="${wa}" target="_blank" rel="noopener">💬</a>` : ""}
       </div>`;
     cardsBox.appendChild(card);
   });
   $("#empty-rsvps").classList.toggle("hidden", rows.length > 0);
+
+  /* Liste des arrivées dans l'onglet Pointage Jour J */
+  const checkinListEl = $("#checkin-list");
+  if (checkinListEl) {
+    const arrived = rsvps
+      .filter((r) => r.checked_in)
+      .slice()
+      .sort((a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0));
+    checkinListEl.innerHTML = "";
+    arrived.forEach((r) => {
+      const div = document.createElement("div");
+      div.className = "checkin-row";
+      div.innerHTML = `
+        <div>
+          <strong>✅ ${escapeHTML(r.nom)} <span style="color:var(--crimson)">(N°${r.num})</span></strong>
+          <small>${r.people} pers. · ${escapeHTML(r.branche || "Visiteur·se")} · Arrivé·e à ${fmtDate(r.checked_in_at)}</small>
+        </div>
+        <button class="btn btn-outline btn-sm" type="button" data-checkin-id="${r.id}" data-checkin-val="0">↩️ Annuler</button>
+      `;
+      checkinListEl.appendChild(div);
+    });
+    $("#empty-checkin")?.classList.toggle("hidden", arrived.length > 0);
+  }
 
   /* Si le tiroir de détails est ouvert, le synchroniser avec les nouvelles données */
   if (currentDrawerId) openGuestDrawer(currentDrawerId);
@@ -422,7 +506,10 @@ function render() {
 
   invites.slice().reverse().forEach((i, idx) => {
     const tel = i.tel ? normalizePhone(i.tel) : "";
-    const wa = tel ? `https://wa.me/${tel}?text=${encodeURIComponent(`✦ Éclairer le Monde ✦\nCher·ère ${i.nom}, vous êtes invité·e à la fête de Noël 🎄 Samedi 19 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso. Entrée gratuite !`)}` : "";
+    const qs = new URLSearchParams({ pour: i.nom });
+    if (i.par) qs.set("de", i.par);
+    const personalUrl = `${location.origin}/?${qs.toString()}`;
+    const wa = tel ? `https://wa.me/${tel}?text=${encodeURIComponent(`✦ Éclairer le Monde ✦\nCher·ère ${i.nom}, vous êtes invité·e à la fête de Noël 🎄 Samedi 19 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso.\n💌 Ouvrez votre enveloppe : ${personalUrl}`)}` : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><span class="t-name">${escapeHTML(i.nom)}</span></td>
@@ -463,6 +550,78 @@ function render() {
   $("#empty-inv").classList.toggle("hidden", invites.length > 0);
 }
 
+/* ---------- Pointage Jour J : Formulaire & Scanner Caméra QR Code ---------- */
+$("#checkin-form")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = $("#checkin-num");
+  const num = parseInt(input.value.trim(), 10);
+  if (!num) return;
+  await toggleCheckin({ num, checked_in: true, showBanner: true });
+  input.value = "";
+  input.focus();
+});
+
+let qrStream = null;
+let qrScanActive = false;
+
+async function stopQrScanner() {
+  qrScanActive = false;
+  if (qrStream) {
+    qrStream.getTracks().forEach((t) => t.stop());
+    qrStream = null;
+  }
+  $("#qr-scanner")?.classList.add("hidden");
+}
+
+async function startQrScanner() {
+  const scannerBox = $("#qr-scanner");
+  const video = $("#qr-video");
+  if (!scannerBox || !video) return;
+
+  try {
+    qrStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false,
+    });
+    video.srcObject = qrStream;
+    scannerBox.classList.remove("hidden");
+    qrScanActive = true;
+
+    if ("BarcodeDetector" in window) {
+      const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+      const scanLoop = async () => {
+        if (!qrScanActive) return;
+        try {
+          const codes = await detector.detect(video);
+          if (codes && codes.length > 0) {
+            const raw = codes[0].rawValue || "";
+            const m = raw.match(/#billet-(\d+)/) || raw.match(/(\d{3,4})/);
+            if (m) {
+              await stopQrScanner();
+              await toggleCheckin({ num: parseInt(m[1], 10), checked_in: true, showBanner: true });
+              return;
+            }
+          }
+        } catch {}
+        if (qrScanActive) requestAnimationFrame(scanLoop);
+      };
+      requestAnimationFrame(scanLoop);
+    } else {
+      toast("📱 Saisissez le N° à 3 chiffres inscrit sous le QR code du billet.");
+    }
+  } catch {
+    await stopQrScanner();
+    toast("📷 Caméra indisponible — tapez le N° de billet dans le champ ci-dessus.");
+    $("#checkin-num")?.focus();
+  }
+}
+
+$("#btn-scan-qr")?.addEventListener("click", () => {
+  if (qrScanActive) stopQrScanner();
+  else startQrScanner();
+});
+$("#btn-stop-qr")?.addEventListener("click", stopQrScanner);
+
 async function refresh(silent = true) {
   try {
     STATE = await api("/api/admin/summary");
@@ -489,15 +648,16 @@ $("#tabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".tab");
   if (!btn) return;
   currentTab = btn.dataset.tab;
+  if (currentTab !== "checkin") stopQrScanner();
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t === btn));
-  ["rsvps", "guestbook", "wall", "invites", "outils"].forEach((id) => {
-    $(`#panel-${id}`).classList.toggle("hidden", id !== currentTab);
+  ["rsvps", "checkin", "guestbook", "wall", "invites", "outils"].forEach((id) => {
+    $(`#panel-${id}`)?.classList.toggle("hidden", id !== currentTab);
   });
 });
 
 /* ---------- Ouverture du Tiroir Latéral (Drawer) au clic ou au clavier ---------- */
 $("#tbl-rsvps tbody").addEventListener("click", (e) => {
-  if (e.target.closest("a, [data-menu], .menu")) return;
+  if (e.target.closest("a, [data-menu], .menu, [data-checkin-id]")) return;
   const main = e.target.closest(".tr-main");
   if (!main) return;
   openGuestDrawer(main.dataset.expand);
@@ -512,7 +672,17 @@ $("#tbl-rsvps tbody").addEventListener("keydown", (e) => {
   openGuestDrawer(main.dataset.expand);
 });
 
-document.addEventListener("click", (e) => {
+document.addEventListener("click", async (e) => {
+  const checkinBtn = e.target.closest("[data-checkin-id]");
+  if (checkinBtn) {
+    e.stopPropagation();
+    const id = checkinBtn.dataset.checkinId;
+    const val = checkinBtn.dataset.checkinVal === "1";
+    document.querySelectorAll(".row-actions .menu").forEach((m) => m.classList.add("hidden"));
+    await toggleCheckin({ id, checked_in: val, showBanner: false });
+    return;
+  }
+
   const openBtn = e.target.closest("[data-open-drawer]");
   if (openBtn) {
     openGuestDrawer(openBtn.dataset.openDrawer);

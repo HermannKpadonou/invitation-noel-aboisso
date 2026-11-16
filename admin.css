@@ -237,6 +237,7 @@ code{background:var(--surface-soft);border-radius:6px;padding:.1rem .4rem;font-s
 }
 .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .pill.present{background:var(--sage-bg);color:var(--sage)}
+.pill.checkedin{background:#D1F2DF;color:#115934;border:1px solid rgba(30,110,71,.25)}
 .pill.absent{background:var(--rose-bg);color:var(--rose)}
 .pill.membre{background:#EEF0F3;color:#49525B}
 .pill.ami{background:var(--powder-bg);color:var(--powder)}
@@ -332,6 +333,54 @@ code{background:var(--surface-soft);border-radius:6px;padding:.1rem .4rem;font-s
 .rsvp-card-meta a{color:var(--crimson);text-decoration:underline;text-underline-offset:2px}
 .rsvp-card-foot{display:flex;gap:.5rem;margin-top:.8rem;flex-wrap:wrap}
 .rsvp-card-foot .btn{flex:1}
+
+/* ---------- Pointage Jour J (Scanner QR & Accueil) ---------- */
+.checkin-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:1.1rem;align-items:start}
+@media(max-width:860px){.checkin-grid{grid-template-columns:1fr}}
+.checkin-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:1.35rem;box-shadow:var(--shadow-sm);
+}
+.checkin-card h3{
+  font-family:var(--font-display);font-size:1.3rem;font-weight:700;
+  color:var(--bordeaux);margin-bottom:.35rem;
+}
+.checkin-form{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:.8rem}
+.checkin-form input{
+  flex:1;min-width:160px;font-family:inherit;font-size:1rem;font-weight:600;
+  background:var(--bg);border:1.5px solid var(--line);border-radius:12px;
+  padding:.7rem .95rem;color:var(--bordeaux);
+}
+.checkin-form input:focus{outline:none;border-color:var(--crimson);box-shadow:0 0 0 4px rgba(215,11,51,.1)}
+.qr-scanner{
+  margin-top:1rem;background:var(--bg);border:1px solid var(--line);
+  border-radius:16px;padding:1rem;text-align:center;
+}
+.qr-video-box{
+  position:relative;max-width:300px;aspect-ratio:1;margin:0 auto;
+  border-radius:14px;overflow:hidden;background:#1F060D;
+}
+.qr-video-box video{width:100%;height:100%;object-fit:cover;display:block}
+.qr-frame{
+  position:absolute;inset:14%;border:2.5px dashed rgba(255,255,255,.85);
+  border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.32);pointer-events:none;
+}
+.checkin-result{
+  margin-top:1rem;padding:1rem 1.15rem;border-radius:14px;
+  background:var(--sage-bg);border:1.5px solid rgba(30,110,71,.3);color:var(--sage);
+  animation:fadeIn .25s ease;
+}
+.checkin-result.err{
+  background:var(--rose-bg);border-color:rgba(179,41,62,.3);color:var(--rose);
+}
+.checkin-result strong{display:block;font-size:1.05rem;margin-bottom:.2rem}
+.checkin-list{display:grid;gap:.55rem;margin-top:.75rem}
+.checkin-row{
+  display:flex;align-items:center;justify-content:space-between;gap:.75rem;
+  background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:.65rem .9rem;
+}
+.checkin-row strong{color:var(--bordeaux);font-size:.92rem;display:block}
+.checkin-row small{color:var(--ink-soft);font-size:.76rem}
 
 /* ---------- Livre d'or ---------- */
 .gb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:.9rem}
