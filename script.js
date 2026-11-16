@@ -757,7 +757,7 @@ function getRsvps() {
     x.closePath();
   }
 
-  function downloadInvite(d) {
+  function buildInviteCanvas(d) {
     const W = 760, H = 1030;
     const c = document.createElement("canvas");
     c.width = W; c.height = H;
@@ -767,76 +767,131 @@ function getRsvps() {
     x.fillStyle = "#fffdf8"; x.fillRect(0, 0, W, H);
 
     /* arche carmin */
-    const AG = x.createLinearGradient(0, 50, 0, H - 210);
+    const AG = x.createLinearGradient(0, 50, 0, H - 300);
     AG.addColorStop(0, "#E05A74"); AG.addColorStop(.5, "#D70B33"); AG.addColorStop(1, "#B8092B");
-    archPath(x, W / 2, 50, W - 90, H - 260);
+    archPath(x, W / 2, 50, W - 90, H - 300);
     x.fillStyle = AG; x.fill();
 
-    /* liseré rose poudré intérieur */
-    x.strokeStyle = "rgba(242,181,193,.75)"; x.lineWidth = 3;
-    archPath(x, W / 2, 64, W - 118, H - 288);
+    /* poudre de neige discrète sur l'arche */
+    x.fillStyle = "rgba(255,255,255,.26)";
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 46; i++) {
+      const sx = 70 + rnd() * (W - 140);
+      const sy = 100 + rnd() * (H - 470);
+      x.beginPath(); x.arc(sx, sy, 1.2 + rnd() * 2.4, 0, 7); x.fill();
+    }
+
+    /* double liseré rose poudré */
+    x.strokeStyle = "rgba(242,181,193,.8)"; x.lineWidth = 3;
+    archPath(x, W / 2, 66, W - 122, H - 326);
     x.stroke();
+    x.strokeStyle = "rgba(255,255,255,.32)"; x.lineWidth = 1.5;
+    archPath(x, W / 2, 78, W - 146, H - 350);
+    x.stroke();
+
+    /* halo derrière l'étoile */
+    const HG = x.createRadialGradient(W / 2, 210, 0, W / 2, 210, 82);
+    HG.addColorStop(0, "rgba(242,181,193,.5)"); HG.addColorStop(1, "rgba(242,181,193,0)");
+    x.fillStyle = HG; x.beginPath(); x.arc(W / 2, 210, 82, 0, 7); x.fill();
 
     /* étoile rose */
     x.fillStyle = "#F2B5C1";
-    drawStar(x, W / 2, 215, 44, 18);
+    drawStar(x, W / 2, 210, 40, 16);
 
     x.textAlign = "center";
     x.fillStyle = "#FBE3E9";
-    x.font = "italic 600 36px 'Playfair Display', Georgia, serif";
-    x.fillText("Invitation", W / 2, 305);
+    x.font = "italic 600 34px 'Playfair Display', Georgia, serif";
+    x.fillText("Invitation", W / 2, 296);
 
     x.fillStyle = "#ffffff";
     x.font = "700 40px Plus Jakarta Sans, sans-serif";
-    let y = wrapText(x, "Célébrez la naissance de Jésus-Christ avec nous", W / 2, 365, W - 220, 52);
+    let y = wrapText(x, "Célébrez la naissance de Jésus-Christ avec nous", W / 2, 352, W - 240, 50);
 
     /* badge date */
     x.fillStyle = "#F2B5C1";
-    roundRect(x, W / 2 - 190, y + 36, 380, 48, 24); x.fill();
+    roundRect(x, W / 2 - 195, y + 30, 390, 46, 23); x.fill();
     x.fillStyle = "#3A0D18";
-    x.font = "800 24px Plus Jakarta Sans, sans-serif";
-    x.fillText("DATE · 19 DÉCEMBRE 2026", W / 2, y + 69);
+    x.font = "800 22px Plus Jakarta Sans, sans-serif";
+    x.fillText("SAMEDI 19 DÉCEMBRE 2026", W / 2, y + 62);
 
     x.fillStyle = "#F7DCE1";
-    x.font = "500 26px Plus Jakarta Sans, sans-serif";
-    x.fillText("Invitation pour", W / 2, y + 128);
+    x.font = "500 24px Plus Jakarta Sans, sans-serif";
+    x.fillText("Invitation personnelle de", W / 2, y + 116);
     x.fillStyle = "#ffffff";
     x.font = "800 44px Plus Jakarta Sans, sans-serif";
-    x.fillText(d.nom.length > 22 ? d.nom.slice(0, 22) + "…" : d.nom, W / 2, y + 178);
+    x.fillText(d.nom.length > 22 ? d.nom.slice(0, 22) + "…" : d.nom, W / 2, y + 166);
 
     x.fillStyle = "#FBE3E9";
-    x.font = "600 28px Plus Jakarta Sans, sans-serif";
-    x.fillText("10h00 – 15h00", W / 2, y + 232);
+    x.font = "600 26px Plus Jakarta Sans, sans-serif";
+    x.fillText("10h00 – 15h00", W / 2, y + 216);
     x.fillStyle = "#ffffff";
-    x.font = "600 28px Plus Jakarta Sans, sans-serif";
-    wrapText(x, "Salle des fêtes de la mairie d'ABOISSO", W / 2, y + 276, W - 200, 38);
+    x.font = "600 26px Plus Jakarta Sans, sans-serif";
+    y = wrapText(x, "Salle des fêtes de la mairie d'ABOISSO", W / 2, y + 256, W - 220, 36);
 
-    /* QR code */
-    const finish = () => {
-      const a = document.createElement("a");
-      a.download = `invitation-noel-aboisso-${d.num}.png`;
-      a.href = c.toDataURL("image/png");
-      a.click();
-    };
-    const qrData = makeQR(inviteLink(d));
-    if (qrData) {
-      const img = new Image();
-      img.onload = () => {
-        x.fillStyle = "#ffffff";
-        roundRect(x, W / 2 - 70, H - 225, 140, 140, 14); x.fill();
-        x.drawImage(img, W / 2 - 60, H - 215, 120, 120);
-        x.fillStyle = "#FBE3E9";
-        x.font = "400 20px Plus Jakarta Sans, sans-serif";
-        x.fillText("Scannez pour rouvrir votre invitation", W / 2, H - 60);
-        x.fillStyle = "#F7DCE1";
-        x.font = "500 22px Plus Jakarta Sans, sans-serif";
-        x.fillText("Église de Jésus-Christ des Saints des Derniers Jours", W / 2, H - 92);
-        finish();
-      };
-      img.onerror = finish;
-      img.src = qrData;
-    } else finish();
+    /* séparateur doux en bas d'arche */
+    x.strokeStyle = "rgba(255,255,255,.35)"; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(W / 2 - 60, y + 42); x.lineTo(W / 2 + 60, y + 42); x.stroke();
+
+    /* La bande blanche sous l'arche accueille le QR — plus aucun chevauchement */
+    return new Promise((resolve) => {
+      const done = () => resolve(c);
+      const qrData = makeQR(inviteLink(d));
+      if (qrData) {
+        const img = new Image();
+        img.onload = () => {
+          const qy = H - 260;
+          x.fillStyle = "#ffffff";
+          roundRect(x, W / 2 - 80, qy, 160, 160, 18); x.fill();
+          x.strokeStyle = "rgba(215,11,51,.22)"; x.lineWidth = 2;
+          roundRect(x, W / 2 - 80, qy, 160, 160, 18); x.stroke();
+          x.drawImage(img, W / 2 - 68, qy + 12, 136, 136);
+          x.fillStyle = "#9C8B90";
+          x.font = "500 19px Plus Jakarta Sans, sans-serif";
+          x.fillText("Église de Jésus-Christ des Saints des Derniers Jours", W / 2, H - 72);
+          x.fillStyle = "#C9AEB4";
+          x.font = "500 16px Plus Jakarta Sans, sans-serif";
+          x.fillText("Scannez pour rouvrir votre invitation", W / 2, H - 42);
+          done();
+        };
+        img.onerror = done;
+        img.src = qrData;
+      } else done();
+    });
   }
+
+  async function downloadInvite(d) {
+    const c = await buildInviteCanvas(d);
+    const a = document.createElement("a");
+    a.download = `invitation-noel-aboisso-${d.num}.png`;
+    a.href = c.toDataURL("image/png");
+    a.click();
+  }
+
+  /* Envoi de la CARTE (image PNG) via WhatsApp — partage natif quand possible */
+  $("#wa-invite-img").addEventListener("click", async () => {
+    const d = currentInvite ?? Object.values(getRsvps()).pop();
+    if (!d) { toast("Répondez d'abord au formulaire 🙏"); return; }
+    toast("📤 Préparation de votre carte…");
+    const c = await buildInviteCanvas(d);
+    const blob = await new Promise((r) => c.toBlob(r, "image/png"));
+    const file = new File([blob], `invitation-noel-aboisso-${d.num}.png`, { type: "image/png" });
+    const msg = "✦ Éclairer le Monde ✦\nVous êtes invité·e à célébrer la naissance de Jésus-Christ avec nous 🎄\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n✨ Entrée gratuite — toute la famille est la bienvenue !";
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Invitation · Éclairer le Monde", text: msg });
+        return;
+      } catch { /* partage annulé par l'utilisateur */ }
+    }
+    /* Repli (desktop) : télécharger la carte puis ouvrir WhatsApp avec le message */
+    const a = document.createElement("a");
+    a.download = file.name;
+    a.href = c.toDataURL("image/png");
+    a.click();
+    const wa = d.tel ? normalizePhone(d.tel) : CONFIG.contactPhone;
+    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg + "\n\n🖼️ Joignez la carte téléchargée à l'instant pour un partage encore plus lumineux !")}`, "_blank");
+    toast("⬇️ Carte téléchargée — joignez-la à votre message WhatsApp 💌");
+  });
 
   $("#dl-invite").addEventListener("click", () => {
     const d = currentInvite ?? Object.values(getRsvps()).pop();
@@ -1235,9 +1290,26 @@ function getRsvps() {
         toast("⬇️ Votre photo avec le cadre Éclairer le Monde est téléchargée ✨");
       });
       fig.appendChild(dl);
+      /* Clic sur le polaroïd : aperçu en grand */
+      fig.title = "Voir en grand";
+      fig.addEventListener("click", () => openLightbox(e));
       grid.appendChild(fig);
     });
   }
+
+  /* ---------- Lightbox du mur des lumières ---------- */
+  const lightbox = $("#wall-lightbox");
+  function openLightbox(e) {
+    $("#wl-img").src = e.photo;
+    $("#wl-name").textContent = e.nom || "";
+    $("#wl-msg").textContent = e.msg || "";
+    $("#wl-msg").classList.toggle("hidden", !e.msg);
+    lightbox.classList.remove("hidden");
+  }
+  function closeLightbox() { lightbox.classList.add("hidden"); }
+  $("#wl-close").addEventListener("click", closeLightbox);
+  lightbox.addEventListener("click", (ev) => { if (ev.target === lightbox) closeLightbox(); });
+  addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeLightbox(); });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

@@ -110,20 +110,29 @@ button{font-family:inherit}
 .env-anim .envelope{animation:none}
 .envelope-back{position:absolute;inset:0;background:#A0082A;border-radius:10px;box-shadow:0 24px 50px rgba(0,0,0,.4)}
 .envelope-letter{
-  position:absolute;left:7%;right:7%;top:8%;bottom:14%;background:var(--cream);border-radius:8px;
-  display:flex;flex-direction:column;justify-content:center;gap:.35rem;padding:.8rem;
+  position:absolute;left:6%;right:6%;top:5%;bottom:8%;background:var(--cream);border-radius:8px;
+  display:flex;flex-direction:column;justify-content:center;gap:.28rem;padding:.7rem .8rem;
   box-shadow:0 8px 20px rgba(0,0,0,.25);z-index:2;
   transition:transform .8s .05s var(--ease-out),box-shadow .8s;
 }
-.env-open .envelope-letter{transform:translateY(-52%)}
+.env-open .envelope-letter{transform:translateY(-56%)}
 .env-open.env-anim .envelope-letter{
-  transform:translateY(-62%) scale(1.06);
+  transform:translateY(-68%) scale(1.05);
   box-shadow:0 24px 60px rgba(0,0,0,.4);
 }
-.letter-line{font-size:.72rem;letter-spacing:.28em;text-transform:uppercase;color:var(--crimson)}
-.letter-big{font-family:var(--font-display);font-style:italic;font-size:1.5rem;color:var(--bordeaux)}
+.letter-line{font-size:.6rem;letter-spacing:.26em;text-transform:uppercase;color:var(--crimson)}
+.letter-big{font-family:var(--font-display);font-style:italic;font-size:1.3rem;color:var(--bordeaux);line-height:1.15}
 .letter-big em{color:var(--rose-deep)}
-.letter-date{font-size:.72rem;letter-spacing:.28em;color:var(--brand-deep-red);font-weight:600}
+.letter-date{font-size:.6rem;letter-spacing:.26em;color:var(--brand-deep-red);font-weight:600}
+.letter-msg{
+  font-family:var(--font-display);font-style:italic;font-size:.58rem;line-height:1.45;
+  color:var(--ink-soft);margin-top:.15rem;
+}
+.letter-msg span{font-family:var(--font-body);font-style:normal;font-size:.52rem;color:var(--muted-c)}
+.letter-ps{
+  font-size:.52rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--crimson);margin-top:.12rem;
+}
 .env-anim .envelope-back,
 .env-anim .envelope-front,
 .env-anim .envelope-seal{opacity:0;transition:opacity .55s ease}
@@ -813,6 +822,7 @@ button{font-family:inherit}
   background:var(--crimson);color:#fff;border-radius:999px;padding:.24rem .75rem;
   box-shadow:0 4px 10px rgba(215,11,51,.18);
 }
+.ii-hashtag{font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--rose-deep);margin-top:.3rem}
 .invite-actions{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center}
 
 /* =========================================================
@@ -977,6 +987,41 @@ button{font-family:inherit}
 @media(hover:none){.wc-dl{opacity:1;transform:scale(1)}} /* toujours visible sur mobile */
 
 .wall-empty{text-align:center;color:#C9AEB4;font-style:italic;font-family:var(--font-display);font-size:1.05rem;margin-top:1.8rem}
+
+/* ---------- Titre lumineux + étincelles du mur ---------- */
+.wall-glow{
+  color:var(--crimson);
+  text-shadow:0 0 16px rgba(215,11,51,.30),0 0 42px rgba(224,90,116,.22);
+  animation:wallGlow 3.4s ease-in-out infinite;
+}
+@keyframes wallGlow{0%,100%{text-shadow:0 0 10px rgba(215,11,51,.2),0 0 30px rgba(224,90,116,.12)}50%{text-shadow:0 0 20px rgba(215,11,51,.42),0 0 52px rgba(224,90,116,.3)}}
+.wall-sparkles{position:absolute;inset:0;pointer-events:none}
+.wall-sparkles span{
+  position:absolute;left:var(--sx);top:var(--sy);
+  color:var(--rose);opacity:.5;font-size:1rem;animation:twinkle 3s ease-in-out infinite;animation-delay:var(--sd);
+}
+
+/* ---------- Lightbox du mur photo ---------- */
+.wall-lightbox{
+  position:fixed;inset:0;z-index:170;background:rgba(58,13,24,.86);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:1.2rem;animation:pop .4s var(--ease-spring);
+}
+.wl-close{
+  position:absolute;top:1rem;right:1rem;width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.16);color:#fff;font-size:1.15rem;
+  transition:transform .25s,background .25s;
+}
+.wl-close:hover{transform:scale(1.1);background:rgba(255,255,255,.28)}
+.wl-figure{
+  background:#fff;border-radius:26px;padding:1rem 1rem .8rem;max-width:min(430px,92vw);
+  box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 3px rgba(242,181,193,.5);text-align:center;
+  animation:springIn .5s var(--ease-spring);
+}
+.wl-figure img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:16px}
+.wl-figure figcaption{padding:.8rem .3rem .2rem;display:grid;gap:.15rem}
+.wl-figure strong{font-family:var(--font-display);font-style:italic;color:var(--bordeaux);font-size:1.2rem}
+.wl-figure small{color:var(--muted-c);font-size:.85rem}
+.wall-card{cursor:pointer}
 
 /* =========================================================
    LIVRE D'OR

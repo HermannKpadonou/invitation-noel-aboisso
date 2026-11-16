@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=16" />
+  <link rel="stylesheet" href="styles.css?v=17" />
 </head>
 <body>
 
@@ -38,6 +38,8 @@
           <p class="letter-line">Notre plus belle nouvelle</p>
           <p class="letter-big">Noël <em>à</em> Aboisso</p>
           <p class="letter-date">19 · 12 · 2026</p>
+          <p class="letter-msg">« La vraie lumière, celle qui éclaire tout homme, venait dans le monde. » <span>— Jean 1:9</span></p>
+          <p class="letter-ps">Une étoile se lève sur Aboisso ✦ venez adorer la Lumière</p>
         </div>
         <div class="envelope-front"></div>
         <div class="envelope-seal"><span>✦</span></div>
@@ -382,12 +384,14 @@
               </div>
               <p class="ii-church">Église de Jésus-Christ des Saints des Derniers Jours</p>
               <p class="ii-badge">ÉclairerLeMonde.org</p>
+              <p class="ii-hashtag">#ÉclairerLeMonde · #NoelAboisso2026</p>
             </div>
           </div>
         </div>
         <div class="invite-actions" data-stagger>
+          <button class="btn btn-red" id="wa-invite-img" type="button">📤 Envoyer la carte sur WhatsApp</button>
           <button class="btn btn-red" id="dl-invite" type="button">⬇️ Télécharger la carte</button>
-          <button class="btn btn-green" id="wa-invite" type="button">💬 Partager par WhatsApp</button>
+          <button class="btn btn-green" id="wa-invite" type="button">💬 Message WhatsApp</button>
           <button class="btn btn-ghost-dark" id="close-invite" type="button">Fermer</button>
         </div>
       </div>
@@ -423,8 +427,16 @@
         <span style="--i:12"></span><span style="--i:13"></span><span style="--i:14"></span><span style="--i:15"></span>
       </div>
       <p class="section-kicker">Je serai là !</p>
-      <h2 class="section-title reveal">Le mur des lumières 📸</h2>
+      <h2 class="section-title reveal"><span class="wall-glow">Le mur des lumières</span> 📸</h2>
       <p class="center">Membres de l'église, ajoutez votre photo et annoncez à tous que <strong>vous serez là</strong> le 19 décembre ✨</p>
+      <div class="wall-sparkles" aria-hidden="true">
+        <span style="--sx:4%;--sy:12%;--sd:0s">✦</span>
+        <span style="--sx:94%;--sy:18%;--sd:.8s">✧</span>
+        <span style="--sx:10%;--sy:70%;--sd:1.6s">✧</span>
+        <span style="--sx:90%;--sy:78%;--sd:.4s">✦</span>
+        <span style="--sx:50%;--sy:4%;--sd:1.2s">✦</span>
+        <span style="--sx:70%;--sy:90%;--sd:2s">✧</span>
+      </div>
       <p class="wall-count hidden" id="wall-count"><strong id="wall-count-n">0</strong> <span id="wall-count-txt">lumière brille déjà sur le mur — et la vôtre ?</span></p>
 
       <form id="wall-form" class="wall-form reveal" novalidate>
@@ -472,6 +484,18 @@
 
       <div class="wall-grid" id="wall-grid"></div>
       <p class="wall-empty" id="wall-empty">Soyez la première lumière sur le mur ✨</p>
+
+      <!-- Aperçu en grand d'un polaroïd (lightbox) -->
+      <div class="wall-lightbox hidden" id="wall-lightbox" role="dialog" aria-label="Photo en grand">
+        <button class="wl-close" id="wl-close" type="button" aria-label="Fermer l'aperçu">✕</button>
+        <figure class="wl-figure">
+          <img id="wl-img" alt="Photo du mur des lumières en grand" />
+          <figcaption>
+            <strong id="wl-name"></strong>
+            <small id="wl-msg"></small>
+          </figcaption>
+        </figure>
+      </div>
     </section>
 
     <!-- ============ PARTAGE ============ -->
@@ -537,6 +561,6 @@
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="assets/qrcode-generator.js"></script>
-  <script src="script.js?v=16"></script>
+  <script src="script.js?v=17"></script>
 </body>
 </html>
