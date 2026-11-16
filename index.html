@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=9" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 <body>
 
@@ -113,8 +113,9 @@
     <section class="section alt" id="programme">
       <p class="section-kicker">Le programme de la journée</p>
       <h2 class="section-title reveal">Cinq heures de magie ✨</h2>
-      <figure class="creche-banner reveal" aria-hidden="true">
-        <img src="assets/creche-rouge.jpg" alt="" loading="lazy" />
+      <figure class="creche-banner reveal">
+        <img src="assets/creche-rouge.jpg" alt="Illustration de la crèche de Bethléem sous un ciel rouge et doré" loading="lazy" />
+        <figcaption>La crèche de Bethléem ✦</figcaption>
       </figure>
       <ol class="timeline" data-stagger>
         <li class="tl-item reveal">
@@ -206,16 +207,20 @@
       </div>
       <div class="gallery-strip reveal" data-stagger>
         <figure class="gs-item">
-          <img src="assets/photo-event.jpg" alt="Écharpe Light the World et ballons, ambiance de fête" loading="lazy" />
-          <figcaption>L'esprit « Éclairer le Monde » ✦</figcaption>
-        </figure>
-        <figure class="gs-item">
           <img src="assets/temple_square_at_christmas.webp" alt="Place du temple illuminée de milliers de lumières de Noël" loading="lazy" />
           <figcaption>Des milliers de lumières ✨</figcaption>
         </figure>
         <figure class="gs-item">
-          <img src="assets/creche-rouge.jpg" alt="Silhouette de la crèche de Bethléem sous un ciel rouge et étoilé" loading="lazy" />
-          <figcaption>La naissance de Jésus-Christ 🌟</figcaption>
+          <img src="assets/nativity_mary_joseph_bethlehem.webp" alt="Marie et Joseph sur la route de Bethléem" loading="lazy" />
+          <figcaption>Le voyage vers Bethléem 🐫</figcaption>
+        </figure>
+        <figure class="gs-item">
+          <img src="assets/bible_video_christ_presentation_temple.webp" alt="La sainte Famille — Marie, Joseph et l'enfant Jésus" loading="lazy" />
+          <figcaption>La sainte Famille 💛</figcaption>
+        </figure>
+        <figure class="gs-item">
+          <img src="assets/creche-nuit.jpg" alt="Crèche illuminée dans la nuit de Noël" loading="lazy" />
+          <figcaption>La nuit de la naissance 🌟</figcaption>
         </figure>
       </div>
     </section>
@@ -227,7 +232,7 @@
       <div class="place reveal">
         <div class="place-map" aria-hidden="true">
           <img class="place-christus" src="assets/christus-arche.jpg" alt="" loading="lazy" />
-          <div class="map-pin">📍<span>Église de Jésus-Christ des SDJ</span></div>
+          <div class="map-pin">📍<span>Salle des fêtes · Mairie d'Aboisso</span></div>
         </div>
         <div class="place-info">
           <h3>🏠 Salle des fêtes · Mairie d'Aboisso</h3>
@@ -235,7 +240,7 @@
           <p class="muted">Samedi 19 décembre 2026 · 10h00 – 15h00. Arrivez un peu en avance : la distribution des cadeaux commence après le repas et nous voulons un appareil photo plein de sourires ! 📸</p>
           <div class="place-actions" data-stagger>
             <a class="btn btn-red" target="_blank" rel="noopener"
-               href="https://www.google.com/maps/search/?api=1&query=Mairie%20d%27Aboisso%2C%20C%C3%B4te%20d%27Ivoire">🧭 Google Maps</a>
+               href="https://maps.app.goo.gl/zKuSVfn95ZYdcqCQA">🧭 Itinéraire</a>
             <a class="btn btn-red" target="_blank" rel="noopener"
                href="https://waze.com/ul?q=Mairie%20d%27Aboisso%2C%20C%C3%B4te%20d%27Ivoire">🚗 Waze</a>
             <button class="btn btn-ghost-dark" id="copy-address" type="button">📋 Copier l'adresse</button>
@@ -495,13 +500,12 @@
   </main>
 
   <footer class="footer">
-    <div class="wave wave-top" aria-hidden="true">
-      <svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path fill="#fdf0e0" d="M0 32 C 200 64 400 0 620 24 C 840 48 1040 8 1240 24 C 1340 32 1400 28 1440 26 L 1440 64 L 0 64 Z"/></svg>
-    </div>
     <img class="footer-logo" src="assets/elw-logo-rouge.jpg" alt="Éclairer le Monde" aria-hidden="true" />
     <p>Avec toute notre joie, <strong>Éclairer le Monde — Aboisso</strong></p>
-    <p class="muted">Église de Jésus-Christ des Saints des Derniers Jours · Salle des fêtes de la mairie d'Aboisso · 19 décembre 2026</p>
-    <p class="muted small">Fait avec ❤️ pour éclairer le monde, une lumière à la fois.</p>
+    <div class="footer-divider" aria-hidden="true">✦</div>
+    <p class="muted">Église de Jésus-Christ des Saints des Derniers Jours</p>
+    <p class="muted">📍 Salle des fêtes de la mairie d'Aboisso · Samedi 19 décembre 2026 · 10h00 – 15h00</p>
+    <p class="muted small">Entrée gratuite — #ÉclairerLeMonde #NoelAboisso2026 ✨</p>
   </footer>
 
   <!-- ============ LECTEUR DE MUSIQUE ============ -->

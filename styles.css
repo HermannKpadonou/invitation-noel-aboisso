@@ -137,7 +137,7 @@ button{font-family:inherit}
   position:fixed;top:.8rem;left:50%;z-index:110;
   transform:translate(-50%,-140%);
   display:flex;align-items:center;gap:.7rem;
-  background:rgba(255,246,236,.92);backdrop-filter:blur(12px);
+  background:rgba(255,246,236,.96);backdrop-filter:blur(16px);
   border:1px solid rgba(200,29,51,.2);border-radius:999px;
   padding:.5rem 1.3rem;box-shadow:var(--shadow-sm);
   transition:transform .5s var(--ease-spring);
@@ -163,12 +163,12 @@ button{font-family:inherit}
 /* Photo des lumières de Noël du temple, fondue dans le rouge */
 .hero::before{
   content:"";position:absolute;inset:0;pointer-events:none;
-  background:url("assets/temple_square_at_christmas.webp") center 35%/cover no-repeat;
-  opacity:.16;mix-blend-mode:luminosity;
-  filter:saturate(.8) blur(1.5px);
+  background:url("assets/photo-event.jpg") center 40%/cover no-repeat;
+  opacity:.24;mix-blend-mode:luminosity;
+  filter:saturate(.9) blur(1.5px);
   animation:heroBreath 12s ease-in-out infinite;
 }
-@keyframes heroBreath{0%,100%{opacity:.12;transform:scale(1)}50%{opacity:.2;transform:scale(1.06)}}
+@keyframes heroBreath{0%,100%{opacity:.18;transform:scale(1)}50%{opacity:.28;transform:scale(1.06)}}
 .hero::after{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(180deg,rgba(93,10,19,.28) 0%,transparent 30%,rgba(93,10,19,.42) 100%);
@@ -240,7 +240,7 @@ button{font-family:inherit}
 .hero-date .h{border-left:1px solid rgba(255,255,255,.3);padding-left:.8rem;color:var(--gold-soft)}
 .hero-actions{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;margin-top:.8rem;opacity:0;animation:fadeUp 1s 1.5s var(--ease-out) forwards}
 .scroll-cue{
-  position:absolute;bottom:5rem;left:50%;transform:translateX(-50%);z-index:1;
+  position:absolute;bottom:1.8rem;left:50%;transform:translateX(-50%);z-index:1;
   width:26px;height:44px;border:2px solid rgba(255,255,255,.55);border-radius:14px;
   opacity:0;animation:fadeUp 1s 2s var(--ease-out) forwards;
 }
@@ -303,7 +303,7 @@ button{font-family:inherit}
   max-width:none;background-image:url("assets/pattern-light.svg");
   box-shadow:inset 0 1px 0 rgba(200,29,51,.06),inset 0 -1px 0 rgba(200,29,51,.06);
 }
-.section.alt>*{max-width:1000px;margin-left:auto;margin-right:auto}
+.section.alt>*:not(form){max-width:1000px;margin-left:auto;margin-right:auto}
 .section-kicker{
   text-align:center;color:var(--red);font-weight:700;letter-spacing:.3em;
   text-transform:uppercase;font-size:.75rem;margin-bottom:.5rem;
@@ -432,9 +432,10 @@ button{font-family:inherit}
 
 /* ---------- Galerie d'images de Noël ---------- */
 .gallery-strip{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.1rem;
+  display:grid;grid-template-columns:repeat(2,1fr);gap:1.2rem;
   border-radius:var(--radius);
 }
+@media(max-width:640px){.gallery-strip{grid-template-columns:1fr}}
 .gs-item{
   position:relative;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);
   border:1px solid rgba(200,29,51,.09);transition:transform .45s var(--ease-out),box-shadow .45s;
@@ -450,10 +451,15 @@ button{font-family:inherit}
 
 /* ---------- Bannière crèche (programme) ---------- */
 .creche-banner{
-  max-width:640px;margin:0 auto 2.4rem;border-radius:var(--radius);overflow:hidden;
-  box-shadow:var(--shadow);border:1px solid rgba(200,29,51,.12);
+  max-width:560px;margin:0 auto 2.6rem;border-radius:var(--radius);overflow:hidden;position:relative;
+  box-shadow:var(--shadow);border:4px solid #fff;outline:1px solid rgba(200,29,51,.15);
 }
-.creche-banner img{width:100%;height:min(300px,46vw);object-fit:cover}
+.creche-banner img{width:100%;height:min(250px,42vw);object-fit:cover;display:block}
+.creche-banner figcaption{
+  position:absolute;inset:auto 0 0 0;padding:.8rem 1.1rem;color:#fff;font-size:.85rem;font-weight:600;
+  background:linear-gradient(transparent,rgba(93,10,19,.78));text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 
 /* ---------- Christus (lieu) ---------- */
 .place-christus{
@@ -471,7 +477,7 @@ button{font-family:inherit}
   box-shadow:var(--shadow);border:4px solid #fff;outline:1px solid rgba(200,29,51,.15);
   transform:rotate(-1.5deg);
 }
-.tenue-photo img{width:100%;height:340px;object-fit:cover}
+.tenue-photo img{width:100%;height:300px;object-fit:cover;object-position:center 10%}
 
 /* ---------- Crèche nuit (vœux) ---------- */
 .gb-creche{
@@ -539,7 +545,7 @@ button{font-family:inherit}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 @media(max-width:520px){.field-row{grid-template-columns:1fr}}
 .field label{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red-deep)}
-.field label span{float:right;color:#b09090;text-transform:none;letter-spacing:0;font-weight:500}
+.gb-form label span{float:right;color:#b09090;text-transform:none;letter-spacing:0;font-weight:500}
 .field input,.field textarea{
   font-family:inherit;font-size:1rem;color:var(--ink);
   background:var(--cream);border:1.5px solid #ecd9cc;border-radius:14px;
@@ -556,6 +562,7 @@ button{font-family:inherit}
 .choice-item span{
   display:block;text-align:center;padding:.85rem .6rem;border-radius:14px;font-weight:600;font-size:.88rem;
   border:1.5px solid #ecd9cc;background:var(--cream);
+  float:none;text-transform:none;letter-spacing:normal;color:var(--red-deep);
   transition:all .3s var(--ease-out);
 }
 .choice-item:hover span{transform:translateY(-2px)}
@@ -886,6 +893,14 @@ button{font-family:inherit}
 }
 .footer p{margin-bottom:.4rem}
 .footer .muted{color:#c99}
+.footer-divider{
+  display:flex;align-items:center;justify-content:center;gap:.9rem;
+  max-width:420px;margin:1.3rem auto 1.2rem;color:rgba(245,192,78,.85);font-size:.9rem;
+}
+.footer-divider::before,.footer-divider::after{
+  content:"";height:1px;flex:1;
+  background:linear-gradient(90deg,transparent,rgba(245,192,78,.45),transparent);
+}
 
 /* =========================================================
    LECTEUR DE MUSIQUE
