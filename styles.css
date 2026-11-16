@@ -147,21 +147,31 @@ button{font-family:inherit}
 @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
 
 /* =========================================================
-   NAVIGATION RAPIDE (apparaît au scroll)
+   NAVBAR STICKY (discrète, apparaît après le hero)
    ========================================================= */
 .topnav{
-  position:fixed;top:.8rem;left:50%;z-index:110;
-  transform:translate(-50%,-140%);
-  display:flex;align-items:center;gap:.7rem;
-  background:rgba(253,249,250,.96);backdrop-filter:blur(16px);
-  border:1px solid rgba(215,11,51,.18);border-radius:999px;
-  padding:.6rem 1.5rem;box-shadow:var(--shadow-sm);
+  position:fixed;top:0;left:0;right:0;z-index:110;
+  transform:translateY(-110%);
+  display:flex;align-items:center;justify-content:space-between;gap:.8rem;
+  background:rgba(253,249,250,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(215,11,51,.12);
+  padding:.6rem clamp(1rem,4vw,2.4rem);
+  box-shadow:0 4px 18px rgba(58,13,24,.06);
   transition:transform .5s var(--ease-spring);
 }
-.topnav.show{transform:translate(-50%,0)}
-.topnav a{font-size:.88rem;font-weight:700;color:var(--bordeaux);padding:.3rem .6rem;border-radius:10px;transition:color .2s,background .2s}
-.topnav a:hover{color:var(--crimson);background:rgba(215,11,51,.07)}
-.topnav span{color:var(--rose);font-size:.6rem}
+.topnav.show{transform:translateY(0)}
+.nav-brand{
+  font-family:var(--font-display);font-style:italic;font-weight:600;
+  font-size:1rem;color:var(--bordeaux);white-space:nowrap;
+}
+.nav-brand:hover{color:var(--crimson)}
+.nav-links{display:flex;align-items:center;gap:.4rem}
+.nav-links a{
+  font-size:.88rem;font-weight:600;color:var(--ink-soft);padding:.3rem .7rem;border-radius:10px;
+  transition:color .2s,background .2s;
+}
+.nav-links a:hover{color:var(--crimson);background:rgba(215,11,51,.07)}
+.nav-cta{padding:.55rem 1.3rem;font-size:.85rem;white-space:nowrap}
 
 /* =========================================================
    HERO
@@ -207,8 +217,8 @@ button{font-family:inherit}
 }
 .hero-kicker{
   position:relative;z-index:1;
-  font-family:var(--font-display);font-style:italic;font-size:clamp(.95rem,2.4vw,1.15rem);
-  color:var(--rose-soft);letter-spacing:.04em;
+  font-size:clamp(.72rem,2vw,.88rem);font-weight:700;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--rose);
   opacity:0;animation:fadeUp 1s .9s var(--ease-out) forwards;
 }
 .hero-title{font-weight:700;line-height:1.08;text-transform:uppercase;font-size:clamp(2.2rem,7.5vw,4.8rem);letter-spacing:-.01em;position:relative;z-index:1}
@@ -405,6 +415,52 @@ button{font-family:inherit}
 }
 .reveal.in .cal-link,.calendar-links.in .cal-link{opacity:1;transform:none}
 .cal-link:hover{background:var(--bordeaux);color:#fff}
+
+/* ---------- Compte à rebours intégré au hero (glassmorphism) ---------- */
+.hero .countdown{margin-top:.3rem;opacity:0;animation:fadeUp 1s 1.15s var(--ease-out) forwards}
+.hero .cd-card{
+  background:rgba(255,255,255,.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.22);box-shadow:none;min-width:78px;
+}
+.hero .cd-card::before{background:rgba(255,255,255,.16)}
+.hero .cd-card::after{display:none}
+.hero .cd-card span{font-size:1.9rem}
+.hero .cd-card small{color:rgba(255,255,255,.75)}
+.hero .cd-sep{color:rgba(255,255,255,.45)}
+.hero .calendar-links{margin-top:.35rem;opacity:0;animation:fadeUp 1s 1.3s var(--ease-out) forwards}
+.hero .cal-link{color:#fff;border-color:rgba(255,255,255,.5);opacity:1;transform:none}
+.hero .cal-link:hover{background:#fff;color:var(--bordeaux);border-color:#fff}
+
+/* =========================================================
+   CTA RSVP FLOTTANT
+   ========================================================= */
+.cta-float{
+  position:fixed;left:1.2rem;bottom:1.2rem;z-index:96;
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.85rem 1.5rem;border-radius:999px;font-weight:700;font-size:.92rem;
+  background:linear-gradient(120deg,var(--crimson),var(--coral));color:#fff;
+  box-shadow:0 12px 30px rgba(215,11,51,.38);
+  transform:translateY(110px);opacity:0;pointer-events:none;
+  transition:transform .5s var(--ease-spring),opacity .4s ease,box-shadow .25s;
+}
+.cta-float.show{transform:none;opacity:1;pointer-events:auto}
+.cta-float:hover{box-shadow:0 16px 36px rgba(215,11,51,.5);transform:translateY(-2px)}
+@media(max-width:520px){
+  .cta-float{left:1rem;right:5.6rem;justify-content:center}
+}
+
+/* =========================================================
+   FORMULAIRE RSVP MULTI-ÉTAPES
+   ========================================================= */
+.steps-bar{display:flex;justify-content:center;gap:.55rem;margin-bottom:.2rem}
+.step-dot{
+  width:38px;height:6px;border-radius:4px;background:#F0DCE2;
+  transition:background .35s;
+}
+.step-dot.active{background:linear-gradient(90deg,var(--crimson),var(--coral))}
+.rsvp-step{display:none;gap:1rem}
+.rsvp-step.is-active{display:grid;animation:pop .45s var(--ease-spring)}
+@media(prefers-reduced-motion:reduce){.rsvp-step.is-active{animation:none}}
 
 /* =========================================================
    PROGRAMME (timeline)
@@ -974,6 +1030,14 @@ button{font-family:inherit}
   content:"";height:1px;flex:1;
   background:linear-gradient(90deg,transparent,rgba(242,181,193,.45),transparent);
 }
+.footer-share{display:flex;justify-content:center;gap:.8rem;margin:1.1rem 0 .9rem}
+.footer-share a,.footer-share button{
+  width:46px;height:46px;border-radius:50%;cursor:pointer;padding:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.15rem;
+  background:rgba(255,255,255,.12);border:1px solid rgba(242,181,193,.5);color:#fff;
+  transition:transform .25s var(--ease-spring),background .25s;
+}
+.footer-share a:hover,.footer-share button:hover{transform:translateY(-3px) scale(1.06);background:rgba(255,255,255,.22)}
 
 /* =========================================================
    LECTEUR DE MUSIQUE
@@ -1071,6 +1135,12 @@ button{font-family:inherit}
   .cd-card{min-width:64px;padding:.9rem .4rem .6rem}
   .cd-card span{font-size:1.5rem}
   .cd-sep{display:none}
+  .hero{padding:4.2rem 1rem 5.2rem;gap:.7rem}
+  .hero-logo{width:min(130px,36vw)}
+  .hero .cd-card{min-width:62px;padding:.85rem .4rem .6rem}
+  .hero .cd-card span{font-size:1.45rem}
+  .hero .cal-link{padding:.5rem .9rem;font-size:.78rem}
+  .scroll-cue{display:none}
   .timeline::before,.timeline::after{left:50px}
   .tl-time{flex-basis:52px;font-size:.9rem}
   .tl-item:nth-child(even) .tl-card{margin-left:.6rem}
@@ -1080,8 +1150,9 @@ button{font-family:inherit}
   .ii-main{font-size:.95rem}
   .music-fab{width:52px;height:52px;right:1rem;bottom:1rem}
   .music-panel{bottom:5.4rem}
-  .topnav{padding:.4rem .9rem}
-  .topnav a{font-size:.74rem}
+  .nav-links{display:none}
+  .nav-brand{font-size:.9rem}
+  .nav-cta{padding:.5rem 1.1rem;font-size:.8rem}
   .section{padding:4rem 1.1rem}
 }
 
@@ -1092,5 +1163,7 @@ button{font-family:inherit}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   html{scroll-behavior:auto}
   .reveal{opacity:1;transform:none}
-  .hero-title .line-in,.hero-kicker,.hero-tagline,.hero-sub,.hero-date,.hero-actions,.scroll-cue,.cal-link,.swatch{opacity:1;transform:none;filter:none}
+  .hero-title .line-in,.hero-kicker,.hero-tagline,.hero-actions,.scroll-cue,.cal-link,.swatch{opacity:1;transform:none;filter:none}
+  .hero .countdown,.hero .calendar-links{opacity:1;transform:none}
+  .cta-float{opacity:1;transform:none;pointer-events:auto}
 }

@@ -201,13 +201,24 @@ function launchConfetti() {
 (function initScrollFX() {
   const bar = $("#progress");
   const nav = $("#topnav");
+  const cta = document.getElementById("cta-float");
   const hero = document.querySelector(".hero");
+  const rsvp = document.querySelector("#rsvp");
   function onScroll() {
     const h = document.documentElement;
     const max = h.scrollHeight - h.clientHeight;
     bar.style.transform = `scaleX(${max ? h.scrollTop / max : 0})`;
-    const show = h.scrollTop > (hero ? hero.offsetHeight - 140 : 400);
-    nav.classList.toggle("show", show);
+    const past = h.scrollTop > (hero ? hero.offsetHeight - 140 : 400);
+    nav.classList.toggle("show", past);
+    /* Le CTA flottant apparaît après le hero et se masque quand le RSVP est visible */
+    if (cta) {
+      let rsvpVisible = false;
+      if (rsvp) {
+        const r = rsvp.getBoundingClientRect();
+        rsvpVisible = r.top < innerHeight * 0.75 && r.bottom > innerHeight * 0.3;
+      }
+      cta.classList.toggle("show", past && !rsvpVisible);
+    }
   }
   addEventListener("scroll", onScroll, { passive: true });
   onScroll();
@@ -318,7 +329,7 @@ function launchConfetti() {
     const s = Math.floor(diff % 6e4 / 1e3);
     setVal(el.d, String(d)); setVal(el.h, pad(h));
     setVal(el.m, pad(m)); setVal(el.s, pad(s));
-    el.inline.textContent = d;
+    if (el.inline) el.inline.textContent = d;
   }
   const timer = setInterval(tick, 1000);
   tick();
@@ -362,20 +373,25 @@ $("#copy-address").addEventListener("click", async () => {
   }
 });
 
-$("#btn-copy-link").addEventListener("click", async () => {
-  try {
-    await navigator.clipboard.writeText(location.href);
-    toast("🔗 Lien copié ! Collez-le où vous voulez.");
-  } catch {
-    toast("Impossible de copier le lien 😕");
-  }
+/* Boutons de partage : un même bloc peut contenir plusieurs boutons (partage + footer) */
+document.querySelectorAll("[data-copy-link]").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      toast("🔗 Lien copié ! Collez-le où vous voulez.");
+    } catch {
+      toast("Impossible de copier le lien 😕");
+    }
+  });
 });
 
 /* ---------- Partage WhatsApp ---------- */
 (function initShare() {
   const text = "✦ Éclairer le Monde ✦\nVous êtes invité·e au Grand Noël des Enfants & Familles 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 19 décembre 2026, 10h–15h\n📍 Salle des fêtes de la mairie d'Aboisso\nEntrée gratuite — toute la famille est la bienvenue !";
   const url = location.href;
-  $("#btn-share-wa").href = `https://wa.me/?text=${encodeURIComponent(text + "\n👉 " + url)}`;
+  document.querySelectorAll("[data-share-wa]").forEach((a) => {
+    a.href = `https://wa.me/?text=${encodeURIComponent(text + "\n👉 " + url)}`;
+  });
 })();
 
 /* =========================================================
@@ -407,8 +423,46 @@ function getRsvps() {
     const statut = form.querySelector('input[name="statut"]:checked')?.value || "membre";
     membreFields.classList.toggle("hidden", statut !== "membre");
     inviteBlock.classList.toggle("hidden", statut !== "membre");
+    /* Les amis n'ont pas d'étape 2 : on la saute automatiquement */
+    if (statut !== "membre" && stepEls[1] && stepEls[1].classList.contains("is-active")) {
+      goToStep(3);
+    }
   }
   form.querySelectorAll('input[name="statut"]').forEach((r) => r.addEventListener("change", syncStatut));
+
+  /* ---------- Navigation multi-étapes du formulaire ---------- */
+  const stepEls = [...form.querySelectorAll(".rsvp-step")];
+  const dots = [...form.querySelectorAll(".step-dot")];
+  function goToStep(n) {
+    stepEls.forEach((s) => s.classList.toggle("is-active", s.dataset.step === String(n)));
+    dots.forEach((d) => d.classList.toggle("active", +d.dataset.stepDot <= n));
+  }
+  function nextStep(target) {
+    if (target === 2) {
+      if (!form.querySelector('input[name="nom"]').value.trim()) {
+        const err = $("#rsvp-error");
+        err.textContent = "Merci d'indiquer votre nom pour continuer 🙏";
+        err.classList.remove("hidden");
+        $("#f-nom").focus();
+        return;
+      }
+      $("#rsvp-error").classList.add("hidden");
+      /* Les amis n'ont pas d'étape 2 : on va directement à l'étape 3 */
+      goToStep(form.querySelector('input[name="statut"]:checked')?.value === "ami" ? 3 : 2);
+    } else {
+      goToStep(target);
+    }
+  }
+  function prevStep(target) {
+    /* Retour depuis l'étape 3 : on revient à l'étape 2 sauf pour les amis */
+    if (target === 2 && form.querySelector('input[name="statut"]:checked')?.value !== "ami") goToStep(2);
+    else goToStep(1);
+  }
+  form.querySelectorAll("[data-next]").forEach((b) => b.addEventListener("click", () => nextStep(+b.dataset.next)));
+  form.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", () => prevStep(+b.dataset.back)));
+
+  /* État initial : étape 1 active, et masquage selon le statut */
+  goToStep(1);
   syncStatut();
 
   /* ---------- Invitations dynamiques : amis & membres inactifs ---------- */
@@ -599,6 +653,7 @@ function getRsvps() {
     showInvite(data);
     form.reset();
     ["ami", "inactif"].forEach((t) => { invLists[t].innerHTML = ""; addInviteRow(t); });
+    goToStep(1); /* retour à la première étape pour une prochaine réponse */
     syncStatut();
     renderInvitesShare(invites.filter((i) => !skippedInvites.some((s) => invKey(s) === invKey(i.nom))), nom);
     toast("💌 Réponse envoyée — votre carte d'invitation est prête !");

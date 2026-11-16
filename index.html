@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=14" />
+  <link rel="stylesheet" href="styles.css?v=16" />
 </head>
 <body>
 
@@ -46,36 +46,46 @@
     </div>
   </div>
 
-  <!-- ============ NAVIGATION RAPIDE ============ -->
-  <nav class="topnav" id="topnav" aria-label="Navigation rapide">
-    <a href="#programme">Programme</a><span aria-hidden="true">✦</span>
-    <a href="#lieu">Lieu</a><span aria-hidden="true">✦</span>
-    <a href="#rsvp">RSVP</a>
+  <!-- ============ NAVBAR STICKY (discrète, apparaît au scroll) ============ -->
+  <nav class="topnav" id="topnav" aria-label="Navigation principale">
+    <a class="nav-brand" href="#accueil">✦ District d'Aboisso</a>
+    <div class="nav-links">
+      <a href="#programme">Programme</a>
+      <a href="#lieu">Lieu</a>
+    </div>
+    <a class="btn btn-gold nav-cta" href="#rsvp">RSVP</a>
   </nav>
 
-  <!-- ============ HERO ============ -->
+  <!-- ============ HERO (épuré, compte à rebours intégré) ============ -->
   <header class="hero" id="accueil">
     <div class="hero-glow" aria-hidden="true"></div>
     <div class="logo-glow" aria-hidden="true"></div>
     <img class="hero-logo" src="assets/light_the_world.webp" alt="Éclairer le Monde" />
-    <p class="hero-kicker">« Vous êtes la lumière du monde » — Matthieu 5:14</p>
+    <p class="hero-kicker">District d'Aboisso · 19 Décembre 2026</p>
     <h1 class="hero-title">
-      <span class="line"><span class="line-in">L'Esprit</span></span>
-      <span class="line"><span class="line-in gold">de Noël</span></span>
+      <span class="line"><span class="line-in">L'Esprit de Noël :</span></span>
+      <span class="line"><span class="line-in gold">Paix, Partage</span></span>
+      <span class="line"><span class="line-in">&amp; Réconciliation</span></span>
     </h1>
-    <p class="hero-tagline">Paix, Partage &amp; Réconciliation</p>
-    <p class="hero-sub">
-      <span>Réveillon de Noël</span><i>·</i><span>District d'Aboisso</span>
-    </p>
-    <div class="hero-date">
-      <span class="d">Samedi</span><span class="n">19</span><span class="m">Décembre</span><span class="y">2026</span>
-      <span class="h">10h00 – 15h00</span>
+    <p class="hero-tagline">Un réveillon pour célébrer ensemble la naissance du Christ.</p>
+    <div class="countdown" id="countdown">
+      <div class="cd-card"><span id="cd-days">--</span><small>Jours</small></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-card"><span id="cd-hours">--</span><small>Heures</small></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-card"><span id="cd-mins">--</span><small>Minutes</small></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-card"><span id="cd-secs">--</span><small>Secondes</small></div>
+    </div>
+    <div class="calendar-links" data-stagger>
+      <a id="btn-gcal" class="cal-link" target="_blank" rel="noopener">📅 Google Agenda</a>
+      <a id="btn-ics" class="cal-link" download="noel-aboisso-2026.ics">🗓️ Fichier .ics</a>
     </div>
     <div class="hero-actions">
       <a class="btn btn-gold" href="#rsvp">Confirmer ma présence</a>
       <a class="btn btn-ghost" href="#partage">Partager l'invitation</a>
     </div>
-    <a class="scroll-cue" href="#compte-a-rebours" aria-label="Descendre"><span></span></a>
+    <a class="scroll-cue" href="#programme" aria-label="Descendre"><span></span></a>
     <div class="wave" aria-hidden="true">
       <svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path fill="#FDF9FA" d="M0 32 C 200 64 400 0 620 24 C 840 48 1040 8 1240 24 C 1340 32 1400 28 1440 26 L 1440 64 L 0 64 Z"/></svg>
     </div>
@@ -90,33 +100,14 @@
   </div>
 
   <main>
-    <!-- ============ COMPTE À REBOURS ============ -->
-    <section class="section" id="compte-a-rebours">
-      <p class="section-kicker">Réservez le grand jour</p>
-      <h2 class="section-title reveal">J-<span id="days-inline">—</span> avant la fête</h2>
-      <div class="countdown" id="countdown">
-        <div class="cd-card"><span id="cd-days">--</span><small>Jours</small></div>
-        <div class="cd-sep">:</div>
-        <div class="cd-card"><span id="cd-hours">--</span><small>Heures</small></div>
-        <div class="cd-sep">:</div>
-        <div class="cd-card"><span id="cd-mins">--</span><small>Minutes</small></div>
-        <div class="cd-sep">:</div>
-        <div class="cd-card"><span id="cd-secs">--</span><small>Secondes</small></div>
-      </div>
-      <div class="calendar-links" data-stagger>
-        <a id="btn-gcal" class="cal-link" target="_blank" rel="noopener">📅 Google Agenda</a>
-        <a id="btn-ics" class="cal-link" download="noel-aboisso-2026.ics">🗓️ Fichier .ics</a>
-      </div>
-    </section>
-
     <!-- ============ LE PREMIER CADEAU (récit) ============ -->
     <section class="section" id="premier-cadeau">
       <p class="section-kicker">Le premier cadeau</p>
       <h2 class="section-title reveal">Un don précieux &amp; unique</h2>
-      <div class="story reveal">
-        <p class="lead">Chaque décembre, nous, membres de l'Église de Jésus-Christ des Saints des Derniers Jours, commémorons <strong>l'esprit de Noël</strong> : cette période qui nous rappelle le premier cadeau offert à la terre — <strong>la naissance de Jésus-Christ</strong>.</p>
-        <p class="lead" style="margin-top:1rem">Pendant cette période, nos regards se tournent vers tout ce qui est <strong>partage</strong>, <strong>recherche de la paix</strong> et <strong>réconciliation avec nos proches</strong> — tout ce qui fait vivre l'esprit de Noël.</p>
-        <blockquote class="story-quote">
+      <div class="story" data-stagger>
+        <p class="lead reveal">Chaque décembre, nous, membres de l'Église de Jésus-Christ des Saints des Derniers Jours, commémorons <strong>l'esprit de Noël</strong> : cette période qui nous rappelle le premier cadeau offert à la terre — <strong>la naissance de Jésus-Christ</strong>.</p>
+        <p class="lead reveal" style="margin-top:1rem">Pendant cette période, nos regards se tournent vers tout ce qui est <strong>partage</strong>, <strong>recherche de la paix</strong> et <strong>réconciliation avec nos proches</strong> — tout ce qui fait vivre l'esprit de Noël.</p>
+        <blockquote class="story-quote reveal">
           « Car Dieu a tant aimé le monde qu'il a donné son Fils unique… »
           <cite>— Jean 3:16</cite>
         </blockquote>
@@ -132,60 +123,36 @@
         <figcaption>La crèche illuminée ✦</figcaption>
       </figure>
       <ol class="timeline" data-stagger>
-        <li class="tl-item reveal">
-          <div class="tl-time">10h00</div>
-          <div class="tl-card">
-            <span class="tl-emoji">🎉</span>
-            <h3>Accueil &amp; parade</h3>
-            <p>Arrivée des familles, musique, ballons et photos devant le <strong>mur lumineux « Éclairer le Monde »</strong>.</p>
-          </div>
-        </li>
-        <li class="tl-item reveal">
+        <li class="tl-item reveal from-left">
           <div class="tl-time">10h30</div>
           <div class="tl-card">
             <span class="tl-emoji">🕯️</span>
-            <h3>Moment spirituel</h3>
-            <p>Célébration de la naissance de Jésus-Christ, ce don précieux : sa vie, son ministère — et l'histoire du <strong>Rétablissement de l'Évangile</strong>, qui a permis au monde d'être sauvé.</p>
+            <h3>Moment Spirituel</h3>
+            <p>Accueil des familles dès 10h00, puis célébration de la naissance de Jésus-Christ : sa vie, son ministère et le message du <strong>Rétablissement</strong>.</p>
           </div>
         </li>
-        <li class="tl-item reveal">
+        <li class="tl-item reveal from-right">
           <div class="tl-time">11h30</div>
           <div class="tl-card">
             <span class="tl-emoji">🎭</span>
-            <h3>Théâtre &amp; représentations</h3>
-            <p>« La lumière du monde » : la nativité racontée par les jeunes de la paroisse, avec décors et costumes.</p>
+            <h3>Expression Artistique</h3>
+            <p>Théâtre « La lumière du monde », représentations et <strong>chorales de Noël</strong> en français et en langue locale.</p>
           </div>
         </li>
-        <li class="tl-item reveal">
-          <div class="tl-time">12h15</div>
-          <div class="tl-card">
-            <span class="tl-emoji">🎶</span>
-            <h3>Chorales de Noël</h3>
-            <p>Chants de chorales célébrant la naissance de Jésus-Christ, en français et en langue locale — reprise en chœur avec le public.</p>
-          </div>
-        </li>
-        <li class="tl-item reveal">
+        <li class="tl-item reveal from-left">
           <div class="tl-time">12h45</div>
           <div class="tl-card">
-            <span class="tl-emoji">🍽️</span>
-            <h3>Repas de partage</h3>
-            <p>Un moment convivial autour d'un bon repas, <strong>avec tous les missionnaires du district d'Aboisso</strong> 🤝.</p>
+            <span class="tl-emoji">🤝</span>
+            <h3>Présence missionnaires</h3>
+            <p>Un repas de partage convivial avec <strong>tous les missionnaires du district d'Aboisso</strong> — témoignages et échanges.</p>
           </div>
         </li>
-        <li class="tl-item reveal">
+        <li class="tl-item reveal from-right">
           <div class="tl-time">13h30</div>
           <div class="tl-card">
             <span class="tl-emoji">🎁</span>
-            <h3>Présents symboliques pour les enfants</h3>
-            <p>Chaque enfant présent recevra un présent symbolique — pour vraiment représenter l'esprit de Noël 🎄.</p>
-          </div>
-        </li>
-        <li class="tl-item reveal">
-          <div class="tl-time">14h30</div>
-          <div class="tl-card">
-            <span class="tl-emoji">✨</span>
-            <h3>Surprises &amp; clôture</h3>
-            <p>Jeux, tirage au sort, remise de diplômes « petite lumière » et photo de groupe lumineuse.</p>
+            <h3>Présents enfants</h3>
+            <p>Chaque enfant recevra un <strong>présent symbolique</strong> 🎄 — suivis de surprises, jeux et photo de groupe lumineuse ✨.</p>
           </div>
         </li>
       </ol>
@@ -195,39 +162,25 @@
     <section class="section" id="activites">
       <p class="section-kicker">Un geste d'amour</p>
       <h2 class="section-title reveal">Offrons un cadeau au Christ 🎁</h2>
-      <p class="center">Puisque nous célébrons <strong>sa naissance</strong>, chaque membre est invité à offrir un cadeau à Jésus-Christ : <strong>inviter un·e ami·e et un·e membre inactif·e</strong> à se joindre à cette fête particulière 💛</p>
+      <p class="center">Puisque nous célébrons <strong>sa naissance</strong>, chaque membre est invité à offrir un cadeau à Jésus-Christ 💛</p>
       <div class="grid-3" data-stagger>
         <article class="feature reveal">
           <span class="f-icon">💝</span>
-          <h3>Inviter : le cadeau au Christ</h3>
-          <p>En vous inscrivant, invitez un·e <strong>ami·e</strong> et un·e <strong>membre inactif·ve</strong> — nous vous aidons même à leur envoyer l'invitation par WhatsApp.</p>
+          <h3>Inviter un ami</h3>
+          <p>Offrir un cadeau au Christ en invitant un·e <strong>proche ou un·e membre moins actif·ve</strong> — nous vous aidons à lui envoyer l'invitation par WhatsApp.</p>
         </article>
         <article class="feature reveal">
           <span class="f-icon">🤝</span>
-          <h3>Missionnaires du district</h3>
-          <p>Nous serons avec <strong>tous les missionnaires du district d'Aboisso</strong> — une journée de témoignages et de partage.</p>
-        </article>
-        <article class="feature reveal">
-          <span class="f-icon">🕊️</span>
-          <h3>Paix &amp; réconciliation</h3>
-          <p>Un moment pour se rapprocher de ses proches, rechercher la paix et faire vivre l'esprit de Noël.</p>
+          <h3>Bénir une famille</h3>
+          <p>Des <strong>vêtements neufs ou d'autres présents</strong> sont les bienvenus pour bénir d'autres familles de la communauté.</p>
         </article>
         <article class="feature reveal">
           <span class="f-icon">🧒</span>
-          <h3>Présents pour les enfants</h3>
-          <p>Les enfants recevront ce jour-là des <strong>présents symboliques</strong>, en guise de cadeaux pour représenter l'esprit de Noël.</p>
-        </article>
-        <article class="feature reveal">
-          <span class="f-icon">🎭</span>
-          <h3>Théâtre &amp; chorales</h3>
-          <p>Des représentations et des chants de chorales pour raconter cette naissance, dans l'esprit de Noël.</p>
-        </article>
-        <article class="feature reveal">
-          <span class="f-icon">💫</span>
-          <h3>Gratuit &amp; ouvert</h3>
-          <p>L'entrée est entièrement <strong>gratuite</strong> : amis, parents, connaissances — tout le monde est bienvenu, comme le dit Matthieu 5:16.</p>
+          <h3>Offrir un sourire</h3>
+          <p>Des <strong>cadeaux symboliques</strong> remis à chaque enfant présent, pour représenter l'esprit de Noël 🎄.</p>
         </article>
       </div>
+      <p class="center"><strong>Entrée gratuite</strong> — amis, parents, connaissances : toute la famille est la bienvenue ✨</p>
       <div class="don-card reveal">
         <h3>Vous souhaitez faire un don&nbsp;? 🎁</h3>
         <p>Vous avez des <strong>habits neufs</strong> ou d'autres présents et souhaitez <strong>bénir d'autres familles</strong> : votre geste est le bienvenu. Écrivez-nous et nous organiserons la remise avec beaucoup de joie 🤍</p>
@@ -310,74 +263,94 @@
       </div>
 
       <form id="rsvp-form" class="rsvp-form reveal" novalidate>
-        <div class="field">
-          <label for="f-nom">Nom &amp; prénom</label>
-          <input id="f-nom" name="nom" type="text" required placeholder="Ex. Kouassi Aya" autocomplete="name" />
+        <div class="steps-bar" aria-hidden="true">
+          <span class="step-dot active" data-step-dot="1"></span>
+          <span class="step-dot" data-step-dot="2"></span>
+          <span class="step-dot" data-step-dot="3"></span>
         </div>
-        <div class="field choice" role="radiogroup" aria-label="Présence">
-          <label class="choice-item">
-            <input type="radio" name="presence" value="present" required checked />
-            <span>🎄 Je serai présent·e</span>
-          </label>
-          <label class="choice-item">
-            <input type="radio" name="presence" value="absent" />
-            <span>💔 Je ne pourrai pas venir</span>
-          </label>
-        </div>
-        <div class="field choice statut-choice" role="radiogroup" aria-label="Statut">
-          <label class="choice-item">
-            <input type="radio" name="statut" value="membre" checked />
-            <span>⛪ Membre</span>
-          </label>
-          <label class="choice-item">
-            <input type="radio" name="statut" value="ami" />
-            <span>🤝 Ami·e / visiteur·se</span>
-          </label>
-        </div>
-        <div class="field-row">
+        <p class="form-error hidden" id="rsvp-error">Merci d'indiquer au moins votre nom 🙏</p>
+
+        <!-- Étape 1 : vos infos -->
+        <div class="rsvp-step is-active" data-step="1">
           <div class="field">
-            <label for="f-tel">Téléphone / WhatsApp</label>
-            <input id="f-tel" name="tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" />
+            <label for="f-nom">Nom &amp; prénom</label>
+            <input id="f-nom" name="nom" type="text" required placeholder="Ex. Kouassi Aya" autocomplete="name" />
           </div>
-          <div class="field">
-            <label for="f-accomp">Nombre de personnes</label>
-            <input id="f-accomp" name="accomp" type="number" min="1" max="20" value="1" />
+          <div class="field choice" role="radiogroup" aria-label="Présence">
+            <label class="choice-item">
+              <input type="radio" name="presence" value="present" required checked />
+              <span>🎄 Je serai présent·e</span>
+            </label>
+            <label class="choice-item">
+              <input type="radio" name="presence" value="absent" />
+              <span>💔 Je ne pourrai pas venir</span>
+            </label>
           </div>
-        </div>
-        <div id="membre-fields" class="membre-fields">
+          <div class="field choice statut-choice" role="radiogroup" aria-label="Statut">
+            <label class="choice-item">
+              <input type="radio" name="statut" value="membre" checked />
+              <span>⛪ Membre</span>
+            </label>
+            <label class="choice-item">
+              <input type="radio" name="statut" value="ami" />
+              <span>🤝 Ami·e / visiteur·se</span>
+            </label>
+          </div>
           <div class="field-row">
             <div class="field">
-              <label for="f-branche">Branche</label>
-              <input id="f-branche" name="branche" type="text" placeholder="Ex. Branche d'Aboisso" />
+              <label for="f-tel">Téléphone / WhatsApp</label>
+              <input id="f-tel" name="tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" />
             </div>
             <div class="field">
-              <label for="f-localite">Localité</label>
-              <input id="f-localite" name="localite" type="text" placeholder="Ex. Aboisso, Adiaké…" />
+              <label for="f-accomp">Nombre de personnes</label>
+              <input id="f-accomp" name="accomp" type="number" min="1" max="20" value="1" />
             </div>
           </div>
-        </div>
-        <div class="field">
-          <label for="f-note">Petit mot (facultatif)</label>
-          <input id="f-note" name="note" type="text" maxlength="120" placeholder="Ex. Je viens avec 2 enfants" />
+          <button class="btn btn-gold btn-wide" type="button" data-next="2">Continuer ✨</button>
         </div>
 
-        <fieldset class="invite-block" id="invite-block">
-          <legend>💝 Qui souhaitez-vous inviter avec vous&nbsp;?</legend>
-          <p class="ib-hint">Offrez un cadeau au Christ 💛 — en tant que membre, invitez <strong>un·e ami·e et un·e membre inactif·ve</strong> (autant que vous voulez, facultatif). Nous vérifions les doublons, puis vous enverrez les invitations par WhatsApp 💌</p>
-          <div class="ib-sub">
-            <p class="ib-title">🤝 Un·e ami·e</p>
-            <div class="inv-list" id="inv-amis"></div>
-            <button class="link-btn inv-add" type="button" data-add-invite="ami">➕ Ajouter un·e autre ami·e</button>
+        <!-- Étape 2 : branche & invitations (membres) -->
+        <div class="rsvp-step" data-step="2">
+          <div id="membre-fields" class="membre-fields">
+            <div class="field-row">
+              <div class="field">
+                <label for="f-branche">Branche</label>
+                <input id="f-branche" name="branche" type="text" placeholder="Ex. Branche d'Aboisso" />
+              </div>
+              <div class="field">
+                <label for="f-localite">Localité</label>
+                <input id="f-localite" name="localite" type="text" placeholder="Ex. Aboisso, Adiaké…" />
+              </div>
+            </div>
           </div>
-          <div class="ib-sub">
-            <p class="ib-title">⛪ Un·e membre inactif·ve</p>
-            <div class="inv-list" id="inv-inactifs"></div>
-            <button class="link-btn inv-add" type="button" data-add-invite="inactif">➕ Ajouter un·e autre membre inactif·ve</button>
-          </div>
-        </fieldset>
 
-        <p class="form-error hidden" id="rsvp-error">Merci d'indiquer au moins votre nom 🙏</p>
-        <button class="btn btn-gold btn-wide" type="submit">Envoyer ma réponse 💌</button>
+          <fieldset class="invite-block" id="invite-block">
+            <legend>💝 Qui souhaitez-vous inviter avec vous&nbsp;?</legend>
+            <p class="ib-hint">Offrez un cadeau au Christ 💛 — en tant que membre, invitez <strong>un·e ami·e et un·e membre inactif·ve</strong> (autant que vous voulez, facultatif). Nous vérifions les doublons, puis vous enverrez les invitations par WhatsApp 💌</p>
+            <div class="ib-sub">
+              <p class="ib-title">🤝 Un·e ami·e</p>
+              <div class="inv-list" id="inv-amis"></div>
+              <button class="link-btn inv-add" type="button" data-add-invite="ami">➕ Ajouter un·e autre ami·e</button>
+            </div>
+            <div class="ib-sub">
+              <p class="ib-title">⛪ Un·e membre inactif·ve</p>
+              <div class="inv-list" id="inv-inactifs"></div>
+              <button class="link-btn inv-add" type="button" data-add-invite="inactif">➕ Ajouter un·e autre membre inactif·ve</button>
+            </div>
+          </fieldset>
+          <button class="btn btn-gold btn-wide" type="button" data-next="3">Continuer 💝</button>
+          <button class="btn btn-ghost-dark btn-wide" type="button" data-back="1">← Retour</button>
+        </div>
+
+        <!-- Étape 3 : petit mot & envoi -->
+        <div class="rsvp-step" data-step="3">
+          <div class="field">
+            <label for="f-note">Petit mot (facultatif)</label>
+            <input id="f-note" name="note" type="text" maxlength="120" placeholder="Ex. Je viens avec 2 enfants" />
+          </div>
+          <button class="btn btn-gold btn-wide" type="submit">Envoyer ma réponse 💌</button>
+          <button class="btn btn-ghost-dark btn-wide" type="button" data-back="2">← Retour</button>
+        </div>
       </form>
 
       <!-- Carte d'invitation officielle -->
@@ -508,8 +481,8 @@
       <blockquote class="verse reveal">« Que votre lumière luise ainsi devant les hommes, afin qu'ils voient vos bonnes œuvres, et qu'ils glorifient votre Père qui est dans les cieux. » <cite>— Matthieu 5:16</cite></blockquote>
       <p class="center">Un proche qui n'a pas encore reçu l'invitation ? Envoyez-lui ce petit mot signé <strong>Éclairer le Monde · Aboisso</strong>.</p>
       <div class="share-actions reveal" data-stagger>
-        <a class="btn btn-green" id="btn-share-wa" target="_blank" rel="noopener">💬 Partager sur WhatsApp</a>
-        <button class="btn btn-ghost-dark" id="btn-copy-link" type="button">🔗 Copier le lien</button>
+        <a class="btn btn-green" data-share-wa target="_blank" rel="noopener">💬 Partager sur WhatsApp</a>
+        <button class="btn btn-ghost-dark" data-copy-link type="button">🔗 Copier le lien</button>
       </div>
       <p class="hashtag">#ÉclairerLeMonde #NoelAboisso2026</p>
     </section>
@@ -519,10 +492,18 @@
     <img class="footer-logo" src="assets/elw-logo-rouge.jpg" alt="Éclairer le Monde" aria-hidden="true" />
     <p>Avec toute notre joie, <strong>Éclairer le Monde — Aboisso</strong></p>
     <div class="footer-divider" aria-hidden="true">✦</div>
-    <p class="muted">Église de Jésus-Christ des Saints des Derniers Jours</p>
+    <p class="muted">Église de Jésus-Christ des Saints des Derniers Jours — District d'Aboisso</p>
     <p class="muted">📍 Salle des fêtes de la mairie d'Aboisso · Samedi 19 décembre 2026 · 10h00 – 15h00</p>
-    <p class="muted small">Entrée gratuite — #ÉclairerLeMonde #NoelAboisso2026 ✨</p>
+    <p class="muted small">« Vous êtes la lumière du monde » — Matthieu 5:14 · Entrée gratuite</p>
+    <div class="footer-share">
+      <a data-share-wa target="_blank" rel="noopener" aria-label="Partager l'invitation sur WhatsApp">💬</a>
+      <button data-copy-link type="button" aria-label="Copier le lien de l'invitation">🔗</button>
+    </div>
+    <p class="muted small">© 2026 Éclairer le Monde — District d'Aboisso ✨ #ÉclairerLeMonde #NoelAboisso2026</p>
   </footer>
+
+  <!-- ============ CTA RSVP FLOTTANT (mobile & desktop) ============ -->
+  <a class="cta-float" id="cta-float" href="#rsvp">💌 Confirmer ma présence</a>
 
   <!-- ============ LECTEUR DE MUSIQUE ============ -->
   <button class="music-fab" id="music-fab" aria-label="Lecteur de musique" title="Cantiques de Noël">
@@ -556,6 +537,6 @@
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="assets/qrcode-generator.js"></script>
-  <script src="script.js?v=13"></script>
+  <script src="script.js?v=16"></script>
 </body>
 </html>
