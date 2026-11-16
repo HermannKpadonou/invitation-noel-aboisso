@@ -90,6 +90,12 @@ async function initDB() {
       at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );`);
 
+  /* Colonnes RSVP ajoutées avec le formulaire enrichi (statut, branche,
+     localité, invités : ami + membre inactif) — sans casser l'existant */
+  for (const col of ["statut", "branche", "localite", "ami_nom", "ami_tel", "inactif_nom", "inactif_tel"]) {
+    await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS ${col} TEXT DEFAULT ''`);
+  }
+
   /* Import automatique des données locales si les tables sont vides */
   const local = {
     rsvps: readJSON("rsvps.json", []),
@@ -172,10 +178,11 @@ function serveStatic(req, res, urlPath) {
 async function addRsvp(d) {
   if (db) {
     const r = await db.query(
-      `INSERT INTO rsvps (num, nom, presence, tel, people, note)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       RETURNING id, num, nom, presence, tel, people, note, at`,
-      [d.num, d.nom, d.presence, d.tel, d.people, d.note]
+      `INSERT INTO rsvps (num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       RETURNING id, num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, at`,
+      [d.num, d.nom, d.presence, d.tel, d.people, d.note, d.statut || "membre", d.branche || "", d.localite || "",
+       d.ami_nom || "", d.ami_tel || "", d.inactif_nom || "", d.inactif_tel || ""]
     );
     return r.rows[0];
   }
@@ -191,7 +198,9 @@ async function addRsvp(d) {
 }
 
 async function listRsvps() {
-  if (db) return (await db.query(`SELECT id, num, nom, presence, tel, people, note, at FROM rsvps ORDER BY id ASC`)).rows;
+  if (db) return (await db.query(
+    `SELECT id, num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, at FROM rsvps ORDER BY id ASC`
+  )).rows;
   return readJSON("rsvps.json", []);
 }
 
@@ -278,8 +287,15 @@ async function handleAPI(req, res, url) {
       num: Math.floor(100 + Math.random() * 900),
       nom,
       presence: body.presence === "absent" ? "absent" : "present",
+      statut: body.statut === "ami" ? "ami" : "membre",
       tel: clean(body.tel, 30),
       people: Math.min(Math.max(parseInt(body.people) || 1, 1), 30),
+      branche: clean(body.branche, 80),
+      localite: clean(body.localite, 80),
+      ami_nom: clean(body.ami_nom, 80),
+      ami_tel: clean(body.ami_tel, 30),
+      inactif_nom: clean(body.inactif_nom, 80),
+      inactif_tel: clean(body.inactif_tel, 30),
       note: clean(body.note, 150),
     });
     return send(res, 200, { ok: true, entry });
@@ -334,10 +350,14 @@ async function handleAPI(req, res, url) {
       const rsvps = await listRsvps();
       const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
       const lines = [
-        ["N° billet", "Nom", "Présence", "Personnes", "Téléphone", "Note", "Date"].join(";"),
+        ["N° billet", "Nom", "Statut", "Présence", "Personnes", "Téléphone", "Branche", "Localité",
+         "Ami invité", "Contact ami", "Membre inactif invité", "Contact membre", "Note", "Date"].join(";"),
         ...rsvps.map((r) => [
-          r.num, esc(r.nom), r.presence === "present" ? "Présent(e)" : "Absent(e)",
-          r.people, esc(r.tel), esc(r.note), esc(new Date(r.at).toLocaleString("fr-FR")),
+          r.num, esc(r.nom), esc(r.statut === "ami" ? "Ami·e / visiteur·se" : "Membre"),
+          r.presence === "present" ? "Présent(e)" : "Absent(e)",
+          r.people, esc(r.tel), esc(r.branche || ""), esc(r.localite || ""),
+          esc(r.ami_nom || ""), esc(r.ami_tel || ""), esc(r.inactif_nom || ""), esc(r.inactif_tel || ""),
+          esc(r.note), esc(new Date(r.at).toLocaleString("fr-FR")),
         ].join(";")),
       ];
       return send(res, 200, "\uFEFF" + lines.join("\r\n"), {

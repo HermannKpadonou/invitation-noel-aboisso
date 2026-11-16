@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body>
 
@@ -113,6 +113,9 @@
     <section class="section alt" id="programme">
       <p class="section-kicker">Le programme de la journée</p>
       <h2 class="section-title reveal">Cinq heures de magie ✨</h2>
+      <figure class="creche-banner reveal" aria-hidden="true">
+        <img src="assets/creche-rouge.jpg" alt="" loading="lazy" />
+      </figure>
       <ol class="timeline" data-stagger>
         <li class="tl-item reveal">
           <div class="tl-time">10h00</div>
@@ -201,10 +204,20 @@
           <p>L'entrée est entièrement <strong>gratuite</strong>, comme le dit Matthieu 5:16 : que tous voient nos bonnes œuvres.</p>
         </article>
       </div>
-      <figure class="photo-band reveal">
-        <img src="assets/photo-event.jpg" alt="Écharpe Light the World et ballons, ambiance de fête" loading="lazy" />
-        <figcaption>L'ambiance « Light the World » — rouge, blanc et lumière ✦</figcaption>
-      </figure>
+      <div class="gallery-strip reveal" data-stagger>
+        <figure class="gs-item">
+          <img src="assets/photo-event.jpg" alt="Écharpe Light the World et ballons, ambiance de fête" loading="lazy" />
+          <figcaption>L'esprit « Éclairer le Monde » ✦</figcaption>
+        </figure>
+        <figure class="gs-item">
+          <img src="assets/temple_square_at_christmas.webp" alt="Place du temple illuminée de milliers de lumières de Noël" loading="lazy" />
+          <figcaption>Des milliers de lumières ✨</figcaption>
+        </figure>
+        <figure class="gs-item">
+          <img src="assets/creche-rouge.jpg" alt="Silhouette de la crèche de Bethléem sous un ciel rouge et étoilé" loading="lazy" />
+          <figcaption>La naissance de Jésus-Christ 🌟</figcaption>
+        </figure>
+      </div>
     </section>
 
     <!-- ============ LIEU ============ -->
@@ -213,6 +226,7 @@
       <h2 class="section-title reveal">Salle des fêtes de la mairie d'Aboisso</h2>
       <div class="place reveal">
         <div class="place-map" aria-hidden="true">
+          <img class="place-christus" src="assets/christus-arche.jpg" alt="" loading="lazy" />
           <div class="map-pin">📍<span>Église de Jésus-Christ des SDJ</span></div>
         </div>
         <div class="place-info">
@@ -235,6 +249,9 @@
       <p class="section-kicker">Dress code &amp; thème</p>
       <h2 class="section-title reveal">Venez brillant·e ✨</h2>
       <p class="center">Pas de contrainte stricte — mais une suggestion : <strong>une touche de rouge ou de blanc</strong>, comme la lumière de Noël. Les enfants peuvent venir déguisés en anges, étoiles, bergers ou petits sapins 🌟</p>
+      <figure class="tenue-photo reveal">
+        <img src="assets/sapin-noel.jpg" alt="Sapin de Noël décoré de rouge et d'or" loading="lazy" />
+      </figure>
       <div class="palette reveal" data-stagger>
         <span class="swatch" style="--c:#c81d33">Rouge lumière</span>
         <span class="swatch" style="--c:#ffffff; color:#8f1320; border-color:#e9d9cf">Blanc neige</span>
@@ -270,6 +287,16 @@
             <span>💔 Je ne pourrai pas venir</span>
           </label>
         </div>
+        <div class="field choice statut-choice" role="radiogroup" aria-label="Statut">
+          <label class="choice-item">
+            <input type="radio" name="statut" value="membre" checked />
+            <span>⛪ Membre</span>
+          </label>
+          <label class="choice-item">
+            <input type="radio" name="statut" value="ami" />
+            <span>🤝 Ami·e / visiteur·se</span>
+          </label>
+        </div>
         <div class="field-row">
           <div class="field">
             <label for="f-tel">Téléphone / WhatsApp</label>
@@ -280,10 +307,54 @@
             <input id="f-accomp" name="accomp" type="number" min="1" max="20" value="1" />
           </div>
         </div>
+        <div id="membre-fields" class="membre-fields">
+          <div class="field-row">
+            <div class="field">
+              <label for="f-branche">Branche</label>
+              <input id="f-branche" name="branche" type="text" placeholder="Ex. Branche d'Aboisso" />
+            </div>
+            <div class="field">
+              <label for="f-localite">Localité</label>
+              <input id="f-localite" name="localite" type="text" placeholder="Ex. Aboisso, Adiaké…" />
+            </div>
+          </div>
+        </div>
         <div class="field">
           <label for="f-note">Petit mot (facultatif)</label>
           <input id="f-note" name="note" type="text" maxlength="120" placeholder="Ex. Je viens avec 2 enfants" />
         </div>
+
+        <fieldset class="invite-block">
+          <legend>💝 Qui souhaitez-vous inviter avec vous&nbsp;?</legend>
+          <p class="ib-hint">Fête de Noël du <strong>District d'Aboisso</strong> — proposez les coordonnées de vos proches (facultatif), nous leur ferons parvenir l'invitation 💌</p>
+          <div class="ib-sub">
+            <p class="ib-title">🤝 Un·e ami·e</p>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-ami-nom">Son nom</label>
+                <input id="f-ami-nom" name="ami_nom" type="text" maxlength="80" placeholder="Ex. Koffi Yao" />
+              </div>
+              <div class="field">
+                <label for="f-ami-tel">Son contact</label>
+                <input id="f-ami-tel" name="ami_tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" />
+              </div>
+            </div>
+          </div>
+          <div class="ib-sub">
+            <p class="ib-title">⛪ Un·e membre inactif·ve</p>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-inactif-nom">Son nom</label>
+                <input id="f-inactif-nom" name="inactif_nom" type="text" maxlength="80" placeholder="Ex. Sœur Adjoua" />
+              </div>
+              <div class="field">
+                <label for="f-inactif-tel">Son contact</label>
+                <input id="f-inactif-tel" name="inactif_tel" type="tel" inputmode="tel" placeholder="05 00 00 00 00" />
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
         <p class="form-error hidden" id="rsvp-error">Merci d'indiquer au moins votre nom 🙏</p>
         <button class="btn btn-gold btn-wide" type="submit">Envoyer ma réponse 💌</button>
       </form>
@@ -328,20 +399,23 @@
       </div>
     </section>
 
-    <!-- ============ LIVRE D'OR ============ -->
+    <!-- ============ MES VŒUX (livre d'or) ============ -->
     <section class="section" id="mots-doux">
-      <p class="section-kicker">Mots doux</p>
-      <h2 class="section-title reveal">Laissez-nous un petit mot 💌</h2>
+      <figure class="gb-creche reveal" aria-hidden="true">
+        <img src="assets/creche-nuit.jpg" alt="" loading="lazy" />
+      </figure>
+      <p class="section-kicker">Mes vœux pour cette fête de Noël</p>
+      <h2 class="section-title reveal">Partagez vos vœux pour cette fête de Noël 💌</h2>
       <form id="guestbook-form" class="gb-form reveal">
         <div class="field">
           <label for="g-nom">Votre nom</label>
           <input id="g-nom" type="text" required maxlength="40" placeholder="Ex. Famille Kouamé" />
         </div>
         <div class="field">
-          <label for="g-msg">Votre message <span id="g-count">0/200</span></label>
-          <textarea id="g-msg" rows="3" maxlength="200" placeholder="Vos vœux, votre enthousiasme…"></textarea>
+          <label for="g-msg">Vos vœux <span id="g-count">0/200</span></label>
+          <textarea id="g-msg" rows="3" maxlength="200" placeholder="Vos vœux, votre enthousiasme pour cette fête de Noël…"></textarea>
         </div>
-        <button class="btn btn-red btn-wide" type="submit">Signer le livre d'or ✍️</button>
+        <button class="btn btn-red btn-wide" type="submit">Envoyer mes vœux ✍️</button>
       </form>
       <ul class="gb-list" id="gb-list" data-stagger></ul>
     </section>
@@ -364,11 +438,15 @@
           <img id="wall-preview" class="wall-preview hidden" alt="Aperçu de votre photo" />
           <div class="wall-placeholder" id="wall-placeholder">
             <span class="wp-emoji">📷</span>
-            <p>Cliquez pour choisir votre photo</p>
+            <p>Choisissez ou prenez votre photo</p>
             <small>Elle sera recadrée en joli cadre polaroïd</small>
             <span class="wp-drop">✋ ou glissez-déposez-la ici</span>
           </div>
           <input id="wall-photo" type="file" accept="image/*" hidden />
+        </div>
+        <div class="wall-actions-row">
+          <button class="btn btn-red" id="btn-camera" type="button">📸 Prendre une photo</button>
+          <button class="btn btn-ghost-dark" id="btn-choose" type="button">🖼️ Choisir dans la galerie</button>
         </div>
         <div class="field">
           <label for="w-nom">Votre nom</label>
@@ -381,6 +459,22 @@
         <p class="form-error hidden" id="wall-error">Choisissez d'abord une photo et indiquez votre nom 🙏</p>
         <button class="btn btn-gold btn-wide" type="submit">✨ Annoncer que je serai là !</button>
       </form>
+
+      <!-- Modale de capture directe (appareil photo / smartphone) -->
+      <div class="cam-modal hidden" id="cam-modal" role="dialog" aria-label="Prendre une photo">
+        <div class="cam-box">
+          <div class="cam-stage">
+            <video id="cam-video" autoplay playsinline muted></video>
+            <canvas id="cam-canvas" class="hidden"></canvas>
+            <div class="cam-guide" aria-hidden="true"></div>
+          </div>
+          <p class="cam-hint">Cadrage carré — placez-vous bien au centre ✦</p>
+          <div class="cam-actions">
+            <button class="btn btn-gold" id="btn-capture" type="button">📸 Capturer</button>
+            <button class="btn btn-ghost-dark" id="btn-cam-close" type="button">Annuler</button>
+          </div>
+        </div>
+      </div>
 
       <div class="wall-grid" id="wall-grid"></div>
       <p class="wall-empty" id="wall-empty">Soyez la première lumière sur le mur ✨</p>
@@ -404,7 +498,7 @@
     <div class="wave wave-top" aria-hidden="true">
       <svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path fill="#fdf0e0" d="M0 32 C 200 64 400 0 620 24 C 840 48 1040 8 1240 24 C 1340 32 1400 28 1440 26 L 1440 64 L 0 64 Z"/></svg>
     </div>
-    <img class="footer-logo" src="assets/light_the_world.webp" alt="" aria-hidden="true" />
+    <img class="footer-logo" src="assets/elw-logo-rouge.jpg" alt="Éclairer le Monde" aria-hidden="true" />
     <p>Avec toute notre joie, <strong>Éclairer le Monde — Aboisso</strong></p>
     <p class="muted">Église de Jésus-Christ des Saints des Derniers Jours · Salle des fêtes de la mairie d'Aboisso · 19 décembre 2026</p>
     <p class="muted small">Fait avec ❤️ pour éclairer le monde, une lumière à la fois.</p>
@@ -442,6 +536,6 @@
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="assets/qrcode-generator.js"></script>
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>

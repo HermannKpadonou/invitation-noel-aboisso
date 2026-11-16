@@ -399,6 +399,15 @@ function getRsvps() {
   const card = $("#invite-card");
   let currentInvite = null;
 
+  /* Statut membre / ami : montrer ou cacher les champs de branche & localité */
+  const membreFields = $("#membre-fields");
+  function syncStatut() {
+    const statut = form.querySelector('input[name="statut"]:checked')?.value || "membre";
+    membreFields.classList.toggle("hidden", statut !== "membre");
+  }
+  form.querySelectorAll('input[name="statut"]').forEach((r) => r.addEventListener("change", syncStatut));
+  syncStatut();
+
   /* Si une réponse existe déjà : proposer de voir le billet */
   const rsvps = getRsvps();
   let last = Object.values(rsvps).pop();
@@ -425,8 +434,15 @@ function getRsvps() {
       num: Math.floor(100 + Math.random() * 900),
       nom,
       presence: fd.get("presence") || "present",
+      statut: fd.get("statut") === "ami" ? "ami" : "membre",
       tel: (fd.get("tel") || "").trim(),
       people: Math.min(Math.max(parseInt(fd.get("accomp") || "1", 10) || 1, 1), 30),
+      branche: (fd.get("branche") || "").trim(),
+      localite: (fd.get("localite") || "").trim(),
+      ami_nom: (fd.get("ami_nom") || "").trim(),
+      ami_tel: (fd.get("ami_tel") || "").trim(),
+      inactif_nom: (fd.get("inactif_nom") || "").trim(),
+      inactif_tel: (fd.get("inactif_tel") || "").trim(),
       note: (fd.get("note") || "").trim(),
       at: new Date().toISOString(),
     };
@@ -451,6 +467,7 @@ function getRsvps() {
     /* Afficher la carte d'invitation (elle s'ouvre en animation) */
     showInvite(data);
     form.reset();
+    syncStatut();
     toast("💌 Réponse envoyée — votre carte d'invitation est prête !");
     launchConfetti();
     setTimeout(() => {
@@ -679,7 +696,7 @@ function getRsvps() {
     if (!entriesList.length) {
       const li = document.createElement("li");
       li.className = "gb-empty";
-      li.textContent = "Soyez la première personne à signer le livre d'or ✨";
+      li.textContent = "Soyez la première personne à partager ses vœux pour cette fête de Noël ✨";
       list.appendChild(li);
       return;
     }
@@ -732,7 +749,7 @@ function getRsvps() {
     form.reset();
     count.textContent = "0/200";
     render();
-    toast("✍️ Merci pour votre petit mot !");
+    toast("💌 Merci pour vos vœux pour cette fête de Noël !");
     list.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
 
@@ -752,6 +769,10 @@ function getRsvps() {
   const preview = $("#wall-preview");
   const placeholder = $("#wall-placeholder");
   const error = $("#wall-error");
+  const camModal = $("#cam-modal");
+  const camVideo = $("#cam-video");
+  const camCanvas = $("#cam-canvas");
+  let camStream = null;
   let photoData = null;
   let serverEntries = null;
 
@@ -794,6 +815,7 @@ function getRsvps() {
   drop.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choosePhoto(); }
   });
+  $("#btn-choose").addEventListener("click", (e) => { e.preventDefault(); choosePhoto(); });
 
   /* Glisser-déposer */
   ["dragenter", "dragover"].forEach((ev) =>
@@ -820,6 +842,157 @@ function getRsvps() {
       placeholder.classList.add("hidden");
       drop.classList.add("has-photo");
     } catch { toast("Impossible de lire cette image 😕"); }
+  }
+
+  /* =======================================================
+     CAPTURE DIRECTE — appareil photo / smartphone
+     ======================================================= */
+  async function stopCamera() {
+    if (camStream) { camStream.getTracks().forEach((t) => t.stop()); camStream = null; }
+  }
+
+  async function openCamera() {
+    camModal.classList.remove("hidden");
+    camVideo.classList.remove("hidden");
+    camCanvas.classList.add("hidden");
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 1280 } },
+        audio: false,
+      });
+      camVideo.srcObject = camStream;
+    } catch {
+      /* Pas d'accès caméra (permission refusée, pas de HTTPS…) :
+         on bascule sur l'appareil photo natif du téléphone */
+      await stopCamera();
+      camModal.classList.add("hidden");
+      fileInput.capture = "environment";
+      choosePhoto();
+      setTimeout(() => fileInput.removeAttribute("capture"), 1000);
+      toast("📱 Ouvrez votre appareil photo et validez la capture 📸");
+    }
+  }
+
+  function closeCamera() {
+    stopCamera();
+    camModal.classList.add("hidden");
+  }
+
+  $("#btn-camera").addEventListener("click", (e) => { e.preventDefault(); openCamera(); });
+  $("#btn-cam-close").addEventListener("click", closeCamera);
+
+  /* Capture : dessin de la frame vidéo recadrée en carré 500×500 */
+  $("#btn-capture").addEventListener("click", () => {
+    const v = camVideo;
+    if (!v.videoWidth) { toast("La caméra se prépare encore… 🙏"); return; }
+    const side = Math.min(v.videoWidth, v.videoHeight);
+    camCanvas.width = camCanvas.height = 500;
+    camCanvas.getContext("2d").drawImage(
+      v,
+      (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side,
+      0, 0, 500, 500
+    );
+    photoData = camCanvas.toDataURL("image/jpeg", 0.72);
+    preview.src = photoData;
+    preview.classList.remove("hidden");
+    placeholder.classList.add("hidden");
+    drop.classList.add("has-photo");
+    closeCamera();
+    toast("📸 Photo capturée ! Elle sera affichée avec le cadre Éclairer le Monde ✨");
+  });
+
+  /* =======================================================
+     CADRE « ÉCLAIRER LE MONDE » — téléchargement PNG
+     ======================================================= */
+  function roundedRect(x, px, py, w, h, r) {
+    x.beginPath();
+    x.moveTo(px + r, py);
+    x.arcTo(px + w, py, px + w, py + h, r);
+    x.arcTo(px + w, py + h, px, py + h, r);
+    x.arcTo(px, py + h, px, py, r);
+    x.arcTo(px, py, px + w, py, r);
+    x.closePath();
+  }
+
+  function drawFramedPhoto(e) {
+    const W = 900, H = 1160;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const x = c.getContext("2d");
+
+    /* Cadre rouge extérieur */
+    const RG = x.createLinearGradient(0, 0, 0, H);
+    RG.addColorStop(0, "#e63950"); RG.addColorStop(.55, "#c81d33"); RG.addColorStop(1, "#8f1320");
+    roundedRect(x, 0, 0, W, H, 34); x.fillStyle = RG; x.fill();
+
+    /* Fond crème intérieur */
+    roundedRect(x, 20, 20, W - 40, H - 40, 22); x.fillStyle = "#fffdf8"; x.fill();
+
+    /* Liseré doré */
+    x.strokeStyle = "rgba(245,192,78,.9)"; x.lineWidth = 2.5;
+    roundedRect(x, 32, 32, W - 64, H - 64, 16); x.stroke();
+
+    /* Photo recadrée en carré */
+    const px = 80, py = 80, pw = W - 160;
+
+    const img = new Image();
+    const finish = () => {
+      const a = document.createElement("a");
+      a.download = `eclairer-le-monde-${(e.nom || "photo").replace(/\s+/g, "-").toLowerCase()}.png`;
+      a.href = c.toDataURL("image/png");
+      a.click();
+    };
+    img.onload = () => {
+      /* photo carrée (les photos du mur sont déjà carrées) */
+      x.save();
+      roundedRect(x, px, py, pw, pw, 12); x.clip();
+      const side = Math.min(img.width, img.height);
+      x.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, px, py, pw, pw);
+      x.restore();
+      /* fin contour doré de la photo */
+      x.strokeStyle = "rgba(245,192,78,.95)"; x.lineWidth = 3;
+      roundedRect(x, px, py, pw, pw, 12); x.stroke();
+
+      /* Étoile dorée */
+      x.fillStyle = "#f5c04e";
+      const cx = W / 2, cy = py + pw + 62, R = 20, r2 = 8;
+      x.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const rad = i % 2 === 0 ? R : r2;
+        const a = (Math.PI * i) / 5 - Math.PI / 2;
+        x[i ? "lineTo" : "moveTo"](cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+      }
+      x.closePath(); x.fill();
+
+      /* Titre */
+      x.textAlign = "center";
+      x.fillStyle = "#8f1320";
+      x.font = "italic 600 46px 'Playfair Display', Georgia, serif";
+      x.fillText("Éclairer le Monde", W / 2, cy + 66);
+
+      /* Nom du participant */
+      if (e.nom) {
+        x.fillStyle = "#3b2a2a";
+        x.font = "700 30px Poppins, sans-serif";
+        x.fillText(e.nom.length > 30 ? e.nom.slice(0, 30) + "…" : e.nom, W / 2, cy + 112);
+      }
+
+      /* Date & lieu */
+      x.fillStyle = "#8a6a6a";
+      x.font = "500 21px Poppins, sans-serif";
+      x.fillText("19 · 12 · 2026  ·  Salle des fêtes de la mairie d'Aboisso", W / 2, cy + 152);
+
+      /* Hashtag sur pastille rouge */
+      x.fillStyle = "#c81d33";
+      roundedRect(x, W / 2 - 175, cy + 175, 350, 46, 23); x.fill();
+      x.fillStyle = "#ffffff";
+      x.font = "700 22px Poppins, sans-serif";
+      x.fillText("#ÉclairerLeMonde", W / 2, cy + 205);
+
+      finish();
+    };
+    img.onerror = finish;
+    img.src = e.photo;
   }
 
   function render() {
@@ -858,6 +1031,19 @@ function getRsvps() {
         msg.textContent = e.msg;
         fig.appendChild(msg);
       }
+      /* Téléchargement de la photo avec le cadre Éclairer le Monde */
+      const dl = document.createElement("button");
+      dl.type = "button";
+      dl.className = "wc-dl";
+      dl.title = "Télécharger ma photo avec le cadre Éclairer le Monde";
+      dl.setAttribute("aria-label", "Télécharger la photo avec le cadre Éclairer le Monde");
+      dl.textContent = "⬇️";
+      dl.addEventListener("click", (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        drawFramedPhoto(e);
+        toast("⬇️ Votre photo avec le cadre Éclairer le Monde est téléchargée ✨");
+      });
+      fig.appendChild(dl);
       grid.appendChild(fig);
     });
   }
@@ -897,7 +1083,7 @@ function getRsvps() {
     placeholder.classList.remove("hidden");
     drop.classList.remove("has-photo");
     render();
-    toast("📸 Vous êtes sur le mur — à très bientôt sur place !");
+    toast("📸 Vous êtes sur le mur ! Cliquez ⬇️ pour télécharger votre photo avec le cadre ✨");
     launchConfetti();
     grid.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });

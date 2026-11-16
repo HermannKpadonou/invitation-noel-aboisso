@@ -3,6 +3,15 @@
    ========================================================= */
 const $ = (sel) => document.querySelector(sel);
 
+/* Numéro local ivoirien → format international pour les liens WhatsApp */
+function normalizePhone(t) {
+  let p = String(t || "").replace(/\D/g, "");
+  if (p.startsWith("225")) return p;           // déjà au format international
+  if (p.startsWith("0")) return "225" + p;     // numéro local 0X XX XX XX XX
+  if (p.length === 8) return "225" + p;        // ancien format ivoirien à 8 chiffres
+  return p;
+}
+
 function toast(msg) {
   const t = $("#toast");
   t.textContent = msg;
@@ -95,9 +104,21 @@ function render() {
   /* Table des inscriptions (avec filtres) */
   const q = $("#f-search").value.trim().toLowerCase();
   const filter = $("#f-filter").value;
+  const matchesFilter = (r) => {
+    if (filter === "all") return true;
+    if (filter === "present" || filter === "absent") return r.presence === filter;
+    if (filter === "membre") return (r.statut || "membre") === "membre";
+    if (filter === "ami") return r.statut === "ami";
+    return true;
+  };
+  const matchesSearch = (r) => {
+    if (!q) return true;
+    return [r.nom, r.branche, r.localite, r.ami_nom, r.inactif_nom, r.tel]
+      .some((v) => (v || "").toLowerCase().includes(q));
+  };
   const rows = rsvps
-    .filter((r) => (filter === "all" || r.presence === filter))
-    .filter((r) => !q || r.nom.toLowerCase().includes(q))
+    .filter(matchesFilter)
+    .filter(matchesSearch)
     .slice()
     .reverse();
 
@@ -107,12 +128,19 @@ function render() {
     const tr = document.createElement("tr");
     const tel = r.tel ? normalizePhone(r.tel) : "";
     const wa = tel ? `https://wa.me/${tel}` : "";
+    const invites = [
+      r.ami_nom ? `🤝 ${r.ami_nom}${r.ami_tel ? " (" + normalizePhone(r.ami_tel) + ")" : ""}` : "",
+      r.inactif_nom ? `⛪ ${r.inactif_nom}${r.inactif_tel ? " (" + normalizePhone(r.inactif_tel) + ")" : ""}` : "",
+    ].filter(Boolean);
     tr.innerHTML = `
       <td class="t-num">N°${r.num}</td>
       <td class="t-name">${escapeHTML(r.nom)}</td>
+      <td><span class="badge statut">${r.statut === "ami" ? "🤝 Ami·e" : "⛪ Membre"}</span></td>
       <td><span class="badge ${r.presence === "present" ? "ok" : "ko"}">${r.presence === "present" ? "🎄 Présent·e" : "💔 Absent·e"}</span></td>
       <td>${r.people}</td>
       <td>${r.tel ? escapeHTML(r.tel) : "—"}</td>
+      <td>${(r.branche || r.localite) ? escapeHTML([r.branche, r.localite].filter(Boolean).join(" · ")) : "—"}</td>
+      <td>${invites.length ? escapeHTML(invites.join("  •  ")) : "—"}</td>
       <td>${r.note ? escapeHTML(r.note) : "—"}</td>
       <td>${fmtDate(r.at)}</td>
       <td><div class="row-actions">
@@ -204,10 +232,10 @@ document.addEventListener("click", async (e) => {
     toast("🗑️ Inscription supprimée");
   }
   if (delG) {
-    if (!confirm("Supprimer ce message du livre d'or ?")) return;
+    if (!confirm("Supprimer ce vœu ?")) return;
     await api(`/api/admin/guestbook?id=${delG.dataset.delGb}`, { method: "DELETE" });
     await refresh();
-    toast("🗑️ Message supprimé");
+    toast("🗑️ Vœu supprimé");
   }
   if (delW) {
     if (!confirm("Supprimer cette photo du mur ?")) return;

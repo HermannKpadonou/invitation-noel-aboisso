@@ -32,7 +32,15 @@ const CONFIG = {
 - 🎭 Programme complet de la journée (chronologie animée)
 - 📍 Lieu avec boutons Google Maps / Waze / copie d'adresse
 - 🎟️ RSVP avec **billet téléchargeable en PNG** (numéroté) + confirmation WhatsApp
-- ✍️ Livre d'or (messages sauvegardés sur l'appareil du visiteur)
+- ⛪ RSVP enrichi : statut **membre ou ami·e**, branche & localité pour les membres,
+  et proposition d'inviter un·e **ami·e** et/ou un·e **membre inactif·ve**
+  à la fête de Noël du District d'Aboisso
+- ✍️ **« Mes vœux pour cette fête de Noël »** (livre d'or, sauvegardés sur le
+  serveur ou l'appareil du visiteur)
+- 📸 Mur photo « Je serai là ! » : photo prise **directement avec la caméra**
+  (ou galerie / glisser-déposer) et **téléchargement avec le cadre décoratif
+  « Éclairer le Monde »** (PNG : bordure rouge, liseré or, titre, date et
+  #ÉclairerLeMonde)
 - 💬 Bouton de partage WhatsApp
 - ❄️ Neige, étoiles scintillantes et animations au défilement
 - 🎨 **Motion design** : titres avec révélation masquée, compte à rebours à
