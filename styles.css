@@ -700,13 +700,18 @@ button{font-family:inherit}
 @media(max-width:520px){.field-row{grid-template-columns:1fr}}
 .field label{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--bordeaux)}
 .gb-form label span{float:right;color:#C9AEB4;text-transform:none;letter-spacing:0;font-weight:500}
-.field input,.field textarea{
+.field input,.field textarea,.field select{
   font-family:inherit;font-size:1rem;color:var(--ink);
   background:var(--cream);border:1.5px solid #F0DCE2;border-radius:14px;
   padding:.8rem 1rem;transition:border-color .25s,box-shadow .25s,background .25s;width:100%;
 }
-.field input:focus,.field textarea:focus{
-  outline:none;border-color:var(--crimson);box-shadow:0 0 0 4px rgba(215,11,51,.08);background:#fff;
+.field select{
+  appearance:none;cursor:pointer;padding-right:2.6rem;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A7278' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .95rem center;background-size:16px;
+}
+.field input:focus,.field textarea:focus,.field select:focus{
+  outline:none;border-color:var(--crimson);box-shadow:0 0 0 4px rgba(215,11,51,.08);background-color:#fff;
 }
 .field input::placeholder,.field textarea::placeholder{color:#C9AEB4}
 .choice{grid-template-columns:1fr 1fr;gap:.7rem}
