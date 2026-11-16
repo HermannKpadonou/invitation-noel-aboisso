@@ -62,18 +62,33 @@ function toast(msg) {
   envelope.setAttribute("aria-label", "Ouvrir l'invitation");
 
   let opened = false;
+  function finish() {
+    if (intro.classList.contains("opening")) return;
+    intro.classList.add("opening");
+    document.body.style.overflow = "";
+    launchConfetti();
+    setTimeout(() => intro.remove(), 1200);
+  }
   function open() {
     if (opened) return;
     opened = true;
     if (window.__startMusic) window.__startMusic(); // 🎵 la fête commence en musique
-    intro.classList.add("env-open");                 // 1) la carte monte de l'enveloppe
-    setTimeout(() => intro.classList.add("env-anim"), 1100);  // 2) l'enveloppe s'envole, la carte reste
-    setTimeout(() => {
-      intro.classList.add("opening");                // 3) l'écran d'intro s'estompe
-      document.body.style.overflow = "";
-      launchConfetti();
-    }, 2200);
-    setTimeout(() => intro.remove(), 3000);
+    /* Message personnalisé : on salue la personne si elle a déjà répondu */
+    try {
+      const lastR = Object.values(getRsvps()).pop();
+      $("#ir-nom").textContent = lastR ? lastR.nom.split(" ")[0] : "ami·e";
+    } catch { /* nom par défaut */ }
+    intro.classList.add("env-open");                          // 1) le rabat s'ouvre en 3D, la carte monte
+    setTimeout(() => intro.classList.add("env-anim"), 1300);  // 2) l'enveloppe s'efface, le message apparaît
+    $("#intro-cta").addEventListener("click", (ev) => {
+      ev.preventDefault();
+      finish();
+      document.querySelector("#programme")?.scrollIntoView({ behavior: "smooth" });
+    });
+    addEventListener("keydown", function onEsc(ev) {
+      if (ev.key === "Escape" && opened) { finish(); removeEventListener("keydown", onEsc); }
+    });
+    setTimeout(finish, 16000); /* garde-fou : l'intro s'efface d'elle-même */
   }
   envelope.addEventListener("click", open);
   envelope.addEventListener("keydown", (e) => {
@@ -757,7 +772,9 @@ function getRsvps() {
     x.closePath();
   }
 
-  function buildInviteCanvas(d) {
+  function buildInviteCanvas(d, withQR = null) {
+    /* withQR : true/false pour forcer ; null = automatique (QR seulement si billet connu) */
+    const showQR = withQR === null ? !!d.num : !!withQR;
     const W = 760, H = 1030;
     const c = document.createElement("canvas");
     c.width = W; c.height = H;
@@ -833,10 +850,10 @@ function getRsvps() {
     x.strokeStyle = "rgba(255,255,255,.35)"; x.lineWidth = 2;
     x.beginPath(); x.moveTo(W / 2 - 60, y + 42); x.lineTo(W / 2 + 60, y + 42); x.stroke();
 
-    /* La bande blanche sous l'arche accueille le QR — plus aucun chevauchement */
+    /* Bande blanche sous l'arche : QR (billet) ou pastille hashtag (carte express) */
     return new Promise((resolve) => {
       const done = () => resolve(c);
-      const qrData = makeQR(inviteLink(d));
+      const qrData = showQR ? makeQR(inviteLink(d)) : null;
       if (qrData) {
         const img = new Image();
         img.onload = () => {
@@ -856,7 +873,20 @@ function getRsvps() {
         };
         img.onerror = done;
         img.src = qrData;
-      } else done();
+      } else {
+        x.fillStyle = "#D70B33";
+        roundRect(x, W / 2 - 130, H - 232, 260, 46, 23); x.fill();
+        x.fillStyle = "#ffffff";
+        x.font = "700 21px Plus Jakarta Sans, sans-serif";
+        x.fillText("#ÉclairerLeMonde", W / 2, H - 202);
+        x.fillStyle = "#9C8B90";
+        x.font = "500 19px Plus Jakarta Sans, sans-serif";
+        x.fillText("Église de Jésus-Christ des Saints des Derniers Jours", W / 2, H - 150);
+        x.fillStyle = "#C9AEB4";
+        x.font = "500 16px Plus Jakarta Sans, sans-serif";
+        x.fillText("Entrée gratuite — toute la famille est la bienvenue ✨", W / 2, H - 118);
+        done();
+      }
     });
   }
 
@@ -896,6 +926,38 @@ function getRsvps() {
   $("#dl-invite").addEventListener("click", () => {
     const d = currentInvite ?? Object.values(getRsvps()).pop();
     if (d) { downloadInvite(d); toast("⬇️ Carte d'invitation téléchargée !"); }
+  });
+
+  /* ---------- Générateur de carte express (aperçu en temps réel) ---------- */
+  const genInput = $("#gen-nom");
+  const genPreview = $("#gen-preview-name");
+  function genName() {
+    const v = genInput.value.trim();
+    genPreview.textContent = v || "—";
+    genPreview.style.opacity = v ? "1" : ".6";
+    /* Pré-remplir le formulaire RSVP avec ce nom */
+    if (v && !$("#f-nom").value.trim()) $("#f-nom").value = v;
+  }
+  genInput.addEventListener("input", genName);
+  genInput.addEventListener("change", genName);
+  $("#gen-dl").addEventListener("click", async () => {
+    const v = genInput.value.trim();
+    if (!v) { toast("Indiquez d'abord votre prénom ✍️"); genInput.focus(); return; }
+    toast("📤 Préparation de votre carte…");
+    const c = await buildInviteCanvas({ nom: v, num: 0 }, false);
+    const a = document.createElement("a");
+    a.download = `invitation-noel-aboisso-${v.replace(/\s+/g, "-").toLowerCase()}.png`;
+    a.href = c.toDataURL("image/png");
+    a.click();
+    toast("⬇️ Votre carte est téléchargée — partagez-la sur WhatsApp 💌");
+  });
+  $("#gen-use").addEventListener("click", () => {
+    const v = genInput.value.trim();
+    if (!v) { toast("Indiquez d'abord votre prénom ✍️"); genInput.focus(); return; }
+    $("#f-nom").value = v;
+    document.querySelector("#rsvp-form").scrollIntoView({ behavior: "smooth", block: "center" });
+    $("#f-nom").focus();
+    toast("✨ Nom pré-rempli — confirmez votre présence !");
   });
 
   /* Lien direct #billet-NUM (QR scanné) : rouvrir la carte correspondante */
@@ -1021,6 +1083,25 @@ function getRsvps() {
   let camStream = null;
   let photoData = null;
   let serverEntries = null;
+
+  /* ---------- Likes (cœurs) du mur — stockés côté visiteur ---------- */
+  const LIKES_KEY = "noel-aboisso-likes";
+  const getLikes = () => JSON.parse(localStorage.getItem(LIKES_KEY) || "{}");
+  const photoId = (e) => String(e.id ?? `${e.nom}|${e.at}`);
+  function toggleLike(pid, btn) {
+    const likes = getLikes();
+    if (likes[pid]) {
+      delete likes[pid];
+      btn.classList.remove("on");
+      btn.innerHTML = "🤍";
+    } else {
+      likes[pid] = 1;
+      btn.classList.add("on");
+      btn.innerHTML = "❤️<b>1</b>";
+      toast("❤️ Merci de faire briller cette lumière !");
+    }
+    localStorage.setItem(LIKES_KEY, JSON.stringify(likes));
+  }
 
   const load = () => JSON.parse(localStorage.getItem(KEY) || "[]");
   const save = (arr) => localStorage.setItem(KEY, JSON.stringify(arr));
@@ -1277,6 +1358,20 @@ function getRsvps() {
         msg.textContent = e.msg;
         fig.appendChild(msg);
       }
+      /* Cœur « like » de la photo */
+      const pid = photoId(e);
+      const like = document.createElement("button");
+      like.type = "button";
+      like.className = "wc-like";
+      like.title = "J'aime cette lumière";
+      like.setAttribute("aria-label", `J'aime la photo de ${e.nom || "ce participant"}`);
+      like.innerHTML = getLikes()[pid] ? "❤️<b>1</b>" : "🤍";
+      if (getLikes()[pid]) like.classList.add("on");
+      like.addEventListener("click", (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        toggleLike(pid, like);
+      });
+      fig.appendChild(like);
       /* Téléchargement de la photo avec le cadre Éclairer le Monde */
       const dl = document.createElement("button");
       dl.type = "button";
