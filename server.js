@@ -9,6 +9,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const zlib = require("zlib");
 
 /* ---------- CONFIGURATION ---------- */
 const CONFIG = {
@@ -33,6 +34,8 @@ const MIME = {
   ".ics": "text/calendar; charset=utf-8",
   ".woff2": "font/woff2",
 };
+
+const COMPRESSIBLE = new Set([".html", ".css", ".js", ".json", ".svg", ".ics"]);
 
 /* =========================================================
    STOCKAGE — PostgreSQL (Neon) ou fichiers JSON
@@ -99,7 +102,7 @@ async function initDB() {
     );`);
 
   /* Colonnes RSVP ajoutées avec le formulaire enrichi (statut, branche,
-     localité, invités : ami + membre inactif) — sans casser l'existant */
+     localite, invités : ami + membre inactif) — sans casser l'existant */
   for (const col of ["statut", "branche", "localite", "ami_nom", "ami_tel", "inactif_nom", "inactif_tel"]) {
     await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS ${col} TEXT DEFAULT ''`);
   }
@@ -112,7 +115,8 @@ async function initDB() {
   };
   for (const [table, rows] of Object.entries(local)) {
     if (!rows.length) continue;
-    const c = await db.query(`SELECT COUNT(*)::int AS n FROM ${table}`);
+    const dbTable = table === "photo-wall" ? "photo_wall" : table;
+    const c = await db.query(`SELECT COUNT(*)::int AS n FROM ${dbTable}`);
     if (c.rows[0].n > 0) continue;
     for (const r of rows) {
       if (table === "rsvps") {
@@ -126,30 +130,87 @@ async function initDB() {
         await db.query(`INSERT INTO photo_wall (nom, msg, photo, at) VALUES ($1,$2,$3,$4)`, [r.nom, r.msg || "", r.photo, r.at]);
       }
     }
-    console.log(`✦ Import local → Neon : ${rows.length} ligne(s) dans ${table}`);
+    console.log(`✦ Import local → Neon : ${rows.length} ligne(s) dans ${dbTable}`);
   }
 }
 
-/* ---------- SESSIONS ADMIN ---------- */
+/* ---------- SESSIONS ADMIN & SÉCURITÉ ---------- */
 const tokens = new Set(); // tokens valides (perdus au redémarrage : il suffit de se reconnecter)
 
-function isAuth(req) {
+function isAuth(req, searchParams = null) {
   const h = req.headers.authorization || "";
-  const token = h.startsWith("Bearer ") ? h.slice(7) : "";
-  return tokens.has(token);
+  const headerToken = h.startsWith("Bearer ") ? h.slice(7).trim() : "";
+  const queryToken = searchParams ? (searchParams.get("token") || "").trim() : "";
+  const token = headerToken || queryToken;
+  return !!token && tokens.has(token);
 }
 
-/* ---------- HELPERS HTTP ---------- */
-function send(res, status, body, headers = {}) {
-  const isObj = typeof body === "object" && body !== null && !(body instanceof Buffer);
-  const data = isObj ? JSON.stringify(body) : body;
-  res.writeHead(status, {
-    "Content-Type": isObj ? "application/json; charset=utf-8" : headers["Content-Type"] || "text/plain; charset=utf-8",
-    "Cache-Control": "no-store",
-    ...headers,
-  });
-  res.end(data);
+/* Comparaison à temps constant pour éviter les attaques temporelles */
+function verifyPassword(input, expected) {
+  const a = Buffer.from(String(input || ""), "utf8");
+  const b = Buffer.from(String(expected || ""), "utf8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
 }
+
+/* Limitation de débit (Rate-Limiting) en mémoire par IP et par route */
+const rateMap = new Map();
+function checkRateLimit(req, keySuffix, maxReq = 15, windowMs = 60_000) {
+  const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "local").split(",")[0].trim();
+  const key = `${ip}:${keySuffix}`;
+  const now = Date.now();
+  const entry = rateMap.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) {
+    entry.count = 0;
+    entry.resetAt = now + windowMs;
+  }
+  entry.count += 1;
+  rateMap.set(key, entry);
+  return entry.count <= maxReq;
+}
+
+/* Nettoyage périodique de la table de rate-limiting */
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of rateMap.entries()) {
+    if (now > v.resetAt) rateMap.delete(k);
+  }
+}, 120_000).unref();
+
+/* ---------- HELPERS HTTP ---------- */
+function send(req, res, status, body, headers = {}) {
+  const isBuf = Buffer.isBuffer(body);
+  const isObj = typeof body === "object" && body !== null && !isBuf;
+  const raw = isObj ? Buffer.from(JSON.stringify(body), "utf8") : isBuf ? body : Buffer.from(String(body ?? ""), "utf8");
+  const contentType = isObj
+    ? "application/json; charset=utf-8"
+    : headers["Content-Type"] || "text/plain; charset=utf-8";
+
+  const baseHeaders = {
+    "Content-Type": contentType,
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    ...headers,
+  };
+
+  /* Compression Gzip automatique pour les réponses JSON/texte > 1 Ko */
+  const acceptGzip = (req.headers["accept-encoding"] || "").includes("gzip");
+  if (acceptGzip && raw.length > 1024 && !baseHeaders["Content-Encoding"] && /^(application\/json|text\/)/.test(contentType)) {
+    zlib.gzip(raw, (err, compressed) => {
+      if (err) {
+        res.writeHead(status, { ...baseHeaders, "Content-Length": raw.length });
+        return res.end(raw);
+      }
+      res.writeHead(status, { ...baseHeaders, "Content-Encoding": "gzip", "Content-Length": compressed.length });
+      res.end(compressed);
+    });
+    return;
+  }
+
+  res.writeHead(status, { ...baseHeaders, "Content-Length": raw.length });
+  res.end(raw);
+}
+
 function readBody(req, max = 1e6) {
   return new Promise((resolve) => {
     let raw = "";
@@ -161,28 +222,91 @@ function readBody(req, max = 1e6) {
 }
 function clean(s, max = 200) { return String(s ?? "").trim().slice(0, max); }
 
-/* ---------- FICHIERS STATIQUES (avec garde-fous) ---------- */
-const BLOCKED = ["server.js", "data", "package.json", "node_modules", ".git", "rename.ps1"];
+/* ---------- FICHIERS STATIQUES (avec garde-fous, Gzip & HTTP 206 Range) ---------- */
+const BLOCKED = ["server.js", "data", "package.json", "package-lock.json", "node_modules", ".git", "rename.ps1"];
 function serveStatic(req, res, urlPath) {
   const safe = path.normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[\/\\])+/, "");
-  if (BLOCKED.some((b) => safe.toLowerCase().startsWith(b) || ("/" + safe).includes("/" + b))) {
-    return send(res, 404, "Not found");
+  if (BLOCKED.some((b) => safe.toLowerCase().startsWith(b) || ("/" + safe).toLowerCase().includes("/" + b))) {
+    return send(req, res, 404, "Not found");
   }
   let filePath = path.join(__dirname, safe === "/" ? "index.html" : safe);
-  if (!filePath.startsWith(__dirname)) return send(res, 403, "Forbidden");
+  if (!filePath.startsWith(__dirname)) return send(req, res, 403, "Forbidden");
   fs.stat(filePath, (err, st) => {
-    if (!err && st.isDirectory()) filePath = path.join(filePath, "index.html");
-    fs.readFile(filePath, (err2, data) => {
-      if (err2) return send(res, 404, "Not found");
-      send(res, 200, data, {
-        "Content-Type": MIME[path.extname(filePath).toLowerCase()] || "application/octet-stream",
-        "Cache-Control": "public, max-age=3600",
+    if (err) return send(req, res, 404, "Not found");
+    if (st.isDirectory()) {
+      filePath = path.join(filePath, "index.html");
+      return fs.stat(filePath, (err2, st2) => {
+        if (err2) return send(req, res, 404, "Not found");
+        streamStaticFile(req, res, filePath, st2);
       });
-    });
+    }
+    streamStaticFile(req, res, filePath, st);
   });
 }
 
+function streamStaticFile(req, res, filePath, st) {
+  const ext = path.extname(filePath).toLowerCase();
+  const contentType = MIME[ext] || "application/octet-stream";
+  const cacheControl = ext === ".html" ? "no-cache" : "public, max-age=86400";
+
+  /* Support HTTP 206 Partial Content (streaming fluide des MP3 sur mobile/Safari) */
+  if (ext === ".mp3" && req.headers.range) {
+    const [startStr, endStr] = req.headers.range.replace(/bytes=/, "").split("-");
+    const start = Math.max(0, parseInt(startStr, 10) || 0);
+    const end = endStr ? Math.min(st.size - 1, parseInt(endStr, 10)) : st.size - 1;
+    if (start >= st.size || start > end) {
+      res.writeHead(416, { "Content-Range": `bytes */${st.size}` });
+      return res.end();
+    }
+    res.writeHead(206, {
+      "Content-Range": `bytes ${start}-${end}/${st.size}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": end - start + 1,
+      "Content-Type": contentType,
+      "Cache-Control": cacheControl,
+      "X-Content-Type-Options": "nosniff",
+    });
+    return fs.createReadStream(filePath, { start, end }).pipe(res);
+  }
+
+  /* Compression Gzip à la volée pour les ressources textuelles */
+  const acceptGzip = (req.headers["accept-encoding"] || "").includes("gzip");
+  if (acceptGzip && COMPRESSIBLE.has(ext) && st.size > 512) {
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Content-Encoding": "gzip",
+      "Cache-Control": cacheControl,
+      "X-Content-Type-Options": "nosniff",
+    });
+    return fs.createReadStream(filePath).pipe(zlib.createGzip()).pipe(res);
+  }
+
+  res.writeHead(200, {
+    "Content-Type": contentType,
+    "Content-Length": st.size,
+    "Accept-Ranges": ext === ".mp3" ? "bytes" : "none",
+    "Cache-Control": cacheControl,
+    "X-Content-Type-Options": "nosniff",
+  });
+  fs.createReadStream(filePath).pipe(res);
+}
+
 /* ---------- API : couche données ---------- */
+async function generateUniqueTicketNum() {
+  const existing = new Set();
+  if (db) {
+    const r = await db.query(`SELECT num FROM rsvps`);
+    r.rows.forEach((row) => existing.add(Number(row.num)));
+  } else {
+    readJSON("rsvps.json", []).forEach((row) => existing.add(Number(row.num)));
+  }
+  for (let attempt = 0; attempt < 150; attempt++) {
+    const candidate = Math.floor(100 + Math.random() * 900);
+    if (!existing.has(candidate)) return candidate;
+  }
+  return 1000 + existing.size + 1;
+}
+
 async function addRsvp(d) {
   if (db) {
     const r = await db.query(
@@ -212,6 +336,29 @@ async function listRsvps() {
   return readJSON("rsvps.json", []);
 }
 
+async function findTicketByNum(num) {
+  const n = parseInt(num, 10);
+  if (!n) return null;
+  if (db) {
+    const r = await db.query(
+      `SELECT num, nom, presence, people, statut, at FROM rsvps WHERE num = $1 ORDER BY id DESC LIMIT 1`,
+      [n]
+    );
+    return r.rows[0] || null;
+  }
+  const all = readJSON("rsvps.json", []);
+  const found = all.filter((r) => Number(r.num) === n).pop();
+  if (!found) return null;
+  return {
+    num: found.num,
+    nom: found.nom,
+    presence: found.presence,
+    people: found.people,
+    statut: found.statut || "membre",
+    at: found.at,
+  };
+}
+
 async function listGuestbook() {
   if (db) {
     /* les 80 derniers messages, du plus ancien au plus récent */
@@ -237,9 +384,35 @@ async function addGuestbook(entry) {
   return entry;
 }
 
-async function listWall() {
-  if (db) return (await db.query(`SELECT id, nom, msg, photo, at FROM photo_wall ORDER BY id ASC`)).rows;
-  return readJSON("photo-wall.json", []);
+/* Liste légère des métadonnées du Mur Photo (sans renvoyer les Mo de Base64 à chaque poll) */
+async function listWallMeta() {
+  if (db) {
+    const r = await db.query(`SELECT id, nom, msg, at FROM photo_wall ORDER BY id ASC`);
+    return r.rows.map((row) => ({
+      id: row.id,
+      nom: row.nom,
+      msg: row.msg,
+      photo: `/api/photo-wall/img?id=${encodeURIComponent(row.id)}`,
+      at: row.at,
+    }));
+  }
+  return readJSON("photo-wall.json", []).map((row) => ({
+    id: row.id,
+    nom: row.nom,
+    msg: row.msg,
+    photo: row.id ? `/api/photo-wall/img?id=${encodeURIComponent(row.id)}` : row.photo,
+    at: row.at,
+  }));
+}
+
+async function getWallPhotoData(id) {
+  if (!id) return null;
+  if (db) {
+    const r = await db.query(`SELECT photo FROM photo_wall WHERE id = $1 LIMIT 1`, [id]);
+    return r.rows[0] ? r.rows[0].photo : null;
+  }
+  const found = readJSON("photo-wall.json", []).find((r) => String(r.id) === String(id));
+  return found ? found.photo : null;
 }
 
 /* ---------- Invitations (amis & membres inactifs proposés par les membres) ---------- */
@@ -270,7 +443,7 @@ async function findInviteDup(nom, tel) {
       const sameTel = tk && normTel(r.tel) === tk;
       const sameNom = nk && normName(r.nom) === nk;
       if (sameTel || (sameNom && (!tk || !normTel(r.tel)))) {
-        return { src: label, nom: r.nom, at: r.at };
+        return { src: label };
       }
     }
     return null;
@@ -304,16 +477,29 @@ async function addInvites(rsvpId, list) {
 async function addWall(entry) {
   if (db) {
     const r = await db.query(
-      `INSERT INTO photo_wall (nom, msg, photo) VALUES ($1,$2,$3) RETURNING id, nom, msg, photo, at`,
+      `INSERT INTO photo_wall (nom, msg, photo) VALUES ($1,$2,$3) RETURNING id, nom, msg, at`,
       [entry.nom, entry.msg, entry.photo]
     );
-    return r.rows[0];
+    const row = r.rows[0];
+    return {
+      id: row.id,
+      nom: row.nom,
+      msg: row.msg,
+      photo: `/api/photo-wall/img?id=${encodeURIComponent(row.id)}`,
+      at: row.at,
+    };
   }
   const all = readJSON("photo-wall.json", []);
   if (all.length >= 300) all.shift();
   all.push(entry);
   writeJSON("photo-wall.json", all);
-  return entry;
+  return {
+    id: entry.id,
+    nom: entry.nom,
+    msg: entry.msg,
+    photo: `/api/photo-wall/img?id=${encodeURIComponent(entry.id)}`,
+    at: entry.at,
+  };
 }
 
 async function deleteRow(table, id) {
@@ -321,42 +507,70 @@ async function deleteRow(table, id) {
     const allowed = { rsvp: "rsvps", guestbook: "guestbook", "photo-wall": "photo_wall", invite: "invites" };
     const t = allowed[table];
     if (!t) return;
+    if (t === "rsvps") {
+      await db.query(`DELETE FROM invites WHERE rsvp_id = $1`, [id]);
+    }
     await db.query(`DELETE FROM ${t} WHERE id = $1`, [id]);
     return;
   }
   const files = { rsvp: "rsvps.json", guestbook: "guestbook.json", "photo-wall": "photo-wall.json", invite: "invites.json" };
   const file = files[table];
   if (!file) return;
-  writeJSON(file, readJSON(file, []).filter((r) => r.id !== parseInt(id)));
+  const numId = parseInt(id, 10);
+  if (table === "rsvp") {
+    writeJSON("invites.json", readJSON("invites.json", []).filter((i) => i.rsvp_id !== numId));
+  }
+  writeJSON(file, readJSON(file, []).filter((r) => r.id !== numId));
+}
+
+/* Échappement CSV sécurisé contre l'injection de formules Excel (=, +, -, @, TAB, CR) */
+function escCSV(v) {
+  let s = String(v ?? "").replace(/"/g, '""');
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return `"${s}"`;
 }
 
 /* ---------- API ---------- */
 async function handleAPI(req, res, url) {
   const { pathname, searchParams } = url;
 
-  /* --- Connexion admin --- */
+  /* --- Connexion admin (avec protection anti-bruteforce) --- */
   if (pathname === "/api/login" && req.method === "POST") {
+    if (!checkRateLimit(req, "login", 10, 60_000)) {
+      return send(req, res, 429, { ok: false, error: "Trop de tentatives. Réessayez dans une minute." });
+    }
     const body = await readBody(req);
-    if (clean(body.password) === CONFIG.adminPassword) {
+    if (verifyPassword(clean(body.password), CONFIG.adminPassword)) {
       const token = crypto.randomBytes(24).toString("hex");
       tokens.add(token);
-      return send(res, 200, { ok: true, token });
+      return send(req, res, 200, { ok: true, token });
     }
-    return send(res, 401, { ok: false, error: "Mot de passe incorrect" });
+    return send(req, res, 401, { ok: false, error: "Mot de passe incorrect" });
+  }
+
+  /* --- Consultation publique d'un billet par numéro (pour le scan du QR Code sur tout appareil) --- */
+  if (pathname === "/api/ticket" && req.method === "GET") {
+    const entry = await findTicketByNum(searchParams.get("num"));
+    if (!entry) return send(req, res, 404, { ok: false, error: "Billet introuvable" });
+    return send(req, res, 200, { ok: true, entry });
   }
 
   /* --- RSVP (public : envoi) --- */
   if (pathname === "/api/rsvp" && req.method === "POST") {
+    if (!checkRateLimit(req, "rsvp", 20, 60_000)) {
+      return send(req, res, 429, { ok: false, error: "Trop de requêtes. Veuillez patienter un instant." });
+    }
     const body = await readBody(req);
     const nom = clean(body.nom, 80);
-    if (!nom) return send(res, 400, { ok: false, error: "Nom requis" });
+    if (!nom) return send(req, res, 400, { ok: false, error: "Nom requis" });
+    const num = await generateUniqueTicketNum();
     const entry = await addRsvp({
-      num: Math.floor(100 + Math.random() * 900),
+      num,
       nom,
       presence: body.presence === "absent" ? "absent" : "present",
       statut: body.statut === "ami" ? "ami" : "membre",
       tel: clean(body.tel, 30),
-      people: Math.min(Math.max(parseInt(body.people) || 1, 1), 30),
+      people: Math.min(Math.max(parseInt(body.people, 10) || 1, 1), 30),
       branche: clean(body.branche, 80),
       localite: clean(body.localite, 80),
       ami_nom: clean(body.ami_nom, 80),
@@ -367,58 +581,95 @@ async function handleAPI(req, res, url) {
     });
     /* Invitations dynamiques : doublons filtrés (nom / téléphone déjà connus) */
     const { saved, skipped } = await addInvites(entry.id, body.invites);
-    return send(res, 200, { ok: true, entry, saved, skipped });
+    return send(req, res, 200, { ok: true, entry, saved, skipped });
   }
 
-  /* --- Invitations : vérifier si une personne a déjà été invitée (public) --- */
+  /* --- Invitations : vérifier si une personne a déjà été invitée (public, sans fuite de date) --- */
   if (pathname === "/api/invites/check" && req.method === "POST") {
+    if (!checkRateLimit(req, "invites-check", 45, 60_000)) {
+      return send(req, res, 429, { ok: false, error: "Trop de vérifications." });
+    }
     const body = await readBody(req);
     const nom = clean(body.nom, 80);
     const tel = clean(body.tel, 30);
-    if (!nom) return send(res, 400, { ok: false, error: "Nom requis" });
+    if (!nom) return send(req, res, 400, { ok: false, error: "Nom requis" });
     const dup = await findInviteDup(nom, tel);
     const info = dup
-      ? (dup.src === "inscriptions" ? "déjà inscrit·e" : "déjà dans les invitations") +
-        (dup.at ? " le " + new Date(dup.at).toLocaleDateString("fr-FR") : "")
+      ? (dup.src === "inscriptions" ? "déjà inscrit·e" : "déjà dans les invitations")
       : "";
-    return send(res, 200, { ok: true, dup: !!dup, info });
+    return send(req, res, 200, { ok: true, dup: !!dup, info });
   }
 
   /* --- Livre d'or (public : lire / écrire) --- */
   if (pathname === "/api/guestbook" && req.method === "GET") {
-    return send(res, 200, await listGuestbook());
+    return send(req, res, 200, await listGuestbook());
   }
   if (pathname === "/api/guestbook" && req.method === "POST") {
+    if (!checkRateLimit(req, "guestbook", 12, 60_000)) {
+      return send(req, res, 429, { ok: false, error: "Veuillez patienter avant d'envoyer un autre message." });
+    }
     const body = await readBody(req);
     const nom = clean(body.nom, 60);
     const msg = clean(body.msg, 250);
-    if (!nom || !msg) return send(res, 400, { ok: false, error: "Nom et message requis" });
+    if (!nom || !msg) return send(req, res, 400, { ok: false, error: "Nom et message requis" });
     const entry = await addGuestbook({ id: Date.now(), nom, msg, at: new Date().toISOString() });
-    return send(res, 200, { ok: true, entry });
+    return send(req, res, 200, { ok: true, entry });
   }
 
-  /* --- Mur photo « Je serai là ! » (public : lire / ajouter) --- */
+  /* --- Mur photo « Je serai là ! » (public : lire métadonnées / servir image binaire / ajouter) --- */
   if (pathname === "/api/photo-wall" && req.method === "GET") {
-    return send(res, 200, await listWall());
+    return send(req, res, 200, await listWallMeta());
+  }
+  if (pathname === "/api/photo-wall/img" && req.method === "GET") {
+    const id = searchParams.get("id");
+    const dataUrl = await getWallPhotoData(id);
+    if (!dataUrl || !dataUrl.startsWith("data:image/")) {
+      return send(req, res, 404, "Image introuvable");
+    }
+    const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);
+    if (!match) return send(req, res, 404, "Format d'image invalide");
+    const mime = match[1];
+    const buf = Buffer.from(match[2], "base64");
+    const etag = `"pw-${id}-${buf.length}"`;
+    if (req.headers["if-none-match"] === etag) {
+      res.writeHead(304);
+      return res.end();
+    }
+    res.writeHead(200, {
+      "Content-Type": mime,
+      "Content-Length": buf.length,
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "ETag": etag,
+      "X-Content-Type-Options": "nosniff",
+    });
+    return res.end(buf);
   }
   if (pathname === "/api/photo-wall" && req.method === "POST") {
+    if (!checkRateLimit(req, "photo-wall", 10, 60_000)) {
+      return send(req, res, 429, { ok: false, error: "Trop d'envois de photos. Réessayez dans une minute." });
+    }
     const body = await readBody(req, 5e5); // ~500 Ko max (photo base64)
     const nom = clean(body.nom, 40);
     const msg = clean(body.msg, 80);
     const photo = typeof body.photo === "string" ? body.photo : "";
-    if (!nom) return send(res, 400, { ok: false, error: "Nom requis" });
-    if (!photo.startsWith("data:image/")) return send(res, 400, { ok: false, error: "Photo requise" });
-    if (photo.length > 45e4) return send(res, 413, { ok: false, error: "Photo trop lourde — choisissez-en une plus petite" });
+    if (!nom) return send(req, res, 400, { ok: false, error: "Nom requis" });
+    if (!photo.startsWith("data:image/")) return send(req, res, 400, { ok: false, error: "Photo requise" });
+    if (photo.length > 45e4) return send(req, res, 413, { ok: false, error: "Photo trop lourde — choisissez-en une plus petite" });
     const entry = await addWall({ id: Date.now(), nom, msg, photo, at: new Date().toISOString() });
-    return send(res, 200, { ok: true, entry });
+    return send(req, res, 200, { ok: true, entry });
   }
 
   /* --- Back office (protégé) --- */
   if (pathname.startsWith("/api/admin/")) {
-    if (!isAuth(req)) return send(res, 401, { ok: false, error: "Non autorisé" });
+    if (!isAuth(req, searchParams)) return send(req, res, 401, { ok: false, error: "Non autorisé" });
 
     if (pathname === "/api/admin/summary" && req.method === "GET") {
-      const [rsvps, guestbook, wall, invites] = await Promise.all([listRsvps(), listGuestbook(), listWall(), listInvitesRaw()]);
+      const [rsvps, guestbook, wall, invites] = await Promise.all([
+        listRsvps(),
+        listGuestbook(),
+        listWallMeta(),
+        listInvitesRaw(),
+      ]);
       const stats = {
         total: rsvps.length,
         presents: rsvps.filter((r) => r.presence === "present").length,
@@ -427,24 +678,50 @@ async function handleAPI(req, res, url) {
         messages: guestbook.length,
         invites: invites.length,
       };
-      return send(res, 200, { ok: true, rsvps, guestbook, wall, invites, stats });
+      return send(req, res, 200, { ok: true, rsvps, guestbook, wall, invites, stats });
     }
 
     if (pathname === "/api/admin/export.csv" && req.method === "GET") {
-      const rsvps = await listRsvps();
-      const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const [rsvps, invites] = await Promise.all([listRsvps(), listInvitesRaw()]);
+      const invitesByRsvp = new Map();
+      for (const inv of invites) {
+        if (!inv.rsvp_id) continue;
+        if (!invitesByRsvp.has(inv.rsvp_id)) invitesByRsvp.set(inv.rsvp_id, []);
+        invitesByRsvp.get(inv.rsvp_id).push(inv);
+      }
       const lines = [
-        ["N° billet", "Nom", "Statut", "Présence", "Personnes", "Téléphone", "Branche", "Localité",
-         "Ami invité", "Contact ami", "Membre inactif invité", "Contact membre", "Note", "Date"].join(";"),
-        ...rsvps.map((r) => [
-          r.num, esc(r.nom), esc(r.statut === "ami" ? "Ami·e / visiteur·se" : "Membre"),
-          r.presence === "present" ? "Présent(e)" : "Absent(e)",
-          r.people, esc(r.tel), esc(r.branche || ""), esc(r.localite || ""),
-          esc(r.ami_nom || ""), esc(r.ami_tel || ""), esc(r.inactif_nom || ""), esc(r.inactif_tel || ""),
-          esc(r.note), esc(new Date(r.at).toLocaleString("fr-FR")),
-        ].join(";")),
+        [
+          "N° billet", "Nom", "Statut", "Présence", "Personnes", "Téléphone", "Branche", "Localité",
+          "Personnes invitées (toutes)", "Ami invité (1er)", "Contact ami", "Membre inactif invité (1er)", "Contact membre", "Note", "Date",
+        ].join(";"),
+        ...rsvps.map((r) => {
+          const linked = invitesByRsvp.get(r.id) || [];
+          const allInvText = linked.length
+            ? linked.map((i) => `${i.type === "inactif" ? "[Inactif]" : "[Ami]"} ${i.nom}${i.tel ? ` (${i.tel})` : ""}`).join(" | ")
+            : [
+                r.ami_nom ? `[Ami] ${r.ami_nom}${r.ami_tel ? ` (${r.ami_tel})` : ""}` : "",
+                r.inactif_nom ? `[Inactif] ${r.inactif_nom}${r.inactif_tel ? ` (${r.inactif_tel})` : ""}` : "",
+              ].filter(Boolean).join(" | ");
+          return [
+            r.num,
+            escCSV(r.nom),
+            escCSV(r.statut === "ami" ? "Ami·e / visiteur·se" : "Membre"),
+            r.presence === "present" ? "Présent(e)" : "Absent(e)",
+            r.people,
+            escCSV(r.tel),
+            escCSV(r.branche || ""),
+            escCSV(r.localite || ""),
+            escCSV(allInvText),
+            escCSV(r.ami_nom || ""),
+            escCSV(r.ami_tel || ""),
+            escCSV(r.inactif_nom || ""),
+            escCSV(r.inactif_tel || ""),
+            escCSV(r.note),
+            escCSV(new Date(r.at).toLocaleString("fr-FR")),
+          ].join(";");
+        }),
       ];
-      return send(res, 200, "\uFEFF" + lines.join("\r\n"), {
+      return send(req, res, 200, "\uFEFF" + lines.join("\r\n"), {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": "attachment; filename=inscriptions-noel-aboisso.csv",
       });
@@ -452,50 +729,49 @@ async function handleAPI(req, res, url) {
 
     if (pathname === "/api/admin/rsvp" && req.method === "DELETE") {
       await deleteRow("rsvp", searchParams.get("id"));
-      return send(res, 200, { ok: true });
+      return send(req, res, 200, { ok: true });
     }
 
     if (pathname === "/api/admin/guestbook" && req.method === "DELETE") {
       await deleteRow("guestbook", searchParams.get("id"));
-      return send(res, 200, { ok: true });
+      return send(req, res, 200, { ok: true });
     }
 
     if (pathname === "/api/admin/photo-wall" && req.method === "DELETE") {
       await deleteRow("photo-wall", searchParams.get("id"));
-      return send(res, 200, { ok: true });
+      return send(req, res, 200, { ok: true });
     }
 
     if (pathname === "/api/admin/invite" && req.method === "DELETE") {
       await deleteRow("invite", searchParams.get("id"));
-      return send(res, 200, { ok: true });
+      return send(req, res, 200, { ok: true });
     }
-    return send(res, 404, { ok: false, error: "Route inconnue" });
+    return send(req, res, 404, { ok: false, error: "Route inconnue" });
   }
 
-  return send(res, 404, { ok: false, error: "Route inconnue" });
+  return send(req, res, 404, { ok: false, error: "Route inconnue" });
 }
 
 /* ---------- SERVEUR ---------- */
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
+  const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   try {
     if (url.pathname.startsWith("/api/")) return await handleAPI(req, res, url);
     return serveStatic(req, res, url.pathname);
   } catch (e) {
     console.error(e);
-    return send(res, 500, { ok: false, error: "Erreur serveur" });
+    return send(req, res, 500, { ok: false, error: "Erreur serveur" });
   }
 });
 
 initDB()
   .then(() => {
-    ensureNothing();
     server.listen(CONFIG.port, () => {
-      console.log(`✦ Site    : http://localhost:${CONFIG.port}`);
+      console.log(`✦ Site        : http://localhost:${CONFIG.port}`);
       console.log(`✦ Back office : http://localhost:${CONFIG.port}/admin.html`);
       console.log(db
-        ? "✦ Stockage : PostgreSQL (Neon) ✨"
-        : `✦ Stockage : fichiers JSON locaux (data/) — définissez DATABASE_URL pour Neon`);
+        ? "✦ Stockage    : PostgreSQL (Neon) ✨"
+        : `✦ Stockage    : fichiers JSON locaux (data/) — définissez DATABASE_URL pour Neon`);
       console.log(`✦ Mot de passe admin : ${CONFIG.adminPassword === "noel2026" ? "noel2026 (PENSEZ À LE CHANGER)" : "(personnalisé)"}`);
     });
   })
@@ -503,5 +779,3 @@ initDB()
     console.error("⚠️  Impossible d'initialiser la base :", e.message);
     server.listen(CONFIG.port, () => console.log(`✦ Démarré en mode dégradé : http://localhost:${CONFIG.port}`));
   });
-
-function ensureNothing() { /* réservé pour extensions futures */ }

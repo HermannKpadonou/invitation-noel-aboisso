@@ -13,14 +13,38 @@ const CONFIG = {
   contactPhone: "2250574152955",
 };
 
-/* Numéro local ivoirien → format international pour les liens WhatsApp */
-function normalizePhone(t) {
-  let p = String(t || "").replace(/\D/g, "");
-  if (p.startsWith("225")) return p;           // déjà au format international
-  if (p.startsWith("0")) return "225" + p;     // numéro local 0X XX XX XX XX
-  if (p.length === 8) return "225" + p;        // ancien format ivoirien à 8 chiffres
+/* ---------- Utilitaires partagés (assets/shared.js avec repli autonome) ---------- */
+const ELW = window.ELW || {};
+const $ = ELW.$ || ((sel, root = document) => root.querySelector(sel));
+const pad = ELW.pad || ((n) => String(n).padStart(2, "0"));
+const normalizePhone = ELW.normalizePhone || function (t) {
+  const p = String(t || "").replace(/\D/g, "");
+  if (!p) return "";
+  if (p.startsWith("225")) return p;
+  if (p.startsWith("0")) return "225" + p;
+  if (p.length === 8) return "225" + p;
   return p;
-}
+};
+const invKey = ELW.normKey || ((s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ""));
+const telKey = ELW.telKey || ((s) => String(s || "").replace(/\D/g, ""));
+const toast = ELW.toast || function (msg) {
+  const t = $("#toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 3200);
+};
+const drawRoundRect = ELW.drawRoundRect || function (x, px, py, w, h, r) {
+  x.beginPath();
+  x.moveTo(px + r, py);
+  x.arcTo(px + w, py, px + w, py + h, r);
+  x.arcTo(px + w, py + h, px, py + h, r);
+  x.arcTo(px, py + h, px, py, r);
+  x.arcTo(px, py, px + w, py, r);
+  x.closePath();
+};
+const isReducedMotion = ELW.isReducedMotion || (() => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
 /* ---------- Playlist de cantiques de Noël ----------
    Fichiers dans Playlists/ — lecture aléatoire par défaut,
@@ -39,16 +63,30 @@ const PLAYLIST = [
   { src: "Playlists/11-viens-crie-sur-les-montagnes.mp3", title: "Viens, crie sur les montagnes (chœur)" },
 ];
 
-/* ---------- Helpers ---------- */
-const $ = (sel) => document.querySelector(sel);
-const pad = (n) => String(n).padStart(2, "0");
+/* ---------- Stockage local des réponses RSVP ---------- */
+const RSVP_KEY = "noel-aboisso-rsvp";
 
-function toast(msg) {
-  const t = $("#toast");
-  t.textContent = msg;
-  t.classList.add("show");
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove("show"), 3200);
+function saveRsvp(data) {
+  try {
+    const all = JSON.parse(localStorage.getItem(RSVP_KEY) || "{}");
+    all[data.num] = data;
+    localStorage.setItem(RSVP_KEY, JSON.stringify(all));
+  } catch { /* navigation privée saturée */ }
+}
+
+function getRsvps() {
+  try { return JSON.parse(localStorage.getItem(RSVP_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+/* Tri chronologique par `at` pour éviter le tri numérique des clés d'objet JS */
+function getLastRsvp() {
+  const list = Object.values(getRsvps());
+  if (!list.length) return null;
+  return list
+    .slice()
+    .sort((a, b) => new Date(a.at || 0).getTime() - new Date(b.at || 0).getTime())
+    .pop();
 }
 
 /* =========================================================
@@ -57,6 +95,7 @@ function toast(msg) {
 (function initIntro() {
   const intro = $("#intro");
   const envelope = $("#envelope");
+  if (!intro || !envelope) return;
   envelope.setAttribute("tabindex", "0");
   envelope.setAttribute("role", "button");
   envelope.setAttribute("aria-label", "Ouvrir l'invitation");
@@ -67,23 +106,32 @@ function toast(msg) {
     intro.classList.add("opening");
     document.body.style.overflow = "";
     launchConfetti();
-    setTimeout(() => intro.remove(), 1200);
+    setTimeout(() => intro.remove(), 900);
   }
   function open() {
     if (opened) return;
     opened = true;
     if (window.__startMusic) window.__startMusic(); // 🎵 la fête commence en musique
-    /* Message personnalisé : on salue la personne si elle a déjà répondu */
+    /* Message personnalisé : paramètre d'URL (?invite=Nom) ou dernière réponse enregistrée */
     try {
-      const lastR = Object.values(getRsvps()).pop();
-      $("#ir-nom").textContent = lastR ? lastR.nom.split(" ")[0] : "ami·e";
+      const params = new URLSearchParams(location.search);
+      const urlGuest = (params.get("invite") || params.get("pour") || "").trim();
+      const lastR = getLastRsvp();
+      const greetName = urlGuest || (lastR && lastR.nom ? lastR.nom.split(" ")[0] : "ami·e");
+      $("#ir-nom").textContent = greetName;
     } catch { /* nom par défaut */ }
-    intro.classList.add("env-open");                          // 1) le rabat s'ouvre en 3D, la carte monte
-    setTimeout(() => intro.classList.add("env-anim"), 1300);  // 2) l'enveloppe s'efface, le message apparaît
-    $("#intro-cta").addEventListener("click", (ev) => {
+
+    intro.classList.add("env-open"); // 1) le rabat s'ouvre en 3D, la lettre monte
+    const delay = isReducedMotion() ? 0 : 900;
+    setTimeout(() => {
+      intro.classList.add("env-anim"); // 2) l'enveloppe se replie sans laisser de vide, le message apparaît
+      $("#intro-cta")?.focus({ preventScroll: true });
+    }, delay);
+
+    $("#intro-cta")?.addEventListener("click", (ev) => {
       ev.preventDefault();
       finish();
-      document.querySelector("#programme")?.scrollIntoView({ behavior: "smooth" });
+      document.querySelector("#programme")?.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth" });
     });
     addEventListener("keydown", function onEsc(ev) {
       if (ev.key === "Escape" && opened) { finish(); removeEventListener("keydown", onEsc); }
@@ -99,10 +147,12 @@ function toast(msg) {
 })();
 
 /* =========================================================
-   NEIGE (canvas)
+   NEIGE (canvas — respecte prefers-reduced-motion et la visibilité de l'onglet)
    ========================================================= */
 (function initSnow() {
+  if (isReducedMotion()) return;
   const canvas = $("#snow");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
   let flakes = [];
   const COLORS = ["#ffffff", "#FBE3E9", "#F2B5C1"];
@@ -112,13 +162,13 @@ function toast(msg) {
   addEventListener("resize", resize);
 
   function makeFlakes() {
-    const count = Math.min(90, Math.floor(innerWidth / 14));
+    const count = Math.min(75, Math.floor(innerWidth / 16));
     flakes = Array.from({ length: count }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      r: Math.random() * 2.6 + 1.2,
-      s: Math.random() * 0.5 + 0.25,       // vitesse chute
-      d: Math.random() * Math.PI * 2,       // dérive
+      r: Math.random() * 2.5 + 1.2,
+      s: Math.random() * 0.48 + 0.24,      // vitesse chute
+      d: Math.random() * Math.PI * 2,      // dérive
       c: COLORS[(Math.random() * COLORS.length) | 0],
       a: Math.random() * 0.5 + 0.25,
     }));
@@ -127,30 +177,34 @@ function toast(msg) {
   addEventListener("resize", makeFlakes);
 
   (function loop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (const f of flakes) {
-      f.y += f.s;
-      f.d += 0.012;
-      f.x += Math.sin(f.d) * 0.4;
-      if (f.y > canvas.height + 6) { f.y = -6; f.x = Math.random() * canvas.width; }
-      ctx.globalAlpha = f.a;
-      ctx.fillStyle = f.c;
-      ctx.beginPath();
-      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-      ctx.fill();
+    if (!document.hidden && !isReducedMotion()) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const f of flakes) {
+        f.y += f.s;
+        f.d += 0.012;
+        f.x += Math.sin(f.d) * 0.4;
+        if (f.y > canvas.height + 6) { f.y = -6; f.x = Math.random() * canvas.width; }
+        ctx.globalAlpha = f.a;
+        ctx.fillStyle = f.c;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
     requestAnimationFrame(loop);
   })();
 })();
 
 /* =========================================================
-   CONFETTIS (à l'ouverture de l'enveloppe)
+   CONFETTIS (à l'ouverture de l'enveloppe — désactivés si reduced-motion)
    ========================================================= */
 function launchConfetti() {
+  if (isReducedMotion()) return;
   const canvas = $("#snow");
+  if (!canvas) return;
   const ctx = canvas.getContext("2d");
-  const pieces = Array.from({ length: 120 }, () => ({
+  const pieces = Array.from({ length: 100 }, () => ({
     x: Math.random() * canvas.width,
     y: -20 - Math.random() * canvas.height * 0.4,
     w: 6 + Math.random() * 6,
@@ -163,14 +217,14 @@ function launchConfetti() {
   }));
   let frames = 0;
   (function anim() {
-    if (frames++ > 260) return;
+    if (frames++ > 240) return;
     for (const p of pieces) {
       p.x += p.vx; p.y += p.vy; p.rot += p.vr;
-      if (p.y > canvas.height + 20 && frames < 200) { p.y = -20; p.x = Math.random() * canvas.width; }
+      if (p.y > canvas.height + 20 && frames < 180) { p.y = -20; p.x = Math.random() * canvas.width; }
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
-      ctx.globalAlpha = Math.max(0, 1 - frames / 260);
+      ctx.globalAlpha = Math.max(0, 1 - frames / 240);
       ctx.fillStyle = p.c;
       ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
       ctx.restore();
@@ -223,9 +277,9 @@ function launchConfetti() {
   function onScroll() {
     const h = document.documentElement;
     const max = h.scrollHeight - h.clientHeight;
-    bar.style.transform = `scaleX(${max ? h.scrollTop / max : 0})`;
+    if (bar) bar.style.transform = `scaleX(${max ? h.scrollTop / max : 0})`;
     const past = h.scrollTop > (hero ? hero.offsetHeight - 140 : 400);
-    nav.classList.toggle("show", past);
+    if (nav) nav.classList.toggle("show", past);
     /* Le CTA flottant apparaît après le hero et se masque quand le RSVP est visible */
     if (cta) {
       let rsvpVisible = false;
@@ -260,7 +314,7 @@ function launchConfetti() {
    CARTES 3D (survol à la souris)
    ========================================================= */
 (function initTilt() {
-  if (!matchMedia("(pointer:fine)").matches) return;
+  if (isReducedMotion() || !matchMedia("(pointer:fine)").matches) return;
   document.querySelectorAll(".feature, .tl-card").forEach((card) => {
     card.addEventListener("mousemove", (e) => {
       const r = card.getBoundingClientRect();
@@ -277,7 +331,7 @@ function launchConfetti() {
    LANTERNE : halo doré qui suit la souris dans le hero
    ========================================================= */
 (function initLantern() {
-  if (!matchMedia("(pointer:fine)").matches) return;
+  if (isReducedMotion() || !matchMedia("(pointer:fine)").matches) return;
   const hero = document.querySelector(".hero");
   if (!hero) return;
   const glow = document.createElement("div");
@@ -291,50 +345,34 @@ function launchConfetti() {
 })();
 
 /* =========================================================
-   PARALLAXE de la photo
-   ========================================================= */
-(function initParallax() {
-  const img = document.querySelector(".photo-band img");
-  if (!img) return;
-  let ticking = false;
-  function update() {
-    const r = img.getBoundingClientRect();
-    const p = (r.top + r.height / 2 - innerHeight / 2) / innerHeight;
-    img.style.transform = `translateY(${p * -26}px) scale(1.15)`;
-    ticking = false;
-  }
-  addEventListener("scroll", () => {
-    if (!ticking) { ticking = true; requestAnimationFrame(update); }
-  }, { passive: true });
-  update();
-})();
-
-/* =========================================================
    COMPTE À REBOURS + CALENDRIER
    ========================================================= */
 (function initCountdown() {
   const start = new Date(CONFIG.eventStart);
   const end = new Date(CONFIG.eventEnd);
   const el = {
-    d: $("#cd-days"), h: $("#cd-hours"), m: $("#cd-mins"), s: $("#cd-secs"), inline: $("#days-inline"),
+    d: $("#cd-days"), h: $("#cd-hours"), m: $("#cd-mins"), s: $("#cd-secs"),
   };
 
-  function setVal(el, v) {
-    if (el.textContent === v) return;
-    el.textContent = v;
-    el.classList.remove("tick");
-    void el.offsetWidth; /* relance l'animation */
-    el.classList.add("tick");
+  function setVal(node, v) {
+    if (!node || node.textContent === v) return;
+    node.textContent = v;
+    if (!isReducedMotion()) {
+      node.classList.remove("tick");
+      void node.offsetWidth; /* relance l'animation */
+      node.classList.add("tick");
+    }
   }
   function tick() {
     const now = new Date();
-    let diff = start - now;
+    const diff = start - now;
     if (diff <= 0) {
       const during = now < end;
-      if (during) {
-        $("#countdown").innerHTML = '<div class="cd-card" style="min-width:200px"><span style="font-size:1.2rem">🎄 C\'est en cours !</span><small>Jusqu\'à 15h00</small></div>';
-      } else {
-        $("#countdown").innerHTML = '<div class="cd-card" style="min-width:200px"><span style="font-size:1.1rem">Merci d\'avoir éclairé le monde ✦</span><small>Événement passé</small></div>';
+      const cd = $("#countdown");
+      if (cd) {
+        cd.innerHTML = during
+          ? '<div class="cd-card" style="min-width:200px"><span style="font-size:1.2rem">🎄 C\'est en cours !</span><small>Jusqu\'à 15h00</small></div>'
+          : '<div class="cd-card" style="min-width:200px"><span style="font-size:1.1rem">Merci d\'avoir éclairé le monde ✦</span><small>Événement passé</small></div>';
       }
       clearInterval(timer);
       return;
@@ -345,7 +383,6 @@ function launchConfetti() {
     const s = Math.floor(diff % 6e4 / 1e3);
     setVal(el.d, String(d)); setVal(el.h, pad(h));
     setVal(el.m, pad(m)); setVal(el.s, pad(s));
-    if (el.inline) el.inline.textContent = d;
   }
   const timer = setInterval(tick, 1000);
   tick();
@@ -359,7 +396,8 @@ function launchConfetti() {
     details: "Théâtre, chants, cadeaux pour les enfants et bien d'autres surprises ! Invitation : rejoignez-nous.",
     location: CONFIG.place,
   });
-  $("#btn-gcal").href = `https://calendar.google.com/calendar/render?${params}`;
+  const gcal = $("#btn-gcal");
+  if (gcal) gcal.href = `https://calendar.google.com/calendar/render?${params}`;
 
   /* Fichier .ics */
   const ics = [
@@ -374,13 +412,14 @@ function launchConfetti() {
     `LOCATION:${CONFIG.place}`,
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");
-  $("#btn-ics").href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+  const btnIcs = $("#btn-ics");
+  if (btnIcs) btnIcs.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
 })();
 
 /* =========================================================
    COPIER L'ADRESSE / LE LIEN
    ========================================================= */
-$("#copy-address").addEventListener("click", async () => {
+$("#copy-address")?.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(CONFIG.place);
     toast("📍 Adresse copiée !");
@@ -413,22 +452,12 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 /* =========================================================
    RSVP + CARTE D'INVITATION
    ========================================================= */
-const RSVP_KEY = "noel-aboisso-rsvp";
-
-function saveRsvp(data) {
-  const all = JSON.parse(localStorage.getItem(RSVP_KEY) || "{}");
-  all[data.num] = data;
-  localStorage.setItem(RSVP_KEY, JSON.stringify(all));
-}
-function getRsvps() {
-  return JSON.parse(localStorage.getItem(RSVP_KEY) || "{}");
-}
-
 (function initRsvp() {
   const form = $("#rsvp-form");
   const done = $("#rsvp-done");
   const modal = $("#invite-modal");
   const card = $("#invite-card");
+  if (!form || !done || !modal || !card) return;
   let currentInvite = null;
 
   /* Statut membre / ami : montrer ou cacher les champs de branche & localité
@@ -481,20 +510,22 @@ function getRsvps() {
   goToStep(1);
   syncStatut();
 
-  /* ---------- Invitations dynamiques : amis & membres inactifs ---------- */
+  /* ---------- Invitations dynamiques : amis & membres inactifs (avec labels accessibles) ---------- */
   const invLists = { ami: $("#inv-amis"), inactif: $("#inv-inactifs") };
-  const invKey = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-  const telKey = (s) => String(s || "").replace(/\D/g, "");
+  let invRowCounter = 0;
 
   function addInviteRow(type) {
+    invRowCounter += 1;
+    const idNom = `inv-nom-${invRowCounter}`;
+    const idTel = `inv-tel-${invRowCounter}`;
     const row = document.createElement("div");
     row.className = "inv-row";
     const phNom = type === "ami" ? "Ex. Koffi Yao" : "Ex. Sœur Adjoua";
     row.innerHTML = `
-      <div class="field"><label>Son nom</label><input class="inv-nom" type="text" maxlength="80" placeholder="${phNom}" /></div>
-      <div class="field"><label>Son contact WhatsApp</label><input class="inv-tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" /></div>
-      <button class="inv-x" type="button" title="Retirer cette personne">✕</button>
-      <p class="inv-msg hidden"></p>`;
+      <div class="field"><label for="${idNom}">Son nom</label><input id="${idNom}" class="inv-nom" type="text" maxlength="80" placeholder="${phNom}" /></div>
+      <div class="field"><label for="${idTel}">Son contact WhatsApp</label><input id="${idTel}" class="inv-tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" /></div>
+      <button class="inv-x" type="button" title="Retirer cette personne" aria-label="Retirer cette personne">✕</button>
+      <p class="inv-msg hidden" aria-live="polite"></p>`;
     row.querySelector(".inv-x").addEventListener("click", () => {
       const list = row.parentElement;
       row.remove();
@@ -560,13 +591,13 @@ function getRsvps() {
         body: JSON.stringify({ nom, tel }),
       });
       const j = await res.json();
-      if (j.dup) rowMsg(row, `⚠️ « ${nom} » a déjà été invité·e${j.info ? " — " + j.info : ""} ✋`);
+      if (j.dup) rowMsg(row, `⚠️ « ${nom} » a déjà été invité·e${j.info ? " (" + j.info + ")" : ""} ✋`);
       else rowMsg(row, "✓ Pas encore invité·e — parfait !", true);
     } catch { rowMsg(row, ""); }
   }
 
   ["ami", "inactif"].forEach((t) => {
-    document.querySelector(`[data-add-invite="${t}"]`).addEventListener("click", () => addInviteRow(t));
+    document.querySelector(`[data-add-invite="${t}"]`)?.addEventListener("click", () => addInviteRow(t));
     addInviteRow(t);
   });
 
@@ -578,11 +609,12 @@ function getRsvps() {
     if (!list.length) { box.classList.add("hidden"); return; }
     const h = document.createElement("p");
     h.className = "is-title";
-    h.textContent = "💌 Envoyez-leur l'invitation par WhatsApp :";
+    h.textContent = "💌 Envoyez-leur l'invitation personnalisée par WhatsApp :";
     box.appendChild(h);
-    const base = location.protocol.startsWith("http") ? location.origin + location.pathname : "https://eclairerlemonde.org/";
+    const base = location.protocol.startsWith("http") ? location.origin + location.pathname : "https://invitation-noel-aboisso.onrender.com/";
     for (const inv of list) {
-      const msg = `✦ Éclairer le Monde ✦\nCher·ère ${inv.nom},\n${membreNom} vous invite à la fête de Noël « Éclairer le Monde » 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n✨ Entrée gratuite — toute la famille est la bienvenue !\n💌 Détails : ${base}`;
+      const personalUrl = `${base}?invite=${encodeURIComponent(inv.nom.split(" ")[0])}`;
+      const msg = `✦ Éclairer le Monde ✦\nCher·ère ${inv.nom},\n${membreNom} vous invite à la fête de Noël « Éclairer le Monde » 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n✨ Entrée gratuite — toute la famille est la bienvenue !\n💌 Votre invitation : ${personalUrl}`;
       const num = telKey(inv.tel) ? normalizePhone(inv.tel) : "";
       const a = document.createElement("a");
       a.className = "btn btn-green is-btn";
@@ -595,8 +627,7 @@ function getRsvps() {
   }
 
   /* Si une réponse existe déjà : proposer de voir le billet */
-  const rsvps = getRsvps();
-  let last = Object.values(rsvps).pop();
+  let last = getLastRsvp();
   if (last) {
     $("#done-name").textContent = last.nom.split(" ")[0];
     form.classList.add("hidden");
@@ -681,19 +712,20 @@ function getRsvps() {
       form.classList.add("hidden");
       $("#done-name").textContent = nom.split(" ")[0];
       done.classList.remove("hidden");
-      done.scrollIntoView({ behavior: "smooth", block: "center" });
+      done.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth", block: "center" });
     }, 600);
   });
 
   /* Lien de la carte (pour le QR) — repli si le site est ouvert en fichier local */
   function inviteLink(d) {
     if (location.protocol.startsWith("http")) return location.origin + location.pathname + "#billet-" + d.num;
-    return "https://eclairerlemonde.org/#billet-" + d.num;
+    return "https://invitation-noel-aboisso.onrender.com/#billet-" + d.num;
   }
 
   /* QR code — encodeURI préserve la structure de l'URL et encode les accents */
   function makeQR(text) {
     try {
+      if (typeof qrcode !== "function") return null;
       const qr = qrcode(0, "M");
       qr.addData(encodeURI(text));
       qr.make();
@@ -714,12 +746,18 @@ function getRsvps() {
     card.classList.remove("open");
     clearTimeout(showInvite._t1);
     /* La couverture s'ouvre en animation après l'apparition du modal */
-    showInvite._t1 = setTimeout(() => card.classList.add("open"), 380);
-    modal.scrollIntoView({ behavior: "smooth", block: "center" });
+    showInvite._t1 = setTimeout(() => card.classList.add("open"), isReducedMotion() ? 0 : 350);
+    modal.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth", block: "center" });
   }
 
-  /* Touchez la carte : refermer / rouvrir la couverture */
+  /* Touchez ou appuyez sur Entrée/Espace sur la carte : refermer / rouvrir la couverture */
   card.addEventListener("click", () => card.classList.toggle("open"));
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      card.classList.toggle("open");
+    }
+  });
 
   /* WhatsApp : partage de l'invitation */
   $("#wa-invite").addEventListener("click", () => {
@@ -732,18 +770,9 @@ function getRsvps() {
 
   $("#close-invite").addEventListener("click", () => modal.classList.add("hidden"));
 
-  /* Génération de la carte en PNG (canvas) */
-  function roundRect(x, px, py, w, h, r) {
-    x.beginPath();
-    x.moveTo(px + r, py);
-    x.arcTo(px + w, py, px + w, py + h, r);
-    x.arcTo(px + w, py + h, px, py + h, r);
-    x.arcTo(px, py + h, px, py, r);
-    x.arcTo(px, py, px + w, py, r);
-    x.closePath();
-  }
+  /* Génération de la carte en PNG (canvas haute résolution 2x + attente des polices) */
   function wrapText(x, text, cx, y, maxW, lineH) {
-    const words = text.split(" ");
+    const words = String(text || "").split(" ");
     let line = "", yy = y;
     for (const w of words) {
       const test = line ? line + " " + w : w;
@@ -773,13 +802,20 @@ function getRsvps() {
     x.closePath();
   }
 
-  function buildInviteCanvas(d, withQR = null) {
+  async function buildInviteCanvas(d, withQR = null) {
+    /* Garantir que les polices Google Fonts sont prêtes avant de dessiner */
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch { /* continuer */ }
+    }
     /* withQR : true/false pour forcer ; null = automatique (QR seulement si billet connu) */
     const showQR = withQR === null ? !!d.num : !!withQR;
+    const scale = 2; /* Rendu Retina HD (1520×2060) pour un partage WhatsApp ultra-net */
     const W = 760, H = 1030;
     const c = document.createElement("canvas");
-    c.width = W; c.height = H;
+    c.width = W * scale;
+    c.height = H * scale;
     const x = c.getContext("2d");
+    x.scale(scale, scale);
 
     /* fond crème */
     x.fillStyle = "#fffdf8"; x.fillRect(0, 0, W, H);
@@ -823,33 +859,38 @@ function getRsvps() {
     x.fillText("Invitation", W / 2, 296);
 
     x.fillStyle = "#ffffff";
-    x.font = "700 40px Plus Jakarta Sans, sans-serif";
+    x.font = "700 40px 'Plus Jakarta Sans', sans-serif";
     let y = wrapText(x, "Célébrez la naissance de Jésus-Christ avec nous", W / 2, 352, W - 240, 50);
 
     /* badge date */
     x.fillStyle = "#F2B5C1";
-    roundRect(x, W / 2 - 195, y + 30, 390, 46, 23); x.fill();
+    drawRoundRect(x, W / 2 - 195, y + 30, 390, 46, 23); x.fill();
     x.fillStyle = "#3A0D18";
-    x.font = "800 22px Plus Jakarta Sans, sans-serif";
-    x.fillText("SAMEDI 19 DÉCEMBRE 2026", W / 2, y + 62);
+    x.font = "800 22px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("SAMEDI 19 DÉCEMBRE 2026", W / 2, y + 61);
 
     x.fillStyle = "#F7DCE1";
-    x.font = "500 24px Plus Jakarta Sans, sans-serif";
-    x.fillText("Invitation personnelle de", W / 2, y + 116);
+    x.font = "500 24px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Invitation personnelle de", W / 2, y + 114);
+
+    /* Adaptation dynamique de la taille du nom pour éviter les coupures brusques */
+    const rawName = String(d.nom || "Invité·e").trim();
+    const fontSize = rawName.length > 26 ? 32 : rawName.length > 18 ? 38 : 44;
     x.fillStyle = "#ffffff";
-    x.font = "800 44px Plus Jakarta Sans, sans-serif";
-    x.fillText(d.nom.length > 22 ? d.nom.slice(0, 22) + "…" : d.nom, W / 2, y + 166);
+    x.font = `800 ${fontSize}px 'Plus Jakarta Sans', sans-serif`;
+    const displayNom = rawName.length > 36 ? rawName.slice(0, 35) + "…" : rawName;
+    x.fillText(displayNom, W / 2, y + 164);
 
     x.fillStyle = "#FBE3E9";
-    x.font = "600 26px Plus Jakarta Sans, sans-serif";
-    x.fillText("10h00 – 15h00", W / 2, y + 216);
+    x.font = "600 26px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("10h00 – 15h00", W / 2, y + 214);
     x.fillStyle = "#ffffff";
-    x.font = "600 26px Plus Jakarta Sans, sans-serif";
-    y = wrapText(x, "Salle des fêtes de la mairie d'ABOISSO", W / 2, y + 256, W - 220, 36);
+    x.font = "600 26px 'Plus Jakarta Sans', sans-serif";
+    y = wrapText(x, "Salle des fêtes de la mairie d'ABOISSO", W / 2, y + 254, W - 220, 36);
 
     /* séparateur doux en bas d'arche */
     x.strokeStyle = "rgba(255,255,255,.35)"; x.lineWidth = 2;
-    x.beginPath(); x.moveTo(W / 2 - 60, y + 42); x.lineTo(W / 2 + 60, y + 42); x.stroke();
+    x.beginPath(); x.moveTo(W / 2 - 60, y + 40); x.lineTo(W / 2 + 60, y + 40); x.stroke();
 
     /* Bande blanche sous l'arche : QR (billet) ou pastille hashtag (carte express) */
     return new Promise((resolve) => {
@@ -860,31 +901,31 @@ function getRsvps() {
         img.onload = () => {
           const qy = H - 260;
           x.fillStyle = "#ffffff";
-          roundRect(x, W / 2 - 80, qy, 160, 160, 18); x.fill();
+          drawRoundRect(x, W / 2 - 80, qy, 160, 160, 18); x.fill();
           x.strokeStyle = "rgba(215,11,51,.22)"; x.lineWidth = 2;
-          roundRect(x, W / 2 - 80, qy, 160, 160, 18); x.stroke();
+          drawRoundRect(x, W / 2 - 80, qy, 160, 160, 18); x.stroke();
           x.drawImage(img, W / 2 - 68, qy + 12, 136, 136);
-          x.fillStyle = "#9C8B90";
-          x.font = "500 19px Plus Jakarta Sans, sans-serif";
+          x.fillStyle = "#6E5A60";
+          x.font = "600 19px 'Plus Jakarta Sans', sans-serif";
           x.fillText("Église de Jésus-Christ des Saints des Derniers Jours", W / 2, H - 72);
-          x.fillStyle = "#C9AEB4";
-          x.font = "500 16px Plus Jakarta Sans, sans-serif";
-          x.fillText("Scannez pour rouvrir votre invitation", W / 2, H - 42);
+          x.fillStyle = "#7A6369";
+          x.font = "500 16px 'Plus Jakarta Sans', sans-serif";
+          x.fillText(`Billet N°${d.num} · Scannez pour rouvrir votre invitation`, W / 2, H - 42);
           done();
         };
         img.onerror = done;
         img.src = qrData;
       } else {
         x.fillStyle = "#D70B33";
-        roundRect(x, W / 2 - 130, H - 232, 260, 46, 23); x.fill();
+        drawRoundRect(x, W / 2 - 130, H - 232, 260, 46, 23); x.fill();
         x.fillStyle = "#ffffff";
-        x.font = "700 21px Plus Jakarta Sans, sans-serif";
+        x.font = "700 21px 'Plus Jakarta Sans', sans-serif";
         x.fillText("#ÉclairerLeMonde", W / 2, H - 202);
-        x.fillStyle = "#9C8B90";
-        x.font = "500 19px Plus Jakarta Sans, sans-serif";
+        x.fillStyle = "#6E5A60";
+        x.font = "600 19px 'Plus Jakarta Sans', sans-serif";
         x.fillText("Église de Jésus-Christ des Saints des Derniers Jours", W / 2, H - 150);
-        x.fillStyle = "#C9AEB4";
-        x.font = "500 16px Plus Jakarta Sans, sans-serif";
+        x.fillStyle = "#7A6369";
+        x.font = "500 16px 'Plus Jakarta Sans', sans-serif";
         x.fillText("Entrée gratuite — toute la famille est la bienvenue ✨", W / 2, H - 118);
         done();
       }
@@ -894,16 +935,16 @@ function getRsvps() {
   async function downloadInvite(d) {
     const c = await buildInviteCanvas(d);
     const a = document.createElement("a");
-    a.download = `invitation-noel-aboisso-${d.num}.png`;
+    a.download = `invitation-noel-aboisso-${d.num || "express"}.png`;
     a.href = c.toDataURL("image/png");
     a.click();
   }
 
   /* Envoi de la CARTE (image PNG) via WhatsApp — partage natif quand possible */
   $("#wa-invite-img").addEventListener("click", async () => {
-    const d = currentInvite ?? Object.values(getRsvps()).pop();
+    const d = currentInvite ?? getLastRsvp();
     if (!d) { toast("Répondez d'abord au formulaire 🙏"); return; }
-    toast("📤 Préparation de votre carte…");
+    toast("📤 Préparation de votre carte HD…");
     const c = await buildInviteCanvas(d);
     const blob = await new Promise((r) => c.toBlob(r, "image/png"));
     const file = new File([blob], `invitation-noel-aboisso-${d.num}.png`, { type: "image/png" });
@@ -925,7 +966,7 @@ function getRsvps() {
   });
 
   $("#dl-invite").addEventListener("click", () => {
-    const d = currentInvite ?? Object.values(getRsvps()).pop();
+    const d = currentInvite ?? getLastRsvp();
     if (d) { downloadInvite(d); toast("⬇️ Carte d'invitation téléchargée !"); }
   });
 
@@ -944,7 +985,7 @@ function getRsvps() {
   $("#gen-dl").addEventListener("click", async () => {
     const v = genInput.value.trim();
     if (!v) { toast("Indiquez d'abord votre prénom ✍️"); genInput.focus(); return; }
-    toast("📤 Préparation de votre carte…");
+    toast("📤 Préparation de votre carte HD…");
     const c = await buildInviteCanvas({ nom: v, num: 0 }, false);
     const a = document.createElement("a");
     a.download = `invitation-noel-aboisso-${v.replace(/\s+/g, "-").toLowerCase()}.png`;
@@ -956,23 +997,36 @@ function getRsvps() {
     const v = genInput.value.trim();
     if (!v) { toast("Indiquez d'abord votre prénom ✍️"); genInput.focus(); return; }
     $("#f-nom").value = v;
-    document.querySelector("#rsvp-form").scrollIntoView({ behavior: "smooth", block: "center" });
+    document.querySelector("#rsvp-form").scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth", block: "center" });
     $("#f-nom").focus();
     toast("✨ Nom pré-rempli — confirmez votre présence !");
   });
 
-  /* Lien direct #billet-NUM (QR scanné) : rouvrir la carte correspondante */
-  const mHash = location.hash.match(/^#billet-(\d+)$/);
-  if (mHash) {
-    const found = Object.values(getRsvps()).find((r) => String(r.num) === mHash[1]);
+  /* Lien direct #billet-NUM (QR scanné sur le même téléphone OU sur un autre appareil via /api/ticket) */
+  async function checkTicketHash() {
+    const mHash = location.hash.match(/^#billet-(\d+)$/);
+    if (!mHash) return;
+    const ticketNum = mHash[1];
+    let found = Object.values(getRsvps()).find((r) => String(r.num) === ticketNum);
+    if (!found) {
+      try {
+        const res = await fetch(`/api/ticket?num=${encodeURIComponent(ticketNum)}`);
+        if (res.ok) {
+          const j = await res.json();
+          if (j.ok && j.entry) found = j.entry;
+        }
+      } catch { /* hors-ligne */ }
+    }
     if (found) {
       const tryShow = () => {
-        if (document.querySelector("#intro")) { setTimeout(tryShow, 500); return; }
+        if (document.querySelector("#intro:not(.opening)")) { setTimeout(tryShow, 500); return; }
         showInvite(found);
       };
       tryShow();
     }
   }
+  checkTicketHash();
+  addEventListener("hashchange", checkTicketHash);
 })();
 
 /* =========================================================
@@ -984,9 +1038,15 @@ function getRsvps() {
   const list = $("#gb-list");
   const msg = $("#g-msg");
   const count = $("#g-count");
+  if (!form || !list || !msg || !count) return;
 
-  const load = () => JSON.parse(localStorage.getItem(KEY) || "[]");
-  const save = (arr) => localStorage.setItem(KEY, JSON.stringify(arr));
+  const load = () => {
+    try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+    catch { return []; }
+  };
+  const save = (arr) => {
+    try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch {}
+  };
 
   /* Source de données : serveur si disponible, sinon stockage local */
   let serverEntries = null;
@@ -1059,20 +1119,23 @@ function getRsvps() {
     count.textContent = "0/200";
     render();
     toast("💌 Merci pour vos vœux pour cette fête de Noël !");
-    list.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    list.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth", block: "nearest" });
   });
 
   render();
 })();
 
 /* =========================================================
-   MUR PHOTO — « Je serai là ! »
+   MUR PHOTO — « Je serai là ! » (Compression WebP + Pagination fluide)
    ========================================================= */
 (function initPhotoWall() {
   const KEY = "noel-aboisso-wall";
+  const PAGE_SIZE = 24;
   const form = $("#wall-form");
   const grid = $("#wall-grid");
   const empty = $("#wall-empty");
+  const moreWrap = $("#wall-more-wrap");
+  const moreBtn = $("#wall-more-btn");
   const drop = $("#wall-drop");
   const fileInput = $("#wall-photo");
   const preview = $("#wall-preview");
@@ -1081,13 +1144,19 @@ function getRsvps() {
   const camModal = $("#cam-modal");
   const camVideo = $("#cam-video");
   const camCanvas = $("#cam-canvas");
+  if (!form || !grid || !drop || !fileInput) return;
+
   let camStream = null;
   let photoData = null;
   let serverEntries = null;
+  let visibleCount = PAGE_SIZE;
 
   /* ---------- Likes (cœurs) du mur — stockés côté visiteur ---------- */
   const LIKES_KEY = "noel-aboisso-likes";
-  const getLikes = () => JSON.parse(localStorage.getItem(LIKES_KEY) || "{}");
+  const getLikes = () => {
+    try { return JSON.parse(localStorage.getItem(LIKES_KEY) || "{}"); }
+    catch { return {}; }
+  };
   const photoId = (e) => String(e.id ?? `${e.nom}|${e.at}`);
   function toggleLike(pid, btn) {
     const likes = getLikes();
@@ -1101,11 +1170,16 @@ function getRsvps() {
       btn.innerHTML = "❤️<b>1</b>";
       toast("❤️ Merci de faire briller cette lumière !");
     }
-    localStorage.setItem(LIKES_KEY, JSON.stringify(likes));
+    try { localStorage.setItem(LIKES_KEY, JSON.stringify(likes)); } catch {}
   }
 
-  const load = () => JSON.parse(localStorage.getItem(KEY) || "[]");
-  const save = (arr) => localStorage.setItem(KEY, JSON.stringify(arr));
+  const load = () => {
+    try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+    catch { return []; }
+  };
+  const save = (arr) => {
+    try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch {}
+  };
   const entries = () => serverEntries ?? load();
 
   /* Source de données : serveur si disponible, sinon stockage local */
@@ -1116,7 +1190,14 @@ function getRsvps() {
     } catch { /* mode local */ }
   })();
 
-  /* Recadrage carré + compression (canvas) — max 500px, JPEG q≈0.72 */
+  /* Encodage WebP prioritaire (~65% plus léger) avec repli JPEG automatique */
+  function canvasToCompressedDataURL(canvas) {
+    const webp = canvas.toDataURL("image/webp", 0.76);
+    if (webp.startsWith("data:image/webp")) return webp;
+    return canvas.toDataURL("image/jpeg", 0.74);
+  }
+
+  /* Recadrage carré + compression (canvas) — max 500px */
   function resizeImage(file) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -1131,7 +1212,7 @@ function getRsvps() {
           0, 0, 500, 500
         );
         URL.revokeObjectURL(url);
-        resolve(c.toDataURL("image/jpeg", 0.72));
+        resolve(canvasToCompressedDataURL(c));
       };
       img.onerror = () => { URL.revokeObjectURL(url); reject(); };
       img.src = url;
@@ -1220,7 +1301,7 @@ function getRsvps() {
       (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side,
       0, 0, 500, 500
     );
-    photoData = camCanvas.toDataURL("image/jpeg", 0.72);
+    photoData = canvasToCompressedDataURL(camCanvas);
     preview.src = photoData;
     preview.classList.remove("hidden");
     placeholder.classList.add("hidden");
@@ -1232,17 +1313,10 @@ function getRsvps() {
   /* =======================================================
      CADRE « ÉCLAIRER LE MONDE » — téléchargement PNG
      ======================================================= */
-  function roundedRect(x, px, py, w, h, r) {
-    x.beginPath();
-    x.moveTo(px + r, py);
-    x.arcTo(px + w, py, px + w, py + h, r);
-    x.arcTo(px + w, py + h, px, py + h, r);
-    x.arcTo(px, py + h, px, py, r);
-    x.arcTo(px, py, px + w, py, r);
-    x.closePath();
-  }
-
-  function drawFramedPhoto(e) {
+  async function drawFramedPhoto(e) {
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch {}
+    }
     const W = 760, H = 980;
     const c = document.createElement("canvas");
     c.width = W; c.height = H;
@@ -1251,19 +1325,20 @@ function getRsvps() {
     /* Cadre carmin extérieur */
     const RG = x.createLinearGradient(0, 0, 0, H);
     RG.addColorStop(0, "#E05A74"); RG.addColorStop(.55, "#D70B33"); RG.addColorStop(1, "#B8092B");
-    roundedRect(x, 0, 0, W, H, 30); x.fillStyle = RG; x.fill();
+    drawRoundRect(x, 0, 0, W, H, 30); x.fillStyle = RG; x.fill();
 
     /* Fond crème intérieur */
-    roundedRect(x, 16, 16, W - 32, H - 32, 18); x.fillStyle = "#fffdf8"; x.fill();
+    drawRoundRect(x, 16, 16, W - 32, H - 32, 18); x.fillStyle = "#fffdf8"; x.fill();
 
     /* Liseré rose poudré */
     x.strokeStyle = "rgba(242,181,193,.9)"; x.lineWidth = 2.5;
-    roundedRect(x, 28, 28, W - 56, H - 56, 14); x.stroke();
+    drawRoundRect(x, 28, 28, W - 56, H - 56, 14); x.stroke();
 
     /* Photo recadrée en carré */
     const px = 64, py = 64, pw = W - 128;
 
     const img = new Image();
+    img.crossOrigin = "anonymous";
     const finish = () => {
       const a = document.createElement("a");
       a.download = `eclairer-le-monde-${(e.nom || "photo").replace(/\s+/g, "-").toLowerCase()}.png`;
@@ -1273,13 +1348,13 @@ function getRsvps() {
     img.onload = () => {
       /* photo carrée (les photos du mur sont déjà carrées) */
       x.save();
-      roundedRect(x, px, py, pw, pw, 12); x.clip();
+      drawRoundRect(x, px, py, pw, pw, 12); x.clip();
       const side = Math.min(img.width, img.height);
       x.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, px, py, pw, pw);
       x.restore();
       /* fin contour rose de la photo */
       x.strokeStyle = "rgba(242,181,193,.95)"; x.lineWidth = 3;
-      roundedRect(x, px, py, pw, pw, 12); x.stroke();
+      drawRoundRect(x, px, py, pw, pw, 12); x.stroke();
 
       /* Étoile rose */
       x.fillStyle = "#F2B5C1";
@@ -1301,20 +1376,20 @@ function getRsvps() {
       /* Nom du participant */
       if (e.nom) {
         x.fillStyle = "#3A0D18";
-        x.font = "700 26px Plus Jakarta Sans, sans-serif";
+        x.font = "700 26px 'Plus Jakarta Sans', sans-serif";
         x.fillText(e.nom.length > 30 ? e.nom.slice(0, 30) + "…" : e.nom, W / 2, cy + 94);
       }
 
       /* Date & lieu */
-      x.fillStyle = "#9C8B90";
-      x.font = "500 18px Plus Jakarta Sans, sans-serif";
+      x.fillStyle = "#6E5A60";
+      x.font = "500 18px 'Plus Jakarta Sans', sans-serif";
       x.fillText("19 · 12 · 2026  ·  Salle des fêtes de la mairie d'Aboisso", W / 2, cy + 126);
 
       /* Hashtag sur pastille carmin */
       x.fillStyle = "#D70B33";
-      roundedRect(x, W / 2 - 150, cy + 150, 300, 40, 20); x.fill();
+      drawRoundRect(x, W / 2 - 150, cy + 150, 300, 40, 20); x.fill();
       x.fillStyle = "#ffffff";
-      x.font = "700 19px Plus Jakarta Sans, sans-serif";
+      x.font = "700 19px 'Plus Jakarta Sans', sans-serif";
       x.fillText("#ÉclairerLeMonde", W / 2, cy + 176);
 
       finish();
@@ -1338,16 +1413,30 @@ function getRsvps() {
         : "lumière brille déjà sur le mur — et la vôtre ?";
     } else countEl.classList.add("hidden");
 
-    all.slice().reverse().forEach((e, i) => {
+    const reversed = all.slice().reverse();
+    const slice = reversed.slice(0, visibleCount);
+
+    if (moreWrap) {
+      const remaining = reversed.length - slice.length;
+      moreWrap.classList.toggle("hidden", remaining <= 0);
+      if (moreBtn && remaining > 0) {
+        moreBtn.textContent = `✨ Voir plus de lumières (${remaining})`;
+      }
+    }
+
+    slice.forEach((e, i) => {
       const fig = document.createElement("figure");
       fig.className = "wall-card";
-      fig.style.setProperty("--d", `${Math.min(i * 70, 700)}ms`);
+      fig.style.setProperty("--d", `${Math.min(i * 60, 600)}ms`);
       const ph = document.createElement("div");
       ph.className = "wc-ph";
       const img = document.createElement("img");
       img.src = e.photo;
-      img.alt = e.nom;
+      img.alt = e.nom || "Participant";
+      img.width = 250;
+      img.height = 250;
       img.loading = "lazy";
+      img.decoding = "async";
       ph.appendChild(img);
       const cap = document.createElement("figcaption");
       cap.className = "wc-name";
@@ -1392,6 +1481,11 @@ function getRsvps() {
       grid.appendChild(fig);
     });
   }
+
+  moreBtn?.addEventListener("click", () => {
+    visibleCount += PAGE_SIZE;
+    render();
+  });
 
   /* ---------- Lightbox du mur des lumières ---------- */
   const lightbox = $("#wall-lightbox");
@@ -1444,7 +1538,7 @@ function getRsvps() {
     render();
     toast("📸 Vous êtes sur le mur ! Cliquez ⬇️ pour télécharger votre photo avec le cadre ✨");
     launchConfetti();
-    grid.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    grid.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth", block: "nearest" });
   });
 
   render();
@@ -1460,7 +1554,10 @@ function getRsvps() {
   audio.preload = "metadata";
   /* Volume stocké en 0–1, borné par sécurité (range HTMLMediaElement)
      — les anciennes valeurs 0–100 sont converties automatiquement */
-  let savedVol = parseFloat(localStorage.getItem(KEY_VOL) ?? "0.7") || 0.7;
+  let savedVol = 0.7;
+  try {
+    savedVol = parseFloat(localStorage.getItem(KEY_VOL) ?? "0.7") || 0.7;
+  } catch {}
   if (savedVol > 1) savedVol = savedVol / 100;
   audio.volume = Math.min(Math.max(savedVol, 0), 1);
 
@@ -1471,6 +1568,7 @@ function getRsvps() {
   const fab = $("#music-fab");
   const panel = $("#music-panel");
   const list = $("#mp-list");
+  if (!fab || !panel || !list) return;
   const els = {
     title: $("#mp-title"), bar: $("#mp-bar"), cur: $("#mp-cur"), dur: $("#mp-dur"),
     play: $("#mp-play"), prev: $("#mp-prev"), next: $("#mp-next"),
@@ -1552,13 +1650,15 @@ function getRsvps() {
 
   els.vol.addEventListener("input", () => {
     audio.volume = els.vol.value / 100;
-    localStorage.setItem(KEY_VOL, String(audio.volume));
+    try { localStorage.setItem(KEY_VOL, String(audio.volume)); } catch {}
   });
   els.vol.value = Math.round(audio.volume * 100);
 
   audio.addEventListener("timeupdate", () => {
     if (audio.duration) {
-      els.bar.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+      const pct = Math.round((audio.currentTime / audio.duration) * 100);
+      els.bar.style.width = `${pct}%`;
+      els.progress.setAttribute("aria-valuenow", String(pct));
       els.cur.textContent = fmtTime(audio.currentTime);
       els.dur.textContent = fmtTime(audio.duration);
     }

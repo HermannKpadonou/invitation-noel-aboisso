@@ -8,22 +8,22 @@
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23D70B33"/><path d="M50 12 L55 42 L85 50 L55 58 L50 88 L45 58 L15 50 L45 42 Z" fill="white"/></svg>' />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=6" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css?v=7" />
 </head>
 <body>
 
   <!-- ============ CONNEXION ============ -->
   <div class="login-screen" id="login-screen">
     <form class="login-card" id="login-form">
-      <img src="assets/light_the_world.webp" alt="Éclairer le Monde" class="login-logo" />
+      <img src="assets/light_the_world.webp" alt="Éclairer le Monde" class="login-logo" width="120" height="120" />
       <h1>Back office</h1>
       <p class="login-sub">Gestion des inscriptions · Noël à Aboisso 2026</p>
       <div class="field">
         <label for="l-pass">Mot de passe administrateur</label>
         <input id="l-pass" type="password" required autocomplete="current-password" placeholder="••••••••" />
       </div>
-      <p class="login-error hidden" id="l-error">Mot de passe incorrect 🙏</p>
+      <p class="login-error hidden" id="l-error" role="alert">Mot de passe incorrect 🙏</p>
       <button class="btn btn-red btn-wide" type="submit">Se connecter</button>
       <a class="login-back" href="/">← Retour au site d'invitation</a>
     </form>
@@ -33,7 +33,7 @@
   <div class="dash hidden" id="dash">
     <header class="dash-head">
       <div class="dash-brand">
-        <img src="assets/light_the_world.webp" alt="" />
+        <img src="assets/light_the_world.webp" alt="" width="50" height="50" />
         <div>
           <strong>Back office</strong>
           <span>Noël à Aboisso · 19.12.2026</span>
@@ -58,7 +58,7 @@
 
     <main class="dash-main">
       <!-- Statistiques -->
-      <section class="stats" id="stats">
+      <section class="stats" id="stats" aria-label="Indicateurs clés">
         <article class="stat">
           <span class="s-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m2 7 10 6L22 7"/></svg>
@@ -134,13 +134,13 @@
         <div class="toolbar">
           <label class="tb-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="search" id="f-search" placeholder="Rechercher un nom, un numéro…" />
+            <input type="search" id="f-search" placeholder="Rechercher un nom, une branche, un numéro…" />
           </label>
           <div class="tb-select">
             <select id="f-filter" aria-label="Filtrer les réponses">
               <option value="all">Toutes les réponses</option>
-              <option value="present">Présent·e seulement</option>
-              <option value="absent">Absents seulement</option>
+              <option value="present">Présent·es seulement</option>
+              <option value="absent">Absent·es seulement</option>
               <option value="membre">Membres seulement</option>
               <option value="ami">Ami·es / visiteur·ses</option>
             </select>
@@ -155,18 +155,26 @@
             Copier les numéros
           </button>
         </div>
+
+        <!-- Tableau compact sans défilement horizontal (Desktop > 820px) -->
         <div class="table-wrap" id="rsvp-table-wrap">
           <table class="table" id="tbl-rsvps">
             <thead>
               <tr>
-                <th>Billet</th><th>Nom</th><th>Statut</th><th>Présence</th><th>Personnes</th><th>Téléphone</th><th></th><th></th>
+                <th>Billet</th>
+                <th>Invité·e &amp; Lieu</th>
+                <th>Statut &amp; Présence</th>
+                <th>Pers.</th>
+                <th>Contact &amp; Invités</th>
+                <th class="th-actions">Actions</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
           <p class="empty hidden" id="empty-rsvps">Aucune inscription pour le moment — les réponses du formulaire du site arriveront ici ✨</p>
         </div>
-        <!-- Version « cartes » pour mobile / tablette étroite -->
+
+        <!-- Version « cartes » fluide (Tablette & Mobile ≤ 820px) -->
         <div class="rsvp-cards" id="rsvp-cards"></div>
       </section>
 
@@ -186,15 +194,16 @@
       <!-- Onglet Invitations -->
       <section class="panel hidden" id="panel-invites">
         <p class="panel-hint">Amis et membres inactifs invités par les membres — contactez-les par WhatsApp 💬. Les doublons (même nom ou même numéro) sont filtrés automatiquement.</p>
-        <div class="table-wrap">
+        <div class="table-wrap" id="invites-table-wrap">
           <table class="table" id="tbl-invites">
             <thead>
-              <tr><th>Nom</th><th>Type</th><th>Contact</th><th>Invité·e par</th><th>Date</th><th></th></tr>
+              <tr><th>Nom</th><th>Type</th><th>Contact</th><th>Invité·e par</th><th>Date</th><th class="th-actions">Actions</th></tr>
             </thead>
             <tbody></tbody>
           </table>
           <p class="empty hidden" id="empty-inv">Aucune invitation pour le moment 💝</p>
         </div>
+        <div class="rsvp-cards" id="invite-cards"></div>
       </section>
 
       <!-- Onglet Outils -->
@@ -202,12 +211,12 @@
         <div class="tools-grid">
           <article class="tool">
             <h3>Sauvegarder les données</h3>
-            <p>Téléchargez les inscriptions et les messages en fichiers CSV / JSON pour ne rien perdre.</p>
+            <p>Téléchargez les inscriptions et toutes leurs personnes invitées en fichier CSV (compatible Excel) pour ne rien perdre.</p>
             <a class="btn btn-red btn-sm" href="/api/admin/export.csv" download>Export CSV des inscriptions</a>
           </article>
           <article class="tool">
             <h3>Relances WhatsApp</h3>
-            <p>L'onglet Inscriptions permet d'ouvrir WhatsApp pour chaque invité. « Copier les numéros » prépare une liste pour un envoi groupé.</p>
+            <p>Cliquez sur n'importe quel inscrit pour ouvrir son tiroir latéral de détails et contacter ses invités sur WhatsApp en un clic.</p>
           </article>
           <article class="tool">
             <h3>Sécurité</h3>
@@ -222,7 +231,22 @@
     </main>
   </div>
 
-  <div class="toast" id="toast" aria-live="polite"></div>
-  <script src="admin.js?v=6"></script>
+  <!-- ============ TIROIR LATÉRAL (DRAWER) — DÉTAILS D'UN INSCRIT ============ -->
+  <div class="drawer-backdrop hidden" id="drawer-backdrop" aria-hidden="true"></div>
+  <aside class="guest-drawer hidden" id="guest-drawer" role="dialog" aria-modal="true" aria-labelledby="dr-name">
+    <header class="dr-head">
+      <div>
+        <small id="dr-num" class="t-num">Billet N°---</small>
+        <h2 id="dr-name">—</h2>
+      </div>
+      <button class="icon-btn" id="dr-close" type="button" aria-label="Fermer le panneau de détails">✕</button>
+    </header>
+    <div class="dr-body" id="dr-body"></div>
+    <footer class="dr-foot" id="dr-foot"></footer>
+  </aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/shared.js?v=7" defer></script>
+  <script src="admin.js?v=7" defer></script>
 </body>
 </html>
