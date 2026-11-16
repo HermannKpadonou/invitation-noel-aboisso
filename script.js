@@ -91,6 +91,7 @@ function toast(msg) {
     setTimeout(finish, 16000); /* garde-fou : l'intro s'efface d'elle-même */
   }
   envelope.addEventListener("click", open);
+  $("#intro-open-btn")?.addEventListener("click", open);
   envelope.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
   });
