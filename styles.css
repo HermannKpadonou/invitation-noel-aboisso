@@ -519,15 +519,12 @@ button{font-family:inherit}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 
-/* ---------- Christus (lieu) ---------- */
-.place-christus{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92;
+/* ---------- Carte (lieu) ---------- */
+.place-map iframe{
+  position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
+  filter:saturate(.92);
 }
-.place-map::after{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(90% 80% at 50% 40%,transparent 45%,rgba(58,13,24,.4) 100%);
-}
-.place-map .map-pin{z-index:2}
+@media(max-width:760px){.place-map{min-height:260px}}
 
 /* ---------- Sapin (tenue) ---------- */
 .tenue-photo{
@@ -557,14 +554,8 @@ button{font-family:inherit}
     repeating-linear-gradient(90deg,transparent 0 34px,rgba(255,255,255,.14) 34px 36px),
     linear-gradient(150deg,var(--crimson) 0%,var(--brand-deep-red) 100%);
 }
-.map-pin{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);
-  font-size:2.4rem;filter:drop-shadow(0 8px 10px rgba(0,0,0,.4));
-  animation:bounce 1.8s ease-in-out infinite;text-align:center;color:#fff;
-}
-.map-pin span{display:block;font-size:.78rem;font-weight:700;margin-top:.3rem;text-shadow:0 2px 6px rgba(0,0,0,.5)}
-@keyframes bounce{0%,100%{transform:translate(-50%,-60%)}50%{transform:translate(-50%,-70%)}}
 .place-info{background:#fff;border-radius:var(--radius);padding:1.7rem 1.5rem;box-shadow:var(--shadow);border:1px solid rgba(215,11,51,.08)}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 .place-info h3{color:var(--bordeaux);margin-bottom:.4rem}
 .place-info p{margin-bottom:.5rem}
 .place-actions{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1rem}
