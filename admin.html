@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Back office · Éclairer le Monde — Noël à Aboisso</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23c81d33"/><path d="M50 12 L55 42 L85 50 L55 58 L50 88 L45 58 L15 50 L45 42 Z" fill="white"/></svg>' />
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%23D70B33"/><path d="M50 12 L55 42 L85 50 L55 58 L50 88 L45 58 L15 50 L45 42 Z" fill="white"/></svg>' />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=5" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css?v=6" />
 </head>
 <body>
 
@@ -24,7 +24,7 @@
         <input id="l-pass" type="password" required autocomplete="current-password" placeholder="••••••••" />
       </div>
       <p class="login-error hidden" id="l-error">Mot de passe incorrect 🙏</p>
-      <button class="btn btn-gold btn-wide" type="submit">Se connecter ✦</button>
+      <button class="btn btn-red btn-wide" type="submit">Se connecter</button>
       <a class="login-back" href="/">← Retour au site d'invitation</a>
     </form>
   </div>
@@ -38,11 +38,21 @@
           <strong>Back office</strong>
           <span>Noël à Aboisso · 19.12.2026</span>
         </div>
+        <span class="dash-hello">Bonjour, <strong>Admin</strong></span>
       </div>
       <div class="dash-actions">
-        <button class="btn btn-ghost-dark btn-sm" id="btn-refresh" type="button">🔄 Actualiser</button>
-        <a class="btn btn-red btn-sm" href="/" target="_blank" rel="noopener">🏠 Voir le site</a>
-        <button class="btn btn-ghost-dark btn-sm" id="btn-logout" type="button">Déconnexion</button>
+        <a class="btn btn-red btn-sm" href="/" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>
+          Voir le site
+        </a>
+        <button class="btn btn-outline btn-sm" id="btn-refresh" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          Actualiser
+        </button>
+        <button class="btn btn-outline btn-sm" id="btn-logout" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+          Déconnexion
+        </button>
       </div>
     </header>
 
@@ -50,69 +60,114 @@
       <!-- Statistiques -->
       <section class="stats" id="stats">
         <article class="stat">
-          <span class="s-icon">💌</span>
+          <span class="s-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m2 7 10 6L22 7"/></svg>
+          </span>
           <strong id="st-total">0</strong>
           <small>Réponses reçues</small>
         </article>
         <article class="stat ok">
-          <span class="s-icon">🎄</span>
+          <span class="s-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3"/><path d="m8 6 8 3-4.5 2L9 14l6 2-3 5"/></svg>
+          </span>
           <strong id="st-presents">0</strong>
           <small>Présents</small>
+          <div class="s-progress" aria-hidden="true"><span id="st-present-bar" style="width:0%"></span></div>
+          <em class="s-progress-label" id="st-present-label">—</em>
         </article>
         <article class="stat ko">
-          <span class="s-icon">💔</span>
+          <span class="s-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 12.6 12 20l-7.5-7.4A5 5 0 1 1 12 6.3a5 5 0 1 1 7.5 6.3Z"/><path d="m7 12 3 3 3-3"/><path d="m13 9 3 3"/></svg>
+          </span>
           <strong id="st-absents">0</strong>
           <small>Absents</small>
         </article>
         <article class="stat">
-          <span class="s-icon">👨‍👩‍👧‍👦</span>
+          <span class="s-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
           <strong id="st-people">0</strong>
           <small>Personnes attendues</small>
         </article>
         <article class="stat gold">
-          <span class="s-icon">✍️</span>
+          <span class="s-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 6.1C15.8 4.8 14 4 12 4a5 5 0 0 0-5 5c0 5 5 11 5 11s5-6 5-11"/><circle cx="12" cy="9" r="2"/></svg>
+          </span>
           <strong id="st-messages">0</strong>
           <small>Vœux reçus</small>
         </article>
         <article class="stat gold">
-          <span class="s-icon">💝</span>
+          <span class="s-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M12 8c-2.5 0-4.5-1.5-4.5-3S9 2.6 10.2 3.6 12 8 12 8Zm0 0c2.5 0 4.5-1.5 4.5-3S15 2.6 13.8 3.6 12 8 12 8Z"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+          </span>
           <strong id="st-invites">0</strong>
           <small>Personnes invitées</small>
         </article>
       </section>
 
       <!-- Onglets -->
-      <nav class="tabs" id="tabs">
-        <button class="tab on" data-tab="rsvps" type="button">💌 Inscriptions <span class="count" id="c-rsvps">0</span></button>
-        <button class="tab" data-tab="guestbook" type="button">✍️ Vœux <span class="count" id="c-gb">0</span></button>
-        <button class="tab" data-tab="wall" type="button">📸 Mur photo <span class="count" id="c-wall">0</span></button>
-        <button class="tab" data-tab="invites" type="button">💝 Invitations <span class="count" id="c-inv">0</span></button>
-        <button class="tab" data-tab="outils" type="button">🧰 Outils</button>
+      <nav class="tabs" id="tabs" aria-label="Sections du back office">
+        <button class="tab on" data-tab="rsvps" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m2 7 10 6L22 7"/></svg>
+          Inscriptions <span class="count" id="c-rsvps">0</span>
+        </button>
+        <button class="tab" data-tab="guestbook" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          Vœux <span class="count" id="c-gb">0</span>
+        </button>
+        <button class="tab" data-tab="wall" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg>
+          Mur photo <span class="count" id="c-wall">0</span>
+        </button>
+        <button class="tab" data-tab="invites" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M12 8c-2.5 0-4.5-1.5-4.5-3S9 2.6 10.2 3.6 12 8 12 8Zm0 0c2.5 0 4.5-1.5 4.5-3S15 2.6 13.8 3.6 12 8 12 8Z"/></svg>
+          Invitations <span class="count" id="c-inv">0</span>
+        </button>
+        <button class="tab" data-tab="outils" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76Z"/></svg>
+          Outils
+        </button>
       </nav>
 
       <!-- Onglet Inscriptions -->
       <section class="panel" id="panel-rsvps">
         <div class="toolbar">
-          <input type="search" id="f-search" placeholder="🔍 Rechercher un nom…" />
-          <select id="f-filter">
-            <option value="all">Toutes les réponses</option>
-            <option value="present">Présent·e seulement</option>
-            <option value="absent">Absents seulement</option>
-            <option value="membre">Membres seulement</option>
-            <option value="ami">Ami·es / visiteur·ses</option>
-          </select>
-          <a class="btn btn-gold btn-sm" id="btn-csv" href="/api/admin/export.csv" download>⬇️ Export CSV</a>
-          <button class="btn btn-green btn-sm" id="btn-copy-phones" type="button">📋 Copier les numéros</button>
+          <label class="tb-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="search" id="f-search" placeholder="Rechercher un nom, un numéro…" />
+          </label>
+          <div class="tb-select">
+            <select id="f-filter" aria-label="Filtrer les réponses">
+              <option value="all">Toutes les réponses</option>
+              <option value="present">Présent·e seulement</option>
+              <option value="absent">Absents seulement</option>
+              <option value="membre">Membres seulement</option>
+              <option value="ami">Ami·es / visiteur·ses</option>
+            </select>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+          <a class="btn btn-outline btn-sm" id="btn-csv" href="/api/admin/export.csv" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Export CSV
+          </a>
+          <button class="btn btn-outline btn-sm" id="btn-copy-phones" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            Copier les numéros
+          </button>
         </div>
-        <div class="table-wrap">
+        <div class="table-wrap" id="rsvp-table-wrap">
           <table class="table" id="tbl-rsvps">
             <thead>
-              <tr><th>Billet</th><th>Nom</th><th>Statut</th><th>Présence</th><th>Personnes</th><th>Téléphone</th><th>Branche / Localité</th><th>Invités</th><th>Note</th><th>Date</th><th></th></tr>
+              <tr>
+                <th>Billet</th><th>Nom</th><th>Statut</th><th>Présence</th><th>Personnes</th><th>Téléphone</th><th></th><th></th>
+              </tr>
             </thead>
             <tbody></tbody>
           </table>
           <p class="empty hidden" id="empty-rsvps">Aucune inscription pour le moment — les réponses du formulaire du site arriveront ici ✨</p>
         </div>
+        <!-- Version « cartes » pour mobile / tablette étroite -->
+        <div class="rsvp-cards" id="rsvp-cards"></div>
       </section>
 
       <!-- Onglet Vœux (livre d'or) -->
@@ -146,20 +201,20 @@
       <section class="panel hidden" id="panel-outils">
         <div class="tools-grid">
           <article class="tool">
-            <h3>⬇️ Sauvegarder les données</h3>
+            <h3>Sauvegarder les données</h3>
             <p>Téléchargez les inscriptions et les messages en fichiers CSV / JSON pour ne rien perdre.</p>
             <a class="btn btn-red btn-sm" href="/api/admin/export.csv" download>Export CSV des inscriptions</a>
           </article>
           <article class="tool">
-            <h3>💬 Relances WhatsApp</h3>
+            <h3>Relances WhatsApp</h3>
             <p>L'onglet Inscriptions permet d'ouvrir WhatsApp pour chaque invité. « Copier les numéros » prépare une liste pour un envoi groupé.</p>
           </article>
           <article class="tool">
-            <h3>🔐 Sécurité</h3>
+            <h3>Sécurité</h3>
             <p>Le mot de passe se règle dans <code>server.js</code> (variable <code>ADMIN_PASSWORD</code>) ou via la variable d'environnement sur Render.</p>
           </article>
           <article class="tool">
-            <h3>📊 Les données</h3>
+            <h3>Les données</h3>
             <p>Sur Render, elles sont enregistrées dans la base <strong>Neon PostgreSQL</strong> (variable <code>DATABASE_URL</code>) et survivent aux redéploiements. En local, elles restent dans le dossier <code>data/</code>.</p>
           </article>
         </div>
@@ -168,6 +223,6 @@
   </div>
 
   <div class="toast" id="toast" aria-live="polite"></div>
-  <script src="admin.js?v=5"></script>
+  <script src="admin.js?v=6"></script>
 </body>
 </html>
