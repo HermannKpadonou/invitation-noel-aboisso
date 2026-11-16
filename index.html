@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=11" />
 </head>
 <body>
 
@@ -114,8 +114,8 @@
       <p class="section-kicker">Le programme de la journée</p>
       <h2 class="section-title reveal">Cinq heures de magie ✨</h2>
       <figure class="creche-banner reveal">
-        <img src="assets/creche-rouge.jpg" alt="Illustration de la crèche de Bethléem sous un ciel rouge et doré" loading="lazy" />
-        <figcaption>La crèche de Bethléem ✦</figcaption>
+        <img src="assets/nativite-nuit.jpg" alt="Crèche illuminée dans la nuit avec sapins de lumière, poinsettias rouges et or" loading="lazy" />
+        <figcaption>La crèche illuminée ✦</figcaption>
       </figure>
       <ol class="timeline" data-stagger>
         <li class="tl-item reveal">
@@ -211,16 +211,16 @@
           <figcaption>Des milliers de lumières ✨</figcaption>
         </figure>
         <figure class="gs-item">
-          <img src="assets/nativity_mary_joseph_bethlehem.webp" alt="Marie et Joseph sur la route de Bethléem" loading="lazy" />
-          <figcaption>Le voyage vers Bethléem 🐫</figcaption>
-        </figure>
-        <figure class="gs-item">
-          <img src="assets/bible_video_christ_presentation_temple.webp" alt="La sainte Famille — Marie, Joseph et l'enfant Jésus" loading="lazy" />
+          <img src="assets/nativite-famille.jpg" alt="Figurines de la sainte Famille — Marie, Joseph et l'enfant Jésus" loading="lazy" />
           <figcaption>La sainte Famille 💛</figcaption>
         </figure>
         <figure class="gs-item">
-          <img src="assets/creche-nuit.jpg" alt="Crèche illuminée dans la nuit de Noël" loading="lazy" />
-          <figcaption>La nuit de la naissance 🌟</figcaption>
+          <img src="assets/creche-bebe.jpg" alt="Grande crèche d'église avec les rois mages autour de l'enfant Jésus" loading="lazy" />
+          <figcaption>La naissance de Jésus-Christ 🌟</figcaption>
+        </figure>
+        <figure class="gs-item">
+          <img src="assets/creche-rouge.jpg" alt="Silhouette de la crèche de Bethléem sous un ciel rouge et étoilé" loading="lazy" />
+          <figcaption>L'étoile de Bethléem ✦</figcaption>
         </figure>
       </div>
     </section>
@@ -255,7 +255,7 @@
       <h2 class="section-title reveal">Venez brillant·e ✨</h2>
       <p class="center">Pas de contrainte stricte — mais une suggestion : <strong>une touche de rouge ou de blanc</strong>, comme la lumière de Noël. Les enfants peuvent venir déguisés en anges, étoiles, bergers ou petits sapins 🌟</p>
       <figure class="tenue-photo reveal">
-        <img src="assets/sapin-noel.jpg" alt="Sapin de Noël décoré de rouge et d'or" loading="lazy" />
+        <img src="assets/sapin-hd.jpg" alt="Sapin de Noël décoré de rouge, de blanc et d'or avec chaussettes du Père Noël" loading="lazy" />
       </figure>
       <div class="palette reveal" data-stagger>
         <span class="swatch" style="--c:#c81d33">Rouge lumière</span>
@@ -275,6 +275,7 @@
         <div class="done-badge">💌</div>
         <h3>Merci <span id="done-name"></span> !</h3>
         <p>Votre réponse est enregistrée. <button class="link-btn" id="view-invite" type="button">Revoir ma carte d'invitation</button></p>
+        <div class="invites-share hidden" id="invites-share"></div>
       </div>
 
       <form id="rsvp-form" class="rsvp-form reveal" novalidate>
@@ -329,34 +330,18 @@
           <input id="f-note" name="note" type="text" maxlength="120" placeholder="Ex. Je viens avec 2 enfants" />
         </div>
 
-        <fieldset class="invite-block">
+        <fieldset class="invite-block" id="invite-block">
           <legend>💝 Qui souhaitez-vous inviter avec vous&nbsp;?</legend>
-          <p class="ib-hint">Fête de Noël du <strong>District d'Aboisso</strong> — proposez les coordonnées de vos proches (facultatif), nous leur ferons parvenir l'invitation 💌</p>
+          <p class="ib-hint">Fête de Noël du <strong>District d'Aboisso</strong> — en tant que membre, ajoutez <strong>autant d'amis et de membres inactifs</strong> que vous voulez (facultatif). Nous vérifions les doublons, puis vous enverrez les invitations par WhatsApp 💌</p>
           <div class="ib-sub">
             <p class="ib-title">🤝 Un·e ami·e</p>
-            <div class="field-row">
-              <div class="field">
-                <label for="f-ami-nom">Son nom</label>
-                <input id="f-ami-nom" name="ami_nom" type="text" maxlength="80" placeholder="Ex. Koffi Yao" />
-              </div>
-              <div class="field">
-                <label for="f-ami-tel">Son contact</label>
-                <input id="f-ami-tel" name="ami_tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" />
-              </div>
-            </div>
+            <div class="inv-list" id="inv-amis"></div>
+            <button class="link-btn inv-add" type="button" data-add-invite="ami">➕ Ajouter un·e autre ami·e</button>
           </div>
           <div class="ib-sub">
             <p class="ib-title">⛪ Un·e membre inactif·ve</p>
-            <div class="field-row">
-              <div class="field">
-                <label for="f-inactif-nom">Son nom</label>
-                <input id="f-inactif-nom" name="inactif_nom" type="text" maxlength="80" placeholder="Ex. Sœur Adjoua" />
-              </div>
-              <div class="field">
-                <label for="f-inactif-tel">Son contact</label>
-                <input id="f-inactif-tel" name="inactif_tel" type="tel" inputmode="tel" placeholder="05 00 00 00 00" />
-              </div>
-            </div>
+            <div class="inv-list" id="inv-inactifs"></div>
+            <button class="link-btn inv-add" type="button" data-add-invite="inactif">➕ Ajouter un·e autre membre inactif·ve</button>
           </div>
         </fieldset>
 
@@ -407,7 +392,7 @@
     <!-- ============ MES VŒUX (livre d'or) ============ -->
     <section class="section" id="mots-doux">
       <figure class="gb-creche reveal" aria-hidden="true">
-        <img src="assets/creche-nuit.jpg" alt="" loading="lazy" />
+        <img src="assets/creche-figurine.jpg" alt="" loading="lazy" />
       </figure>
       <p class="section-kicker">Mes vœux pour cette fête de Noël</p>
       <h2 class="section-title reveal">Partagez vos vœux pour cette fête de Noël 💌</h2>
@@ -540,6 +525,6 @@
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="assets/qrcode-generator.js"></script>
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=11"></script>
 </body>
 </html>

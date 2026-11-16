@@ -399,14 +399,130 @@ function getRsvps() {
   const card = $("#invite-card");
   let currentInvite = null;
 
-  /* Statut membre / ami : montrer ou cacher les champs de branche & localité */
+  /* Statut membre / ami : montrer ou cacher les champs de branche & localité
+     et le bloc d'invitations (réservé aux membres) */
   const membreFields = $("#membre-fields");
+  const inviteBlock = $("#invite-block");
   function syncStatut() {
     const statut = form.querySelector('input[name="statut"]:checked')?.value || "membre";
     membreFields.classList.toggle("hidden", statut !== "membre");
+    inviteBlock.classList.toggle("hidden", statut !== "membre");
   }
   form.querySelectorAll('input[name="statut"]').forEach((r) => r.addEventListener("change", syncStatut));
   syncStatut();
+
+  /* ---------- Invitations dynamiques : amis & membres inactifs ---------- */
+  const invLists = { ami: $("#inv-amis"), inactif: $("#inv-inactifs") };
+  const invKey = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  const telKey = (s) => String(s || "").replace(/\D/g, "");
+
+  function addInviteRow(type) {
+    const row = document.createElement("div");
+    row.className = "inv-row";
+    const phNom = type === "ami" ? "Ex. Koffi Yao" : "Ex. Sœur Adjoua";
+    row.innerHTML = `
+      <div class="field"><label>Son nom</label><input class="inv-nom" type="text" maxlength="80" placeholder="${phNom}" /></div>
+      <div class="field"><label>Son contact WhatsApp</label><input class="inv-tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" /></div>
+      <button class="inv-x" type="button" title="Retirer cette personne">✕</button>
+      <p class="inv-msg hidden"></p>`;
+    row.querySelector(".inv-x").addEventListener("click", () => {
+      const list = row.parentElement;
+      row.remove();
+      if (list && !list.children.length) addInviteRow(type);
+    });
+    row.querySelector(".inv-nom").addEventListener("change", () => checkInviteRow(row));
+    row.querySelector(".inv-tel").addEventListener("change", () => checkInviteRow(row));
+    invLists[type].appendChild(row);
+    return row;
+  }
+
+  const rowValues = (row) => ({
+    nom: row.querySelector(".inv-nom").value.trim(),
+    tel: row.querySelector(".inv-tel").value.trim(),
+  });
+
+  function rowMsg(row, text, ok = false) {
+    const m = row.querySelector(".inv-msg");
+    m.textContent = text || "";
+    m.classList.toggle("hidden", !text);
+    m.classList.toggle("ok", ok && !!text);
+  }
+
+  function collectInvites() {
+    const out = [];
+    for (const type of ["ami", "inactif"]) {
+      for (const row of Array.from(invLists[type].children)) {
+        const v = rowValues(row);
+        if (v.nom || v.tel) out.push({ type, ...v });
+      }
+    }
+    return out;
+  }
+
+  /* Doublon à l'intérieur du formulaire */
+  function localDup(row) {
+    const me = rowValues(row);
+    const nk = invKey(me.nom), tk = telKey(me.tel);
+    for (const list of Object.values(invLists)) {
+      for (const other of list.children) {
+        if (other === row) continue;
+        const v = rowValues(other);
+        if (!v.nom && !v.tel) continue;
+        const sameTel = tk && telKey(v.tel) === tk;
+        const sameNom = nk && invKey(v.nom) === nk;
+        if (sameTel || (sameNom && (!tk || !telKey(v.tel)))) return v.nom || v.tel;
+      }
+    }
+    return "";
+  }
+
+  /* Doublon dans la base (invitations + inscriptions) : comparaison nom & téléphone */
+  async function checkInviteRow(row) {
+    const { nom, tel } = rowValues(row);
+    if (!nom && !tel) { rowMsg(row, ""); return; }
+    if (!nom) { rowMsg(row, "Indiquez aussi son nom 🙏"); return; }
+    const ld = localDup(row);
+    if (ld) { rowMsg(row, `⚠️ « ${ld} » figure déjà dans vos invitations ✋`); return; }
+    try {
+      const res = await fetch("/api/invites/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nom, tel }),
+      });
+      const j = await res.json();
+      if (j.dup) rowMsg(row, `⚠️ « ${nom} » a déjà été invité·e${j.info ? " — " + j.info : ""} ✋`);
+      else rowMsg(row, "✓ Pas encore invité·e — parfait !", true);
+    } catch { rowMsg(row, ""); }
+  }
+
+  ["ami", "inactif"].forEach((t) => {
+    document.querySelector(`[data-add-invite="${t}"]`).addEventListener("click", () => addInviteRow(t));
+    addInviteRow(t);
+  });
+
+  /* Boutons WhatsApp pour chaque personne invitée (après envoi de la réponse) */
+  function renderInvitesShare(invites, membreNom) {
+    const box = $("#invites-share");
+    box.innerHTML = "";
+    const list = (invites || []).filter((i) => i && i.nom);
+    if (!list.length) { box.classList.add("hidden"); return; }
+    const h = document.createElement("p");
+    h.className = "is-title";
+    h.textContent = "💌 Envoyez-leur l'invitation par WhatsApp :";
+    box.appendChild(h);
+    const base = location.protocol.startsWith("http") ? location.origin + location.pathname : "https://eclairerlemonde.org/";
+    for (const inv of list) {
+      const msg = `✦ Éclairer le Monde ✦\nCher·ère ${inv.nom},\n${membreNom} vous invite à la fête de Noël « Éclairer le Monde » 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n✨ Entrée gratuite — toute la famille est la bienvenue !\n💌 Détails : ${base}`;
+      const num = telKey(inv.tel) ? normalizePhone(inv.tel) : "";
+      const a = document.createElement("a");
+      a.className = "btn btn-green is-btn";
+      a.href = num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      a.target = "_blank"; a.rel = "noopener";
+      a.textContent = `💬 ${inv.nom}`;
+      box.appendChild(a);
+    }
+    box.classList.remove("hidden");
+  }
 
   /* Si une réponse existe déjà : proposer de voir le billet */
   const rsvps = getRsvps();
@@ -439,15 +555,29 @@ function getRsvps() {
       people: Math.min(Math.max(parseInt(fd.get("accomp") || "1", 10) || 1, 1), 30),
       branche: (fd.get("branche") || "").trim(),
       localite: (fd.get("localite") || "").trim(),
-      ami_nom: (fd.get("ami_nom") || "").trim(),
-      ami_tel: (fd.get("ami_tel") || "").trim(),
-      inactif_nom: (fd.get("inactif_nom") || "").trim(),
-      inactif_tel: (fd.get("inactif_tel") || "").trim(),
       note: (fd.get("note") || "").trim(),
       at: new Date().toISOString(),
     };
 
+    /* Invitations (réservées aux membres) : autant de lignes que besoin */
+    const invites = data.statut === "membre" ? collectInvites() : [];
+    const incomplet = invites.find((i) => !i.nom && i.tel);
+    if (incomplet) {
+      const el = $("#rsvp-error");
+      el.textContent = "Indiquez le nom de chaque personne dont vous donnez le contact 🙏";
+      el.classList.remove("hidden");
+      return;
+    }
+    data.invites = invites;
+    const firstAmi = invites.find((i) => i.type === "ami");
+    const firstInactif = invites.find((i) => i.type === "inactif");
+    data.ami_nom = firstAmi ? firstAmi.nom : "";
+    data.ami_tel = firstAmi ? firstAmi.tel : "";
+    data.inactif_nom = firstInactif ? firstInactif.nom : "";
+    data.inactif_tel = firstInactif ? firstInactif.tel : "";
+
     /* Envoi au serveur (back office) — repli sur le stockage local si absent */
+    let skippedInvites = [];
     try {
       const res = await fetch("/api/rsvp", {
         method: "POST",
@@ -455,8 +585,9 @@ function getRsvps() {
         body: JSON.stringify(data),
       });
       if (res.ok) {
-        const saved = (await res.json()).entry;
-        if (saved && saved.num) data.num = saved.num;
+        const j = await res.json();
+        if (j.entry && j.entry.num) data.num = j.entry.num;
+        skippedInvites = j.skipped || [];
       }
     } catch { /* site ouvert en fichier local : stockage local uniquement */ }
 
@@ -467,8 +598,13 @@ function getRsvps() {
     /* Afficher la carte d'invitation (elle s'ouvre en animation) */
     showInvite(data);
     form.reset();
+    ["ami", "inactif"].forEach((t) => { invLists[t].innerHTML = ""; addInviteRow(t); });
     syncStatut();
+    renderInvitesShare(invites.filter((i) => !skippedInvites.some((s) => invKey(s) === invKey(i.nom))), nom);
     toast("💌 Réponse envoyée — votre carte d'invitation est prête !");
+    if (skippedInvites.length) {
+      setTimeout(() => toast(`⚠️ ${skippedInvites.join(", ")} avait déjà été invité·e — ignoré·e`), 2800);
+    }
     launchConfetti();
     setTimeout(() => {
       form.classList.add("hidden");
@@ -915,7 +1051,7 @@ function getRsvps() {
   }
 
   function drawFramedPhoto(e) {
-    const W = 900, H = 1160;
+    const W = 760, H = 980;
     const c = document.createElement("canvas");
     c.width = W; c.height = H;
     const x = c.getContext("2d");
@@ -923,17 +1059,17 @@ function getRsvps() {
     /* Cadre rouge extérieur */
     const RG = x.createLinearGradient(0, 0, 0, H);
     RG.addColorStop(0, "#e63950"); RG.addColorStop(.55, "#c81d33"); RG.addColorStop(1, "#8f1320");
-    roundedRect(x, 0, 0, W, H, 34); x.fillStyle = RG; x.fill();
+    roundedRect(x, 0, 0, W, H, 30); x.fillStyle = RG; x.fill();
 
     /* Fond crème intérieur */
-    roundedRect(x, 20, 20, W - 40, H - 40, 22); x.fillStyle = "#fffdf8"; x.fill();
+    roundedRect(x, 16, 16, W - 32, H - 32, 18); x.fillStyle = "#fffdf8"; x.fill();
 
     /* Liseré doré */
     x.strokeStyle = "rgba(245,192,78,.9)"; x.lineWidth = 2.5;
-    roundedRect(x, 32, 32, W - 64, H - 64, 16); x.stroke();
+    roundedRect(x, 28, 28, W - 56, H - 56, 14); x.stroke();
 
     /* Photo recadrée en carré */
-    const px = 80, py = 80, pw = W - 160;
+    const px = 64, py = 64, pw = W - 128;
 
     const img = new Image();
     const finish = () => {
@@ -955,7 +1091,7 @@ function getRsvps() {
 
       /* Étoile dorée */
       x.fillStyle = "#f5c04e";
-      const cx = W / 2, cy = py + pw + 62, R = 20, r2 = 8;
+      const cx = W / 2, cy = py + pw + 50, R = 17, r2 = 7;
       x.beginPath();
       for (let i = 0; i < 10; i++) {
         const rad = i % 2 === 0 ? R : r2;
@@ -967,27 +1103,27 @@ function getRsvps() {
       /* Titre */
       x.textAlign = "center";
       x.fillStyle = "#8f1320";
-      x.font = "italic 600 46px 'Playfair Display', Georgia, serif";
-      x.fillText("Éclairer le Monde", W / 2, cy + 66);
+      x.font = "italic 600 40px 'Playfair Display', Georgia, serif";
+      x.fillText("Éclairer le Monde", W / 2, cy + 56);
 
       /* Nom du participant */
       if (e.nom) {
         x.fillStyle = "#3b2a2a";
-        x.font = "700 30px Poppins, sans-serif";
-        x.fillText(e.nom.length > 30 ? e.nom.slice(0, 30) + "…" : e.nom, W / 2, cy + 112);
+        x.font = "700 26px Poppins, sans-serif";
+        x.fillText(e.nom.length > 30 ? e.nom.slice(0, 30) + "…" : e.nom, W / 2, cy + 94);
       }
 
       /* Date & lieu */
       x.fillStyle = "#8a6a6a";
-      x.font = "500 21px Poppins, sans-serif";
-      x.fillText("19 · 12 · 2026  ·  Salle des fêtes de la mairie d'Aboisso", W / 2, cy + 152);
+      x.font = "500 18px Poppins, sans-serif";
+      x.fillText("19 · 12 · 2026  ·  Salle des fêtes de la mairie d'Aboisso", W / 2, cy + 126);
 
       /* Hashtag sur pastille rouge */
       x.fillStyle = "#c81d33";
-      roundedRect(x, W / 2 - 175, cy + 175, 350, 46, 23); x.fill();
+      roundedRect(x, W / 2 - 150, cy + 150, 300, 40, 20); x.fill();
       x.fillStyle = "#ffffff";
-      x.font = "700 22px Poppins, sans-serif";
-      x.fillText("#ÉclairerLeMonde", W / 2, cy + 205);
+      x.font = "700 19px Poppins, sans-serif";
+      x.fillText("#ÉclairerLeMonde", W / 2, cy + 176);
 
       finish();
     };

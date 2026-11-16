@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=4" />
+  <link rel="stylesheet" href="admin.css?v=5" />
 </head>
 <body>
 
@@ -74,6 +74,11 @@
           <strong id="st-messages">0</strong>
           <small>Vœux reçus</small>
         </article>
+        <article class="stat gold">
+          <span class="s-icon">💝</span>
+          <strong id="st-invites">0</strong>
+          <small>Personnes invitées</small>
+        </article>
       </section>
 
       <!-- Onglets -->
@@ -81,6 +86,7 @@
         <button class="tab on" data-tab="rsvps" type="button">💌 Inscriptions <span class="count" id="c-rsvps">0</span></button>
         <button class="tab" data-tab="guestbook" type="button">✍️ Vœux <span class="count" id="c-gb">0</span></button>
         <button class="tab" data-tab="wall" type="button">📸 Mur photo <span class="count" id="c-wall">0</span></button>
+        <button class="tab" data-tab="invites" type="button">💝 Invitations <span class="count" id="c-inv">0</span></button>
         <button class="tab" data-tab="outils" type="button">🧰 Outils</button>
       </nav>
 
@@ -122,6 +128,20 @@
         <p class="empty hidden" id="empty-wall">Aucune photo pour le moment 📸</p>
       </section>
 
+      <!-- Onglet Invitations -->
+      <section class="panel hidden" id="panel-invites">
+        <p class="panel-hint">Amis et membres inactifs invités par les membres — contactez-les par WhatsApp 💬. Les doublons (même nom ou même numéro) sont filtrés automatiquement.</p>
+        <div class="table-wrap">
+          <table class="table" id="tbl-invites">
+            <thead>
+              <tr><th>Nom</th><th>Type</th><th>Contact</th><th>Invité·e par</th><th>Date</th><th></th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="empty hidden" id="empty-inv">Aucune invitation pour le moment 💝</p>
+        </div>
+      </section>
+
       <!-- Onglet Outils -->
       <section class="panel hidden" id="panel-outils">
         <div class="tools-grid">
@@ -148,6 +168,6 @@
   </div>
 
   <div class="toast" id="toast" aria-live="polite"></div>
-  <script src="admin.js?v=4"></script>
+  <script src="admin.js?v=5"></script>
 </body>
 </html>

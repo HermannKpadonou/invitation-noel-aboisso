@@ -88,6 +88,14 @@ async function initDB() {
       msg TEXT DEFAULT '',
       photo TEXT NOT NULL,
       at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS invites (
+      id SERIAL PRIMARY KEY,
+      rsvp_id INT,
+      type TEXT NOT NULL DEFAULT 'ami',
+      nom TEXT NOT NULL,
+      tel TEXT DEFAULT '',
+      at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );`);
 
   /* Colonnes RSVP ajoutées avec le formulaire enrichi (statut, branche,
@@ -234,6 +242,65 @@ async function listWall() {
   return readJSON("photo-wall.json", []);
 }
 
+/* ---------- Invitations (amis & membres inactifs proposés par les membres) ---------- */
+function normTel(t) { return String(t || "").replace(/\D/g, ""); }
+function normName(n) {
+  return String(n || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+async function listInvitesRaw() {
+  if (db) return (await db.query(
+    `SELECT i.id, i.rsvp_id, i.type, i.nom, i.tel, i.at, r.nom AS par
+     FROM invites i LEFT JOIN rsvps r ON r.id = i.rsvp_id ORDER BY i.id ASC`
+  )).rows;
+  const invites = readJSON("invites.json", []);
+  const rsvps = readJSON("rsvps.json", []);
+  return invites.map((i) => ({ ...i, par: (rsvps.find((r) => r.id === i.rsvp_id) || {}).nom || "" }));
+}
+
+/* Un invité est un doublon si son téléphone OU son nom correspond déjà
+   (inscriptions comme invitations précédentes) */
+async function findInviteDup(nom, tel) {
+  const nk = normName(nom), tk = normTel(tel);
+  if (!nk && !tk) return null;
+  const invites = db ? (await db.query(`SELECT nom, tel, at FROM invites`)).rows : readJSON("invites.json", []);
+  const rsvps = db ? (await db.query(`SELECT nom, tel, at FROM rsvps`)).rows : readJSON("rsvps.json", []);
+  const scan = (list, label) => {
+    for (const r of list) {
+      const sameTel = tk && normTel(r.tel) === tk;
+      const sameNom = nk && normName(r.nom) === nk;
+      if (sameTel || (sameNom && (!tk || !normTel(r.tel)))) {
+        return { src: label, nom: r.nom, at: r.at };
+      }
+    }
+    return null;
+  };
+  return scan(invites, "invitations") || scan(rsvps, "inscriptions");
+}
+
+async function addInvites(rsvpId, list) {
+  const saved = [], skipped = [];
+  for (const inv of Array.isArray(list) ? list.slice(0, 40) : []) {
+    const nom = clean(inv.nom, 80);
+    const tel = clean(inv.tel, 30);
+    if (!nom && !tel) continue;
+    if (!nom) continue; /* sans nom on ne peut pas personnaliser l'invitation */
+    const dup = await findInviteDup(nom, tel);
+    if (dup) { skipped.push(nom); continue; }
+    const type = inv.type === "inactif" ? "inactif" : "ami";
+    if (db) {
+      await db.query(`INSERT INTO invites (rsvp_id, type, nom, tel) VALUES ($1,$2,$3,$4)`,
+        [rsvpId || null, type, nom, tel]);
+    } else {
+      const all = readJSON("invites.json", []);
+      all.push({ id: Date.now() + saved.length, rsvp_id: rsvpId || null, type, nom, tel, at: new Date().toISOString() });
+      writeJSON("invites.json", all);
+    }
+    saved.push({ type, nom, tel });
+  }
+  return { saved, skipped };
+}
+
 async function addWall(entry) {
   if (db) {
     const r = await db.query(
@@ -251,13 +318,13 @@ async function addWall(entry) {
 
 async function deleteRow(table, id) {
   if (db) {
-    const allowed = { rsvp: "rsvps", guestbook: "guestbook", "photo-wall": "photo_wall" };
+    const allowed = { rsvp: "rsvps", guestbook: "guestbook", "photo-wall": "photo_wall", invite: "invites" };
     const t = allowed[table];
     if (!t) return;
     await db.query(`DELETE FROM ${t} WHERE id = $1`, [id]);
     return;
   }
-  const files = { rsvp: "rsvps.json", guestbook: "guestbook.json", "photo-wall": "photo-wall.json" };
+  const files = { rsvp: "rsvps.json", guestbook: "guestbook.json", "photo-wall": "photo-wall.json", invite: "invites.json" };
   const file = files[table];
   if (!file) return;
   writeJSON(file, readJSON(file, []).filter((r) => r.id !== parseInt(id)));
@@ -298,7 +365,23 @@ async function handleAPI(req, res, url) {
       inactif_tel: clean(body.inactif_tel, 30),
       note: clean(body.note, 150),
     });
-    return send(res, 200, { ok: true, entry });
+    /* Invitations dynamiques : doublons filtrés (nom / téléphone déjà connus) */
+    const { saved, skipped } = await addInvites(entry.id, body.invites);
+    return send(res, 200, { ok: true, entry, saved, skipped });
+  }
+
+  /* --- Invitations : vérifier si une personne a déjà été invitée (public) --- */
+  if (pathname === "/api/invites/check" && req.method === "POST") {
+    const body = await readBody(req);
+    const nom = clean(body.nom, 80);
+    const tel = clean(body.tel, 30);
+    if (!nom) return send(res, 400, { ok: false, error: "Nom requis" });
+    const dup = await findInviteDup(nom, tel);
+    const info = dup
+      ? (dup.src === "inscriptions" ? "déjà inscrit·e" : "déjà dans les invitations") +
+        (dup.at ? " le " + new Date(dup.at).toLocaleDateString("fr-FR") : "")
+      : "";
+    return send(res, 200, { ok: true, dup: !!dup, info });
   }
 
   /* --- Livre d'or (public : lire / écrire) --- */
@@ -335,15 +418,16 @@ async function handleAPI(req, res, url) {
     if (!isAuth(req)) return send(res, 401, { ok: false, error: "Non autorisé" });
 
     if (pathname === "/api/admin/summary" && req.method === "GET") {
-      const [rsvps, guestbook, wall] = await Promise.all([listRsvps(), listGuestbook(), listWall()]);
+      const [rsvps, guestbook, wall, invites] = await Promise.all([listRsvps(), listGuestbook(), listWall(), listInvitesRaw()]);
       const stats = {
         total: rsvps.length,
         presents: rsvps.filter((r) => r.presence === "present").length,
         absents: rsvps.filter((r) => r.presence === "absent").length,
         people: rsvps.filter((r) => r.presence === "present").reduce((s, r) => s + (r.people || 1), 0),
         messages: guestbook.length,
+        invites: invites.length,
       };
-      return send(res, 200, { ok: true, rsvps, guestbook, wall, stats });
+      return send(res, 200, { ok: true, rsvps, guestbook, wall, invites, stats });
     }
 
     if (pathname === "/api/admin/export.csv" && req.method === "GET") {
@@ -378,6 +462,11 @@ async function handleAPI(req, res, url) {
 
     if (pathname === "/api/admin/photo-wall" && req.method === "DELETE") {
       await deleteRow("photo-wall", searchParams.get("id"));
+      return send(res, 200, { ok: true });
+    }
+
+    if (pathname === "/api/admin/invite" && req.method === "DELETE") {
+      await deleteRow("invite", searchParams.get("id"));
       return send(res, 200, { ok: true });
     }
     return send(res, 404, { ok: false, error: "Route inconnue" });

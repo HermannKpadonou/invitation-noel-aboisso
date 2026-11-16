@@ -78,7 +78,7 @@ if (token) {
 }
 
 /* ---------- État + rendu ---------- */
-let STATE = { rsvps: [], guestbook: [], wall: [], stats: {} };
+let STATE = { rsvps: [], guestbook: [], wall: [], invites: [], stats: {} };
 let currentTab = "rsvps";
 let autoTimer = null;
 
@@ -97,9 +97,11 @@ function render() {
   $("#st-absents").textContent = stats.absents ?? 0;
   $("#st-people").textContent = stats.people ?? 0;
   $("#st-messages").textContent = stats.messages ?? 0;
+  $("#st-invites").textContent = stats.invites ?? 0;
   $("#c-rsvps").textContent = rsvps.length;
   $("#c-gb").textContent = guestbook.length;
   $("#c-wall").textContent = (STATE.wall ?? []).length;
+  $("#c-inv").textContent = (STATE.invites ?? []).length;
 
   /* Table des inscriptions (avec filtres) */
   const q = $("#f-search").value.trim().toLowerCase();
@@ -184,6 +186,28 @@ function render() {
     wallGrid.appendChild(card);
   });
   $("#empty-wall").classList.toggle("hidden", wall.length > 0);
+
+  /* Invitations */
+  const invites = STATE.invites ?? [];
+  const invTbody = $("#tbl-invites tbody");
+  invTbody.innerHTML = "";
+  invites.slice().reverse().forEach((i) => {
+    const tr = document.createElement("tr");
+    const tel = i.tel ? normalizePhone(i.tel) : "";
+    const wa = tel ? `https://wa.me/${tel}?text=${encodeURIComponent(`✦ Éclairer le Monde ✦\nCher·ère ${i.nom}, vous êtes invité·e à la fête de Noël 🎄 Samedi 19 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso. Entrée gratuite !`)}` : "";
+    tr.innerHTML = `
+      <td class="t-name">${escapeHTML(i.nom)}</td>
+      <td><span class="badge statut">${i.type === "inactif" ? "⛪ Membre inactif·ve" : "🤝 Ami·e"}</span></td>
+      <td>${i.tel ? escapeHTML(i.tel) : "—"}</td>
+      <td>${i.par ? escapeHTML(i.par) : "—"}</td>
+      <td>${fmtDate(i.at)}</td>
+      <td><div class="row-actions">
+        ${wa ? `<a class="icon-btn" title="Inviter par WhatsApp" target="_blank" rel="noopener" href="${wa}">💬</a>` : ""}
+        <button class="icon-btn" title="Supprimer" data-del-inv="${i.id}">🗑️</button>
+      </div></td>`;
+    invTbody.appendChild(tr);
+  });
+  $("#empty-inv").classList.toggle("hidden", invites.length > 0);
 }
 
 function escapeHTML(s) {
@@ -215,7 +239,7 @@ $("#tabs").addEventListener("click", (e) => {
   if (!btn) return;
   currentTab = btn.dataset.tab;
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t === btn));
-  ["rsvps", "guestbook", "wall", "outils"].forEach((id) => {
+  ["rsvps", "guestbook", "wall", "invites", "outils"].forEach((id) => {
     $(`#panel-${id}`).classList.toggle("hidden", id !== currentTab);
   });
 });
@@ -225,6 +249,7 @@ document.addEventListener("click", async (e) => {
   const delR = e.target.closest("[data-del-rsvp]");
   const delG = e.target.closest("[data-del-gb]");
   const delW = e.target.closest("[data-del-wall]");
+  const delI = e.target.closest("[data-del-inv]");
   if (delR) {
     if (!confirm("Supprimer cette inscription ?")) return;
     await api(`/api/admin/rsvp?id=${delR.dataset.delRsvp}`, { method: "DELETE" });
@@ -242,6 +267,12 @@ document.addEventListener("click", async (e) => {
     await api(`/api/admin/photo-wall?id=${delW.dataset.delWall}`, { method: "DELETE" });
     await refresh();
     toast("🗑️ Photo supprimée");
+  }
+  if (delI) {
+    if (!confirm("Retirer cette personne des invitations ?")) return;
+    await api(`/api/admin/invite?id=${delI.dataset.delInv}`, { method: "DELETE" });
+    await refresh();
+    toast("🗑️ Invitation retirée");
   }
 });
 
