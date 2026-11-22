@@ -32,6 +32,7 @@ const MIME = {
   ".png": "image/png",
   ".ico": "image/x-icon",
   ".mp3": "audio/mpeg",
+  ".mp4": "video/mp4",
   ".ics": "text/calendar; charset=utf-8",
   ".woff2": "font/woff2",
 };
@@ -259,8 +260,9 @@ function streamStaticFile(req, res, filePath, st) {
   const contentType = MIME[ext] || "application/octet-stream";
   const cacheControl = (ext === ".html" || baseName === "sw.js") ? "no-cache" : "public, max-age=86400";
 
-  /* Support HTTP 206 Partial Content (streaming fluide des MP3 sur mobile/Safari) */
-  if (ext === ".mp3" && req.headers.range) {
+  /* Support HTTP 206 Partial Content (streaming fluide des MP3 et vidéos MP4 sur mobile/Safari) */
+  const isMedia = ext === ".mp3" || ext === ".mp4";
+  if (isMedia && req.headers.range) {
     const [startStr, endStr] = req.headers.range.replace(/bytes=/, "").split("-");
     const start = Math.max(0, parseInt(startStr, 10) || 0);
     const end = endStr ? Math.min(st.size - 1, parseInt(endStr, 10)) : st.size - 1;
@@ -294,7 +296,7 @@ function streamStaticFile(req, res, filePath, st) {
   res.writeHead(200, {
     "Content-Type": contentType,
     "Content-Length": st.size,
-    "Accept-Ranges": ext === ".mp3" ? "bytes" : "none",
+    "Accept-Ranges": isMedia ? "bytes" : "none",
     "Cache-Control": cacheControl,
     "X-Content-Type-Options": "nosniff",
   });

@@ -1,11 +1,11 @@
-/* =========================================================
+﻿/* =========================================================
    Éclairer le Monde — Noël à Aboisso · script principal
    ========================================================= */
 
 /* ---------- CONFIG (modifiable facilement) ---------- */
 const CONFIG = {
-  eventStart: "2026-12-19T10:00:00+00:00", // Aboisso = UTC+0
-  eventEnd:   "2026-12-19T15:00:00+00:00",
+  eventStart: "2026-12-24T10:00:00+00:00", // Aboisso = UTC+0
+  eventEnd:   "2026-12-24T15:00:00+00:00",
   rsvpDeadline: "2026-12-12",
   eventName: "Grand Noël des Enfants & Familles — Éclairer le Monde",
   place: "Salle des fêtes de la mairie d'Aboisso, Côte d'Ivoire",
@@ -668,7 +668,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
 /* ---------- Partage WhatsApp ---------- */
 (function initShare() {
-  const text = "✦ Éclairer le Monde ✦\nVous êtes invité·e au Grand Noël des Enfants & Familles 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 19 décembre 2026, 10h–15h\n📍 Salle des fêtes de la mairie d'Aboisso\nEntrée gratuite — toute la famille est la bienvenue !";
+  const text = "✦ Éclairer le Monde ✦\nVous êtes invité·e au Grand Noël des Enfants & Familles 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 24 décembre 2026, 10h–15h\n📍 Salle des fêtes de la mairie d'Aboisso\nEntrée gratuite — toute la famille est la bienvenue !";
   const url = location.href;
   document.querySelectorAll("[data-share-wa]").forEach((a) => {
     a.href = `https://wa.me/?text=${encodeURIComponent(text + "\n👉 " + url)}`;
@@ -841,7 +841,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     for (const inv of list) {
       const qs = new URLSearchParams({ pour: inv.nom, de: membreNom });
       const personalUrl = `${base}?${qs.toString()}`;
-      const msg = `✦ Éclairer le Monde ✦\nCher·ère ${inv.nom},\n${membreNom} vous a préparé une enveloppe d'invitation personnelle pour la fête de Noël « Éclairer le Monde » 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Touchez pour ouvrir votre enveloppe : ${personalUrl}`;
+      const msg = `✦ Éclairer le Monde ✦\nCher·ère ${inv.nom},\n${membreNom} vous a préparé une enveloppe d'invitation personnelle pour la fête de Noël « Éclairer le Monde » 🎄\n🎭 Théâtre · 🎶 Chants · 🎁 Cadeaux · ✨ Surprises\n📅 Samedi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Touchez pour ouvrir votre enveloppe : ${personalUrl}`;
       const num = telKey(inv.tel) ? normalizePhone(inv.tel) : "";
       const a = document.createElement("a");
       a.className = "btn btn-green is-btn";
@@ -894,6 +894,13 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       const el = $("#rsvp-error");
       el.textContent = "Indiquez le nom de chaque personne dont vous donnez le contact 🙏";
       el.classList.remove("hidden");
+      return;
+    }
+    if (data.statut === "membre" && !invites.some((i) => i.nom)) {
+      const el = $("#rsvp-error");
+      el.textContent = "Merci d'inviter au moins un·e ami·e ou membre moins actif·ve (ticket d'entrée) 🙏";
+      el.classList.remove("hidden");
+      inviteBlock.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     data.invites = invites;
@@ -990,7 +997,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   $("#wa-invite").addEventListener("click", () => {
     if (!currentInvite) { toast("Répondez d'abord au formulaire 🙏"); return; }
     const d = currentInvite;
-    const msg = `✦ Éclairer le Monde ✦\nCher·ère ${d.nom}, vous êtes invité·e à célébrer la naissance de Jésus-Christ avec nous 🎄\n📅 Samedi 19 décembre 2026 · 10h–15h\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Votre invitation : ${inviteLink(d)}`;
+    const msg = `✦ Éclairer le Monde ✦\nCher·ère ${d.nom}, vous êtes invité·e à célébrer la naissance de Jésus-Christ avec nous 🎄\n📅 Samedi 24 décembre 2026 · 10h–15h\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Votre invitation : ${inviteLink(d)}`;
     const wa = d.tel ? normalizePhone(d.tel) : CONFIG.contactPhone;
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
   });
@@ -1182,7 +1189,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     const c = await buildInviteCanvas(d);
     const blob = await new Promise((r) => c.toBlob(r, "image/png"));
     const file = new File([blob], `invitation-noel-aboisso-${d.num}.png`, { type: "image/png" });
-    const msg = "✦ Éclairer le Monde ✦\nVous êtes invité·e à célébrer la naissance de Jésus-Christ avec nous 🎄\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n✨ Entrée gratuite — toute la famille est la bienvenue !";
+    const msg = "✦ Éclairer le Monde ✦\nVous êtes invité·e à célébrer la naissance de Jésus-Christ avec nous 🎄\n📅 Samedi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n✨ Entrée gratuite — toute la famille est la bienvenue !";
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: "Invitation · Éclairer le Monde", text: msg });
@@ -1251,7 +1258,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     const introLine = de
       ? `Cher·ère ${pour}, ${de} vous a préparé une enveloppe d'invitation personnelle pour Noël 🎄`
       : `Cher·ère ${pour}, une enveloppe d'invitation personnelle vous attend pour Noël 🎄`;
-    const msg = `✦ Éclairer le Monde · Noël à Aboisso ✦\n${introLine}\n📅 Samedi 19 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Touchez pour ouvrir votre enveloppe : ${magicUrl}`;
+    const msg = `✦ Éclairer le Monde · Noël à Aboisso ✦\n${introLine}\n📅 Samedi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Touchez pour ouvrir votre enveloppe : ${magicUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   });
 

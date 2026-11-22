@@ -1,5 +1,5 @@
 /* =========================================================
-   Éclairer le Monde — Noël à Aboisso · 19 décembre 2026
+   Éclairer le Monde — Noël à Aboisso · 24 décembre 2026
    Direction artistique « Moderne & Soft » aux couleurs
    officielles : carmin #D70B33, rose poudré #F2B5C1,
    fond blanc rosé #FDF9FA, bordeaux #3A0D18, prune #594A4E
@@ -1333,13 +1333,15 @@ button{font-family:inherit}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* =========================================================
-   NOUVEAUTÉS « CHEF-D'ŒUVRE » :
+   NOUVEAUTÉS :
    1. Étiquette nominative sur l'enveloppe & Studio
-   2. Constellation d'Aboisso & Bougie interactive
-   3. Bascule d'Ambiance « Aurore Douce / Nuit de Bethléem »
+   2. Cinémathèque de Noël (5 Vidéos 1080p HD)
+   3. Galerie Cinématographique HD Animée (Diaporama Ken Burns + Pellicule)
+   4. Règle Ticket d'Entrée (1 invité·e minimum)
+   5. Bascule d'Ambiance « Aurore Douce / Nuit de Bethléem »
    ========================================================= */
 
-/* --- 1. Étiquette calligraphique sur l'enveloppe fermée --- */
+/* --- 1. Étiquette calligraphique sur l'enveloppe fermée & Badge Hero --- */
 .envelope-tag{
   position:absolute;z-index:6;left:50%;bottom:11%;
   transform:translateX(-50%);
@@ -1365,104 +1367,210 @@ button{font-family:inherit}
 .gen-btn-row .btn{flex:1;min-width:165px}
 .gc-by{font-size:.66rem;color:var(--rose-soft);font-style:italic;margin-top:-.1rem}
 
-/* --- 2. Constellation d'Aboisso & Bougie Interactive --- */
-.constellation-box{
-  position:relative;overflow:hidden;border-radius:28px;
-  background:
-    radial-gradient(80% 70% at 22% 30%,rgba(242,181,193,.22) 0%,transparent 60%),
-    radial-gradient(70% 80% at 85% 80%,rgba(215,11,51,.32) 0%,transparent 65%),
-    linear-gradient(155deg,#2A0711 0%,#4A0E1F 52%,#1F050C 100%);
-  color:#fff;padding:2.4rem 2rem;
-  box-shadow:0 24px 56px rgba(58,13,24,.25),inset 0 0 0 1px rgba(242,181,193,.35);
+.hero-ticket-pill{
+  position:relative;z-index:1;
+  display:inline-flex;align-items:center;gap:.45rem;flex-wrap:wrap;justify-content:center;
+  background:rgba(255,255,255,.15);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1.5px solid rgba(242,181,193,.65);border-radius:999px;
+  padding:.55rem 1.35rem;font-size:.88rem;color:#FFFFFF;
+  box-shadow:0 10px 24px rgba(0,0,0,.22);
+  opacity:0;animation:fadeUp 1s .72s var(--ease-out) forwards;
 }
-.cb-sky{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.cb-star-dot{
-  position:absolute;width:4px;height:4px;border-radius:50%;
-  background:#FFF5D6;box-shadow:0 0 10px 2px rgba(255,224,140,.8);
-  animation:twinkle 3.2s ease-in-out infinite;
+.hero-ticket-pill strong{color:#FFE49E}
+
+/* --- 2. Cinémathèque de Noël (Lecteur 1080p + Playlist 5 films) --- */
+.cinema-showcase{
+  display:grid;grid-template-columns:1.45fr 1fr;gap:1.4rem;
+  background:#fff;border-radius:26px;padding:1.4rem;
+  box-shadow:var(--shadow);border:1px solid rgba(215,11,51,.1);
+  align-items:start;
 }
-.cb-content{
-  position:relative;z-index:2;
-  display:grid;grid-template-columns:230px 1fr;gap:2rem;align-items:center;
+@media(max-width:860px){.cinema-showcase{grid-template-columns:1fr}}
+.cinema-stage{display:grid;gap:1rem}
+.cinema-player-wrap{
+  position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;
+  background:#140307;box-shadow:0 16px 36px rgba(58,13,24,.28);
+}
+.cinema-video{width:100%;height:100%;display:block;object-fit:cover;background:#000}
+.cinema-meta{padding:.2rem .3rem}
+.cm-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;flex-wrap:wrap;margin-bottom:.45rem}
+.cm-badge{
+  display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--rose-soft);color:var(--crimson);border-radius:999px;padding:.24rem .75rem;
+}
+.cm-scripture{font-size:.78rem;font-weight:700;color:var(--rose-deep);font-family:var(--font-display);font-style:italic}
+.cinema-meta h3{
+  font-family:var(--font-display);font-size:clamp(1.25rem,2.6vw,1.55rem);
+  color:var(--bordeaux);margin-bottom:.35rem;line-height:1.25;
+}
+.cinema-meta p{font-size:.92rem;color:var(--ink-soft);line-height:1.65}
+
+.cinema-playlist{display:grid;gap:.65rem;max-height:520px;overflow-y:auto;padding-right:.2rem}
+.cp-item{
+  display:grid;grid-template-columns:124px 1fr;gap:.8rem;align-items:center;
+  background:var(--cream);border:1.5px solid #EDD5DC;border-radius:16px;
+  padding:.55rem;text-align:left;cursor:pointer;
+  transition:transform .25s var(--ease-out),border-color .25s,background .25s,box-shadow .25s;
+}
+.cp-item:hover{transform:translateX(3px);border-color:var(--rose);background:#FFF9FB}
+.cp-item.active{
+  border-color:var(--crimson);background:var(--rose-soft);
+  box-shadow:0 8px 20px rgba(215,11,51,.14);
+}
+.cp-thumb{
+  position:relative;width:100%;aspect-ratio:16/9;border-radius:11px;overflow:hidden;background:#2A0812;
+}
+.cp-thumb img{width:100%;height:100%;object-fit:cover;transition:transform .4s var(--ease-out)}
+.cp-item:hover .cp-thumb img{transform:scale(1.07)}
+.cp-play{
+  position:absolute;inset:0;margin:auto;width:30px;height:30px;border-radius:50%;
+  background:rgba(215,11,51,.88);color:#fff;font-size:.75rem;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(0,0,0,.35);transition:transform .25s;
+}
+.cp-item:hover .cp-play{transform:scale(1.12)}
+.cp-dur{
+  position:absolute;right:5px;bottom:4px;background:rgba(20,3,7,.8);color:#fff;
+  font-size:.64rem;font-weight:700;padding:.1rem .38rem;border-radius:6px;
+  font-variant-numeric:tabular-nums;
+}
+.cp-info{display:grid;gap:.18rem;min-width:0}
+.cp-info strong{
+  font-size:.86rem;color:var(--bordeaux);line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.cp-info span{
+  font-size:.75rem;color:var(--muted-c);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+@media(max-width:480px){
+  .cp-item{grid-template-columns:104px 1fr;gap:.65rem}
+}
+
+/* --- 3. Galerie Cinématographique HD Animée (Diaporama Ken Burns + Pellicule) --- */
+.hd-carousel{
+  position:relative;border-radius:26px;overflow:hidden;
+  aspect-ratio:16/9;max-height:520px;width:100%;margin:0 auto 1.2rem;
+  background:#1A050B;box-shadow:0 24px 56px rgba(58,13,24,.24);
+  border:3px solid #fff;outline:1px solid rgba(215,11,51,.16);
+}
+.hdc-stage{position:relative;width:100%;height:100%}
+.hdc-slide{
+  position:absolute;inset:0;opacity:0;pointer-events:none;
+  transition:opacity .95s ease;overflow:hidden;
+}
+.hdc-slide.active{opacity:1;pointer-events:auto;z-index:2}
+.hdc-slide img{
+  width:100%;height:100%;object-fit:cover;
+  transform:scale(1.01);
+  transition:transform 6.5s cubic-bezier(.25,.46,.45,.94);
+}
+.hdc-slide.active img{transform:scale(1.1)}
+.hdc-caption{
+  position:absolute;inset:auto 0 0 0;z-index:3;
+  padding:2.6rem 1.8rem 1.5rem;
+  background:linear-gradient(180deg,transparent 0%,rgba(26,5,11,.78) 52%,rgba(26,5,11,.94) 100%);
+  color:#fff;display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+}
+.hdc-text{max-width:620px;text-align:left}
+.hdc-kicker{
+  display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:#FFE49E;margin-bottom:.25rem;
+}
+.hdc-text h3{
+  font-family:var(--font-display);font-style:italic;font-size:clamp(1.2rem,2.8vw,1.65rem);
+  color:#fff;line-height:1.2;margin-bottom:.25rem;
+}
+.hdc-text p{font-size:.86rem;color:rgba(255,255,255,.88);line-height:1.45}
+.hdc-actions{display:flex;gap:.5rem;flex-shrink:0}
+.hdc-btn{
+  background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.45);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-radius:999px;padding:.5rem 1rem;font-size:.78rem;font-weight:700;cursor:pointer;
+  transition:background .25s,transform .25s;
+}
+.hdc-btn:hover{background:var(--crimson);border-color:var(--crimson);transform:translateY(-2px)}
+.hdc-nav{
+  position:absolute;top:46%;transform:translateY(-50%);z-index:5;
+  width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.35);
+  background:rgba(26,5,11,.55);color:#fff;font-size:1.1rem;cursor:pointer;
+  backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;
+  transition:background .25s,transform .25s;
+}
+.hdc-nav:hover{background:var(--crimson);transform:translateY(-50%) scale(1.08)}
+.hdc-prev{left:1rem}
+.hdc-next{right:1rem}
+.hdc-dots{
+  position:absolute;top:1rem;right:1.2rem;z-index:5;
+  display:flex;gap:.38rem;background:rgba(26,5,11,.48);
+  padding:.35rem .65rem;border-radius:999px;backdrop-filter:blur(6px);
+}
+.hdc-dot{
+  width:8px;height:8px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.4);transition:all .3s;padding:0;
+}
+.hdc-dot.active{width:24px;border-radius:999px;background:#FFE49E}
+
+/* Pellicule HD interactive (Filmstrip) */
+.hd-filmstrip-wrap{overflow:hidden;padding:.3rem 0}
+.hd-filmstrip{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem;
+}
+@media(max-width:520px){
+  .hd-filmstrip{grid-template-columns:repeat(2,1fr);gap:.6rem}
+  .hdc-caption{padding:1.6rem 1rem 1rem}
+  .hdc-text p{display:none}
+  .hdc-nav{width:36px;height:36px}
+}
+.hdf-card{
+  position:relative;border-radius:14px;overflow:hidden;aspect-ratio:16/10;
+  cursor:pointer;border:2px solid transparent;box-shadow:var(--shadow-sm);
+  transition:transform .3s var(--ease-out),border-color .3s,box-shadow .3s;
+  background:#1A050B;
+}
+.hdf-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.hdf-card.active{border-color:var(--crimson);box-shadow:0 0 0 3px rgba(215,11,51,.22)}
+.hdf-card img{width:100%;height:100%;object-fit:cover;transition:transform .5s var(--ease-out)}
+.hdf-card:hover img{transform:scale(1.09)}
+.hdf-card span{
+  position:absolute;inset:auto 0 0 0;padding:.45rem .6rem;
+  background:linear-gradient(transparent,rgba(26,5,11,.88));
+  color:#fff;font-size:.72rem;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* --- 4. Bannière & Règle du Ticket d'Entrée (1 Invité minimum) --- */
+.ticket-rule-banner{
+  display:grid;grid-template-columns:auto 1fr auto;gap:1.2rem;align-items:center;
+  background:linear-gradient(135deg,#FFF5F7 0%,#F9E4EA 100%);
+  border:2px solid rgba(215,11,51,.28);border-radius:24px;
+  padding:1.5rem 1.7rem;box-shadow:var(--shadow-sm);
 }
 @media(max-width:720px){
-  .cb-content{grid-template-columns:1fr;text-align:center;gap:1.4rem}
-  .constellation-box{padding:1.8rem 1.3rem}
+  .ticket-rule-banner{grid-template-columns:1fr;text-align:center;justify-items:center}
 }
-.cb-candle-wrap{display:flex;flex-direction:column;align-items:center;gap:.8rem}
-.cb-candle{
-  position:relative;width:110px;height:150px;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
-  cursor:pointer;
+.trb-icon{
+  width:64px;height:64px;border-radius:18px;
+  background:var(--crimson);color:#fff;font-size:2rem;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 22px rgba(215,11,51,.28);
 }
-.cb-halo{
-  position:absolute;top:2px;left:50%;width:120px;height:120px;border-radius:50%;
-  transform:translateX(-50%) scale(.75);
-  background:radial-gradient(circle,rgba(255,210,105,.55) 0%,rgba(242,181,193,.22) 45%,transparent 72%);
-  opacity:.45;transition:transform .6s var(--ease-spring),opacity .6s;pointer-events:none;
-}
-.cb-candle.lit .cb-halo{
-  opacity:1;transform:translateX(-50%) scale(1.25);
-  animation:haloBreath 2.8s ease-in-out infinite;
-}
-@keyframes haloBreath{
-  0%,100%{transform:translateX(-50%) scale(1.18);opacity:.85}
-  50%{transform:translateX(-50%) scale(1.34);opacity:1}
-}
-.cb-flame{
-  width:24px;height:42px;
-  background:radial-gradient(ellipse at 50% 72%,#FFFFFF 0%,#FFE484 38%,#FF9824 72%,rgba(215,11,51,0) 100%);
-  border-radius:50% 50% 36% 36% / 65% 65% 35% 35%;
-  box-shadow:0 0 22px 6px rgba(255,190,70,.65);
-  transform-origin:50% 90%;
-  animation:flameDance 2.2s ease-in-out infinite;
-  transition:transform .45s var(--ease-spring),filter .45s;
-}
-.cb-candle.lit .cb-flame{
-  transform:scale(1.22);
-  box-shadow:0 0 34px 12px rgba(255,205,90,.92);
-}
-@keyframes flameDance{
-  0%,100%{transform:scaleX(1) scaleY(1) rotate(-1.5deg)}
-  33%{transform:scaleX(.94) scaleY(1.06) rotate(2deg)}
-  66%{transform:scaleX(1.04) scaleY(.96) rotate(-2deg)}
-}
-.cb-wick{width:3px;height:8px;background:#3A1D24;border-radius:2px;margin-top:-2px}
-.cb-wax{
-  width:58px;height:78px;border-radius:10px 10px 14px 14px;
-  background:linear-gradient(90deg,#FDF9FA 0%,#F9ECEF 48%,#E8CED5 100%);
-  box-shadow:inset 0 6px 12px rgba(255,210,120,.45),0 12px 26px rgba(0,0,0,.45);
-  border:1px solid rgba(255,255,255,.65);
-}
-.cb-counter{text-align:center;line-height:1.35}
-.cb-counter strong{
-  display:block;font-family:var(--font-display);font-size:2.3rem;font-weight:700;
-  color:#FFE49E;text-shadow:0 0 18px rgba(255,210,110,.45);
-}
-.cb-counter span{font-size:.78rem;color:var(--rose-soft)}
+.trb-body h3{color:var(--bordeaux);font-family:var(--font-display);font-size:1.3rem;margin-bottom:.25rem}
+.trb-body p{font-size:.92rem;color:var(--ink-soft);line-height:1.55}
 
-.cb-card{
-  background:rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1px solid rgba(242,181,193,.28);border-radius:22px;padding:1.6rem 1.5rem;
+.rsvp-ticket-notice{
+  background:linear-gradient(90deg,rgba(215,11,51,.09),rgba(242,181,193,.25));
+  border:1.5px solid rgba(215,11,51,.25);border-radius:14px;
+  padding:.75rem 1rem;font-size:.84rem;color:var(--bordeaux);text-align:center;line-height:1.45;
 }
-.cb-badge{
-  display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
-  background:rgba(242,181,193,.2);color:#FFE49E;border-radius:999px;padding:.24rem .8rem;margin-bottom:.7rem;
-}
-.cb-insp{
-  font-family:var(--font-display);font-style:italic;font-size:clamp(1.1rem,2.6vw,1.35rem);
-  line-height:1.55;color:#FFFFFF;margin-bottom:.55rem;
-  transition:opacity .25s ease,transform .25s ease;
-}
-.cb-verse{display:block;font-size:.82rem;color:var(--rose-soft);font-style:normal;margin-bottom:1.2rem}
-.cb-actions{display:flex;flex-wrap:wrap;gap:.7rem}
-@media(max-width:720px){.cb-actions{justify-content:center}}
-.cb-recent{
-  margin-top:.9rem;font-size:.78rem;color:#FFE49E;
-  border-top:1px dashed rgba(242,181,193,.25);padding-top:.65rem;
+.ii-companion{
+  font-size:.76rem;font-weight:700;color:#FFE49E;
+  background:rgba(0,0,0,.22);border:1px solid rgba(255,228,158,.4);
+  border-radius:999px;padding:.2rem .75rem;max-width:95%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 
-/* --- 3. Boutons de bascule Mode Aurore / Nuit de Bethléem --- */
+/* --- 5. Boutons de bascule Mode Aurore / Nuit de Bethléem --- */
 .nav-right{display:flex;align-items:center;gap:.55rem}
 .theme-toggle{
   display:inline-flex;align-items:center;gap:.38rem;
@@ -1534,15 +1642,26 @@ html[data-theme="night"] .wall-form,
 html[data-theme="night"] .rsvp-done,
 html[data-theme="night"] .invite-modal,
 html[data-theme="night"] .gb-item,
-html[data-theme="night"] .swatch{
+html[data-theme="night"] .swatch,
+html[data-theme="night"] .cinema-showcase{
   background:#260A14;
   border-color:rgba(242,181,193,.22);
   color:#E5CCD3;
 }
-html[data-theme="night"] .don-card,
+html[data-theme="night"] .cp-item{
+  background:#1C060E;
+  border-color:rgba(242,181,193,.22);
+}
+html[data-theme="night"] .cp-item.active{
+  background:#380D1D;
+  border-color:var(--crimson);
+}
+html[data-theme="night"] .ticket-rule-banner,
+html[data-theme="night"] .rsvp-ticket-notice,
 html[data-theme="night"] .invite-block{
-  background:linear-gradient(160deg,#260A14,#1E070F);
-  border-color:rgba(242,181,193,.32);
+  background:linear-gradient(160deg,#2A0B16,#1E070F);
+  border-color:rgba(242,181,193,.35);
+  color:#FDF5F7;
 }
 html[data-theme="night"] .invite-block legend{
   background:#260A14;border-color:rgba(242,181,193,.4);
@@ -1616,3 +1735,26 @@ html[data-theme="night"] .music-panel{
   .cta-float{opacity:1;transform:none;pointer-events:auto}
   .env-anim .intro-reveal{opacity:1;transform:none;pointer-events:auto}
 }
+
+/* =========================================================
+   GALERIE VIDÉO — Les vidéos de Noël
+   ========================================================= */
+.video-gallery{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.4rem;
+  max-width:1100px;margin:0 auto;
+}
+.video-card{
+  background:#fff;border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow-sm);border:1px solid var(--line);
+  transition:transform .35s var(--ease-out),box-shadow .35s;animation:cardIn .5s var(--ease-out) backwards;
+}
+.video-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.video-wrap{position:relative;background:#000;aspect-ratio:16/9}
+.video-wrap video{width:100%;height:100%;display:block;object-fit:cover}
+.video-info{padding:1rem 1.1rem 1.2rem}
+.video-info h3{
+  font-family:var(--font-display);font-style:italic;color:var(--bordeaux);
+  font-size:1.15rem;margin-bottom:.4rem;
+}
+.video-info p{font-size:.88rem;color:var(--ink);line-height:1.6}
+@media(max-width:640px){.video-gallery{grid-template-columns:1fr}}

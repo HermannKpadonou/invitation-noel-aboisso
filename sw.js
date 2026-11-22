@@ -1,14 +1,14 @@
 /* =========================================================
    Service Worker (PWA & Billet Hors-Ligne)
-   Éclairer le Monde — Noël à Aboisso 2026
+   Éclairer le Monde — Noël à Aboisso (24 Décembre 2026)
    ========================================================= */
-const CACHE_NAME = "noel-aboisso-v23";
+const CACHE_NAME = "noel-aboisso-v24";
 const CORE_ASSETS = [
   "/",
   "/index.html",
-  "/styles.css?v=23",
-  "/script.js?v=23",
-  "/assets/shared.js?v=23",
+  "/styles.css?v=24",
+  "/script.js?v=24",
+  "/assets/shared.js?v=24",
   "/assets/qrcode-generator.js",
   "/assets/light_the_world.webp",
   "/assets/pattern-light.svg",
@@ -38,8 +38,15 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  /* Ne pas mettre en cache les routes d'administration */
-  if (url.pathname.startsWith("/api/admin") || url.pathname === "/admin.html") return;
+  /* Ne pas mettre en cache les vidéos MP4 lourdes, les MP3 ou les routes d'administration */
+  if (
+    url.pathname.endsWith(".mp4") ||
+    url.pathname.endsWith(".mp3") ||
+    url.pathname.startsWith("/api/admin") ||
+    url.pathname === "/admin.html"
+  ) {
+    return;
+  }
 
   /* Images du mur photo et assets statiques : Cache-First avec mise en cache dynamique */
   if (
@@ -61,7 +68,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* Pages HTML et données publiques (billet QR, vœux, lumières) : Network-First avec repli Hors-Ligne */
+  /* Pages HTML et données publiques (billet QR, vœux) : Network-First avec repli Hors-Ligne */
   event.respondWith(
     fetch(request)
       .then((res) => {

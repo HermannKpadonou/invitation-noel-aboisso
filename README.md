@@ -1,7 +1,7 @@
-# 🎄 Invitation — Éclairer le Monde · Noël à Aboisso
+﻿# 🎄 Invitation — Éclairer le Monde · Noël à Aboisso
 
 Site d'invitation pour le **Grand Noël des Enfants & Familles**
-📅 Samedi **19 décembre 2026**, 10h00 – 15h00
+📅 Samedi **24 décembre 2026**, 10h00 – 15h00
 📍 Salle des fêtes de la mairie d'**Aboisso**, Côte d'Ivoire
 
 ## Ouvrir le site
@@ -13,8 +13,8 @@ Tout est centralisé en haut du fichier **`script.js`** (bloc `CONFIG`) :
 
 ```js
 const CONFIG = {
-  eventStart: "2026-12-19T10:00:00+00:00",  // date et heure de début
-  eventEnd:   "2026-12-19T15:00:00+00:00",  // heure de fin
+  eventStart: "2026-12-24T10:00:00+00:00",  // date et heure de début
+  eventEnd:   "2026-12-24T15:00:00+00:00",  // heure de fin
   rsvpDeadline: "2026-12-12",               // date limite de réponse
   contactPhone: "2250700000000",            // ⚠️ à remplacer par votre vrai numéro WhatsApp
   ...
