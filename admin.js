@@ -241,7 +241,7 @@ function openGuestDrawer(rsvpId) {
         ? `<div class="dr-invite-list">
             ${guests.map((g) => {
               const gTel = g.tel ? normalizePhone(g.tel) : "";
-              const gWaMsg = encodeURIComponent(`✦ Éclairer le Monde ✦\nCher·ère ${g.nom}, ${r.nom} vous a invité·e à la fête de Noël 🎄 Samedi 19 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso.`);
+              const gWaMsg = encodeURIComponent(`✦ Un Sauveur est né · Il est le Cadeau ✦\nCher·ère ${g.nom}, ${r.nom} vous a inscrit·e comme son invité·e pour la fête de Noël 🎄 Jeudi 24 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso.`);
               return `<div class="dr-invite-row">
                 <div>
                   <strong>${g.icon} ${escapeHTML(g.nom)}</strong>
@@ -509,7 +509,7 @@ function render() {
     const qs = new URLSearchParams({ pour: i.nom });
     if (i.par) qs.set("de", i.par);
     const personalUrl = `${location.origin}/?${qs.toString()}`;
-    const wa = tel ? `https://wa.me/${tel}?text=${encodeURIComponent(`✦ Éclairer le Monde ✦\nCher·ère ${i.nom}, vous êtes invité·e à la fête de Noël 🎄 Samedi 19 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso.\n💌 Ouvrez votre enveloppe : ${personalUrl}`)}` : "";
+    const wa = tel ? `https://wa.me/${tel}?text=${encodeURIComponent(`✦ Un Sauveur est né · Il est le Cadeau ✦\nCher·ère ${i.nom}, vous êtes invité·e à la fête de Noël 🎄 Jeudi 24 décembre 2026 · 10h–15h · Salle des fêtes de la mairie d'Aboisso.\n💌 Ouvrez votre enveloppe : ${personalUrl}`)}` : "";
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><span class="t-name">${escapeHTML(i.nom)}</span></td>

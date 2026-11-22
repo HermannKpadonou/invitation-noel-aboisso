@@ -617,23 +617,7 @@ async function handleAPI(req, res, url) {
     return send(req, res, 200, { ok: true, entry });
   }
 
-  /* --- Constellation d'Aboisso : Bougies allumées (public : lire / allumer) --- */
-  if (pathname === "/api/lights" && req.method === "GET") {
-    const summary = await getLightsSummary();
-    return send(req, res, 200, { ok: true, ...summary });
-  }
-  if (pathname === "/api/lights" && req.method === "POST") {
-    if (!checkRateLimit(req, "lights", 15, 60_000)) {
-      return send(req, res, 429, { ok: false, error: "Patientez un instant avant de rallumer une bougie." });
-    }
-    const body = await readBody(req);
-    const nom = clean(body.nom, 50) || "Une âme bienveillante";
-    const inspiration = clean(body.inspiration, 160);
-    const summary = await addLight({ nom, inspiration });
-    return send(req, res, 200, { ok: true, ...summary });
-  }
-
-  /* --- RSVP (public : envoi) --- */
+  /* --- RSVP (public : envoi — Ticket d'entrée : venir avec au moins 1 invité si présent) --- */
   if (pathname === "/api/rsvp" && req.method === "POST") {
     if (!checkRateLimit(req, "rsvp", 20, 60_000)) {
       return send(req, res, 429, { ok: false, error: "Trop de requêtes. Veuillez patienter un instant." });
@@ -641,14 +625,16 @@ async function handleAPI(req, res, url) {
     const body = await readBody(req);
     const nom = clean(body.nom, 80);
     if (!nom) return send(req, res, 400, { ok: false, error: "Nom requis" });
+    const presence = body.presence === "absent" ? "absent" : "present";
+    const minPeople = presence === "present" ? 2 : 1;
     const num = await generateUniqueTicketNum();
     const entry = await addRsvp({
       num,
       nom,
-      presence: body.presence === "absent" ? "absent" : "present",
+      presence,
       statut: body.statut === "ami" ? "ami" : "membre",
       tel: clean(body.tel, 30),
-      people: Math.min(Math.max(parseInt(body.people, 10) || 1, 1), 30),
+      people: Math.min(Math.max(parseInt(body.people, 10) || minPeople, minPeople), 30),
       branche: clean(body.branche, 80),
       localite: clean(body.localite, 80),
       ami_nom: clean(body.ami_nom, 80),
