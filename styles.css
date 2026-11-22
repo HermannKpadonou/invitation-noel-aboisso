@@ -11,8 +11,8 @@
   --border-strong: #E2C6CF;
 
   --ink: #2D1219;
-  --ink-body: #5A4349;
-  --ink-muted: #7C636A;
+  --ink-body: #4A3339;
+  --ink-muted: #654E55;
 
   --primary: #C8102E;
   --primary-hover: #A50C25;
@@ -20,9 +20,9 @@
   --rose: #E5738A;
   --rose-light: #F6D5DC;
   --gold-soft: #FDF3DF;
-  --gold-ink: #8A5A10;
-  --green: #1D8A56;
-  --green-hover: #166E44;
+  --gold-ink: #724A0B;
+  --green: #16794B;
+  --green-hover: #12613C;
 
   --radius-xl: 28px;
   --radius-lg: 22px;
@@ -625,6 +625,35 @@ html[data-theme="night"] .hero {
   border-radius: var(--radius-sm); padding: 0.7rem 0.95rem;
   font-size: 0.86rem; font-weight: 600; text-align: center;
 }
+.field-err {
+  color: var(--primary); font-size: 0.78rem; font-weight: 600;
+  margin-top: 0.15rem; display: block;
+}
+.btn[disabled] {
+  opacity: 0.65; cursor: not-allowed; transform: none !important;
+}
+.privacy-note {
+  font-size: 0.76rem; color: var(--ink-muted); line-height: 1.5;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.65rem 0.85rem;
+}
+.contact-help {
+  font-size: 0.82rem; color: var(--ink-body); text-align: center;
+  line-height: 1.5;
+}
+.contact-help a {
+  color: var(--green); font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
+}
+.consent-check {
+  display: flex; align-items: flex-start; gap: 0.55rem;
+  font-size: 0.78rem; color: var(--ink-body); line-height: 1.45;
+  cursor: pointer;
+}
+.consent-check input[type="checkbox"] {
+  width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0;
+  accent-color: var(--primary); cursor: pointer;
+}
+.cm-links { margin-top: 0.55rem; }
 
 /* État : inscription terminée */
 .rsvp-done {
@@ -991,10 +1020,20 @@ html[data-theme="night"] .hero {
 .gb-item {
   background: var(--surface-2); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: 0.8rem 1rem;
+  position: relative;
 }
-.gb-item .who { font-weight: 700; font-size: 0.86rem; color: var(--ink); }
+.gb-item .who { font-weight: 700; font-size: 0.86rem; color: var(--ink); display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
 .gb-item .when { font-size: 0.72rem; color: var(--ink-muted); margin-left: 0.45rem; font-weight: 400; }
 .gb-item .txt { font-size: 0.86rem; color: var(--ink-body); margin-top: 0.2rem; }
+.gb-report, .wc-report {
+  background: none; border: none; color: var(--ink-muted);
+  font-size: 0.72rem; cursor: pointer; padding: 0.15rem 0.4rem; border-radius: 6px;
+}
+.gb-report:hover, .wc-report:hover { color: var(--primary); background: var(--primary-soft); }
+.wc-report {
+  position: absolute; bottom: 0.35rem; right: 0.35rem; z-index: 3;
+  font-size: 0.7rem; opacity: 0.75;
+}
 .gb-empty { font-size: 0.86rem; color: var(--ink-muted); font-style: italic; text-align: center; padding: 0.8rem; }
 
 /* Grille des Polaroïds */
@@ -1076,14 +1115,15 @@ html[data-theme="night"] .hero {
   width: 64px; height: 64px; border-radius: 16px;
   box-shadow: var(--shadow-card); margin-bottom: 0.3rem;
 }
-.footer h3 {
-  font-family: var(--font-serif); font-style: italic;
-  font-size: 1.25rem; color: var(--ink);
-}
+.footer-org { font-weight: 700; font-size: 0.95rem; color: var(--ink); }
 .footer p { font-size: 0.88rem; color: var(--ink-body); }
 .footer-meta { font-weight: 600; color: var(--ink); }
 .footer-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin: 0.5rem 0; }
-.footer-copy { font-size: 0.78rem; color: var(--ink-muted); }
+.footer-copy { font-size: 0.8rem; font-weight: 600; color: var(--ink-muted); }
+.footer-legal {
+  font-size: 0.72rem !important; color: var(--ink-muted) !important;
+  max-width: 580px; line-height: 1.5; margin-top: 0.25rem;
+}
 
 /* =========================================================
    BOUTON FLOTTANT & LECTEUR AUDIO DISCRET

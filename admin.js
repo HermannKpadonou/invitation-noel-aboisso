@@ -467,13 +467,26 @@ function render() {
   const grid = $("#gb-grid");
   grid.innerHTML = "";
   guestbook.slice().reverse().forEach((g, i) => {
+    const isApproved = g.approved !== false;
+    const isReported = !!g.reported;
     const card = document.createElement("article");
     card.className = "gb-card";
     card.style.animationDelay = `${Math.min(i * 60, 400)}ms`;
+    if (isReported) card.style.borderColor = "#D70B33";
     card.innerHTML = `
-      <p class="who">${escapeHTML(g.nom)}<span class="when">${fmtDate(g.at)}</span></p>
+      <p class="who">
+        ${escapeHTML(g.nom)}
+        ${isReported ? `<span class="pill absent">🚩 Signalé</span>` : ""}
+        ${!isApproved ? `<span class="pill inactif">Masqué</span>` : ""}
+        <span class="when">${fmtDate(g.at)}</span>
+      </p>
       <p class="txt">${escapeHTML(g.msg)}</p>
-      <button class="icon-btn" type="button" title="Supprimer" aria-label="Supprimer le vœu de ${escapeHTML(g.nom)}" data-del-gb="${g.id}">${ICON.trash}</button>`;
+      <div style="display:flex;gap:.35rem;align-items:center">
+        <button class="btn btn-outline btn-sm" type="button" data-mod-type="guestbook" data-mod-id="${g.id}" data-mod-val="${isApproved ? "0" : "1"}">
+          ${isApproved ? "🙈 Masquer" : "✅ Approuver"}
+        </button>
+        <button class="icon-btn" type="button" title="Supprimer" aria-label="Supprimer le vœu de ${escapeHTML(g.nom)}" data-del-gb="${g.id}">${ICON.trash}</button>
+      </div>`;
     grid.appendChild(card);
   });
   $("#empty-gb").classList.toggle("hidden", guestbook.length > 0);
@@ -483,16 +496,28 @@ function render() {
   const wallGrid = $("#wall-grid");
   wallGrid.innerHTML = "";
   wall.slice().reverse().forEach((p) => {
+    const isApproved = p.approved !== false;
+    const isReported = !!p.reported;
     const card = document.createElement("article");
     card.className = "wall-admin-card";
+    if (isReported) card.style.borderColor = "#D70B33";
     card.innerHTML = `
       <img src="${p.photo}" alt="${escapeHTML(p.nom)}" width="84" height="84" loading="lazy" decoding="async" />
       <div class="wall-admin-info">
-        <strong>${escapeHTML(p.nom)}</strong>
+        <strong>
+          ${escapeHTML(p.nom)}
+          ${isReported ? `<span class="pill absent">🚩 Signalé</span>` : ""}
+          ${!isApproved ? `<span class="pill inactif">Masqué</span>` : ""}
+        </strong>
         ${p.msg ? `<span>${escapeHTML(p.msg)}</span>` : ""}
         <small>${fmtDate(p.at)}</small>
       </div>
-      <button class="icon-btn" type="button" title="Supprimer" aria-label="Supprimer la photo de ${escapeHTML(p.nom)}" data-del-wall="${p.id}">${ICON.trash}</button>`;
+      <div style="display:flex;gap:.35rem;align-items:center">
+        <button class="btn btn-outline btn-sm" type="button" data-mod-type="photo-wall" data-mod-id="${p.id}" data-mod-val="${isApproved ? "0" : "1"}">
+          ${isApproved ? "🙈 Masquer" : "✅ Approuver"}
+        </button>
+        <button class="icon-btn" type="button" title="Supprimer" aria-label="Supprimer la photo de ${escapeHTML(p.nom)}" data-del-wall="${p.id}">${ICON.trash}</button>
+      </div>`;
     wallGrid.appendChild(card);
   });
   $("#empty-wall").classList.toggle("hidden", wall.length > 0);
@@ -710,6 +735,19 @@ function fadeOut(el) {
 }
 
 document.addEventListener("click", async (e) => {
+  const modBtn = e.target.closest("[data-mod-type]");
+  if (modBtn) {
+    const type = modBtn.dataset.modType;
+    const id = modBtn.dataset.modId;
+    const approved = modBtn.dataset.modVal === "1";
+    await api("/api/admin/moderate", {
+      method: "POST",
+      body: JSON.stringify({ type, id, approved }),
+    });
+    await refresh();
+    toast(approved ? "✅ Contenu approuvé et visible" : "🙈 Contenu masqué du site public");
+    return;
+  }
   const delR = e.target.closest("[data-del-rsvp]");
   const delG = e.target.closest("[data-del-gb]");
   const delW = e.target.closest("[data-del-wall]");

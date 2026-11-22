@@ -4,11 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Il est le Cadeau · Noël à Aboisso — 24 Décembre 2026</title>
-  <meta name="description" content="Un Sauveur est né — Il est le cadeau ! Célébrez la naissance de Jésus-Christ le jeudi 24 décembre 2026 (10h–15h) à la salle des fêtes de la mairie d'Aboisso. Ticket d'entrée : venir avec au moins un invité." />
+  <meta name="description" content="Un Sauveur est né — Il est le cadeau ! Célébrez la naissance de Jésus-Christ le jeudi 24 décembre 2026 (10h00–15h00) à la salle des fêtes de la mairie d'Aboisso. Entrée gratuite — venez avec au moins une personne que vous invitez." />
   <meta name="theme-color" content="#FDFBF9" id="meta-theme-color" />
+
+  <!-- Open Graph & Aperçu WhatsApp / Facebook (URL absolues obligatoires) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://invitation-noel-aboisso.onrender.com/" />
   <meta property="og:title" content="Il est le Cadeau · Noël à Aboisso — 24 Décembre 2026" />
-  <meta property="og:description" content="« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre aux hommes qui lui sont agréables » (Luc 2:14). Jeudi 24 décembre 2026 · Mairie d'Aboisso." />
-  <meta property="og:image" content="assets/hd-scene-02.jpg" />
+  <meta property="og:description" content="Jeudi 24 décembre 2026 · 10h00–15h00 · Salle des fêtes de la mairie d'Aboisso. Entrée gratuite — venez avec au moins une personne que vous invitez !" />
+  <meta property="og:image" content="https://invitation-noel-aboisso.onrender.com/assets/apercu-partage.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="fr_FR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Il est le Cadeau · Noël à Aboisso — 24 Décembre 2026" />
+  <meta name="twitter:description" content="Jeudi 24 décembre 2026 · 10h00–15h00 · Mairie d'Aboisso. Entrée gratuite — venez avec au moins un invité !" />
+  <meta name="twitter:image" content="https://invitation-noel-aboisso.onrender.com/assets/apercu-partage.jpg" />
+
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="assets/light_the_world.webp" />
   <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%23C8102E"/><path d="M50 14 L55 42 L83 50 L55 58 L50 86 L45 58 L17 50 L45 42 Z" fill="white"/></svg>' />
@@ -16,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=25" />
+  <link rel="stylesheet" href="styles.css?v=26" />
 </head>
 <body>
 
@@ -44,9 +56,9 @@
       </div>
 
       <div class="intro-welcome" id="intro-welcome">
-        <p class="iw-greet">Cher·ère <strong id="ir-nom">ami·e</strong>,</p>
+        <p class="iw-greet"><span id="ir-prefix">Cher ami, chère amie</span><strong id="ir-nom"></strong>,</p>
         <p class="iw-from hidden" id="ir-from"></p>
-        <p class="iw-text">Le premier cadeau de Noël, tout simple, a été fait par un Père à tous ses enfants, à nous tous. Il a fait cadeau de son Fils, le Christ. <strong>Il est le cadeau.</strong></p>
+        <p class="iw-text">Vous êtes cordialement invité à célébrer la naissance de Jésus-Christ le <strong>jeudi 24 décembre 2026</strong> à la Mairie d'Aboisso.</p>
         <div class="iw-actions">
           <button class="btn btn-primary" id="intro-open-btn" type="button">Ouvrir l'invitation ✨</button>
           <a class="btn btn-soft" id="intro-skip-rsvp" href="#rsvp">S'inscrire directement →</a>
@@ -59,12 +71,13 @@
   <header class="navbar" id="topnav">
     <div class="nav-inner">
       <a class="nav-brand" href="#accueil">
-        <img src="assets/light_the_world.webp" alt="" width="34" height="34" />
+        <img src="assets/light_the_world.webp" alt="Logo Éclairer le Monde" width="34" height="34" />
         <span>Noël à Aboisso</span>
       </a>
       <nav class="nav-links" aria-label="Navigation principale">
-        <a href="#message">Le Cadeau</a>
-        <a href="#videos-noel">Films HD</a>
+        <a href="#message">Le Message</a>
+        <a href="#rsvp">Inscription</a>
+        <a href="#videos-noel">Films</a>
         <a href="#galerie-hd">Galerie</a>
         <a href="#programme">Programme</a>
         <a href="#mur-photo">Mur photo</a>
@@ -84,14 +97,14 @@
       <div class="hero-text">
         <div class="hero-badges">
           <span class="badge-soft">✦ Jeudi 24 Décembre 2026 · 10h00 – 15h00</span>
-          <span class="badge-ticket">🎟️ Ticket d'entrée : Venir avec 1 invité·e</span>
+          <span class="badge-ticket">🤝 Entrée gratuite — venez avec au moins un invité</span>
         </div>
         <h1 class="hero-title">
           Un Sauveur est né.<br />
           <em>Il est le cadeau.</em>
         </h1>
         <p class="hero-lead">
-          Tandis que nous célébrons la naissance de Jésus-Christ en cette période de Noël, nous nous joignons avec joie aux armées célestes d’autrefois pour proclamer : <strong>« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre aux hommes qui lui sont agréables »</strong> (Luc 2:14).
+          Rejoignez les familles et amis du district d'Aboisso pour une grande journée de chants, de théâtre de la Nativité et de repas fraternel pour célébrer la naissance de Jésus-Christ.
         </p>
 
         <!-- Compte à rebours minimaliste & doux -->
@@ -118,17 +131,17 @@
       <!-- Visuel Hero Cinématographique HD -->
       <div class="hero-visual">
         <div class="hero-frame">
-          <img src="assets/hd-scene-02.jpg" alt="La Nativité — Il a donné son Fils" width="1280" height="720" fetchpriority="high" />
+          <img src="assets/hd-scene-02.jpg" alt="Scène de la Nativité : Marie et Joseph auprès de l'Enfant Jésus dans la crèche" width="1280" height="720" fetchpriority="high" />
           <div class="hero-frame-caption">
-            <span>« Il a fait cadeau de son Fils, le Christ. »</span>
-            <a href="#videos-noel" class="hfc-play" aria-label="Regarder la vidéo">▶ Regarder</a>
+            <span>« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre » (Luc 2:14)</span>
+            <a href="#videos-noel" class="hfc-play" aria-label="Regarder le film de Noël">▶ Regarder</a>
           </div>
         </div>
         <div class="hero-float-card">
-          <span class="hfc-icon">📍</span>
+          <span class="hfc-icon" aria-hidden="true">📍</span>
           <div>
             <strong>Salle des fêtes de la Mairie d'Aboisso</strong>
-            <small>Entrée gratuite · Venez accompagné·e d'un·e invité·e</small>
+            <small>Entrée gratuite. Venez avec au moins une personne que vous invitez.</small>
           </div>
         </div>
       </div>
@@ -136,48 +149,48 @@
   </section>
 
   <main>
-    <!-- ============ LE MESSAGE DE NOËL (4 Récits & Descriptions) ============ -->
+    <!-- ============ LE MESSAGE DE NOËL (4 Récits & Descriptions condensés) ============ -->
     <section class="section" id="message">
       <div class="section-header">
         <span class="kicker">La bonne nouvelle d'une grande joie · Luc 2:1-20</span>
-        <h2 class="title">Souvenons-nous de Lui, aimons-Le et suivons-Le</h2>
-        <p class="subtitle">Chaque année, à la période de Noël, nous célébrons la naissance de notre Sauveur, le Fils de Dieu, qui peut nous délivrer du péché et de la tristesse.</p>
+        <h2 class="title">Pourquoi nous célébrons Sa naissance</h2>
+        <p class="subtitle">Le premier cadeau de Noël, tout simple, a été fait par un Père à tous ses enfants, à nous tous. Il a fait cadeau de son Fils, le Christ. <strong>Il est le cadeau.</strong></p>
       </div>
 
       <div class="bento-4">
         <article class="soft-card reveal">
-          <div class="sc-img"><img src="assets/hd-scene-02.jpg" alt="Il est le cadeau" width="640" height="360" loading="lazy" /></div>
+          <div class="sc-img"><img src="assets/hd-scene-02.jpg" alt="Marie et Joseph contemplant l'Enfant Jésus à Bethléem" width="640" height="360" loading="lazy" /></div>
           <div class="sc-body">
             <span class="sc-tag">Jean 3:16</span>
-            <h3>Il est le cadeau</h3>
-            <p>Le premier cadeau de Noël, tout simple, a été fait par un père à tous ses enfants, à nous tous. Il a fait cadeau de son fils, le Christ. <strong>Il est le cadeau.</strong></p>
+            <h3>Le don du Père</h3>
+            <p>Un cadeau d'amour pur donné à toute l'humanité pour éclairer nos vies et consoler nos cœurs.</p>
           </div>
         </article>
 
         <article class="soft-card reveal">
-          <div class="sc-img"><img src="assets/hd-scene-03.jpg" alt="Un Sauveur est né" width="640" height="360" loading="lazy" /></div>
+          <div class="sc-img"><img src="assets/hd-scene-03.jpg" alt="Lumière de l'étoile de Bethléem annonçant la naissance du Sauveur" width="640" height="360" loading="lazy" /></div>
           <div class="sc-body">
             <span class="sc-tag">Ésaïe 9:5</span>
-            <h3>Un Sauveur est né</h3>
-            <p>Chaque année, à la période de Noël, nous célébrons la naissance de notre Sauveur, le Fils de Dieu, qui peut nous délivrer du péché et de la tristesse. <strong>Souvenons-nous de lui, aimons-le et suivons-le.</strong></p>
+            <h3>Un Sauveur nous est né</h3>
+            <p>Le Fils de Dieu est venu nous délivrer du péché et de la tristesse. <strong>Souvenons-nous de lui, aimons-le et suivons-le.</strong></p>
           </div>
         </article>
 
         <article class="soft-card reveal">
-          <div class="sc-img"><img src="assets/hd-scene-06.jpg" alt="Proclamez la bonne nouvelle : il vit !" width="640" height="360" loading="lazy" /></div>
+          <div class="sc-img"><img src="assets/hd-scene-06.jpg" alt="Les bergers dans les champs de Judée écoutant le chant des anges" width="640" height="360" loading="lazy" /></div>
           <div class="sc-body">
-            <span class="sc-tag">Luc 2:1-20</span>
-            <h3>Proclamez la bonne nouvelle : il vit !</h3>
-            <p>Nous nous joignons avec joie aux armées célestes d’autrefois pour proclamer : <em>« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre aux hommes qui lui sont agréables »</em> (Luc 2:14).</p>
+            <span class="sc-tag">Luc 2:14</span>
+            <h3>Proclamez la bonne nouvelle : Il vit !</h3>
+            <p>Joignons nos voix aux armées célestes d'autrefois pour annoncer la paix sur la terre aux hommes qui lui sont agréables.</p>
           </div>
         </article>
 
         <article class="soft-card reveal">
-          <div class="sc-img"><img src="assets/hd-scene-12.jpg" alt="Le premier esprit de Noël — Joseph" width="640" height="360" loading="lazy" /></div>
+          <div class="sc-img"><img src="assets/hd-scene-12.jpg" alt="Joseph, l'humble charpentier de Nazareth, veillant sur l'Enfant Jésus" width="640" height="360" loading="lazy" /></div>
           <div class="sc-body">
             <span class="sc-tag">Matthieu 1:18-25</span>
             <h3>Le premier esprit de Noël</h3>
-            <p>Quelle expérience cela a dû être d'avoir élevé Jésus-Christ ? <strong>Joseph n’était qu'un humble charpentier</strong> quand Dieu lui a confié la responsabilité d'être le père du Christ sur la terre.</p>
+            <p>Quelle expérience cela a dû être d'avoir élevé Jésus-Christ ? <strong>Joseph n'était qu'un humble charpentier</strong> quand Dieu lui a confié la responsabilité d'être le père du Christ sur la terre.</p>
           </div>
         </article>
       </div>
@@ -187,8 +200,8 @@
     <section class="section section-soft" id="rsvp">
       <div class="section-header">
         <span class="kicker">Inscription simple &amp; rapide · 30 secondes</span>
-        <h2 class="title">Réservez votre billet d'entrée 🎟️</h2>
-        <p class="subtitle">L'entrée est gratuite. <strong>Votre unique ticket d'entrée est de venir accompagné·e d'au moins un·e invité·e</strong> (ami·e, voisin·e, parent·e ou membre moins actif·ve).</p>
+        <h2 class="title">Réservez votre billet gratuit 🎟️</h2>
+        <p class="subtitle"><strong>Entrée gratuite.</strong> Venez avec au moins une personne que vous invitez (ami, voisin, parent ou membre moins actif).</p>
       </div>
 
       <div class="rsvp-layout">
@@ -197,10 +210,11 @@
           <!-- État : Déjà inscrit -->
           <div id="rsvp-done" class="rsvp-done hidden" aria-live="polite">
             <div class="done-icon">🎟️</div>
-            <h3>Votre billet est prêt, <span id="done-name"></span> !</h3>
-            <p>Votre inscription et celle de votre invité·e sont bien enregistrées pour le <strong>jeudi 24 décembre 2026</strong>.</p>
+            <h3 id="done-title">Votre billet est prêt !</h3>
+            <p id="done-desc">Votre inscription et celle de votre invité sont bien enregistrées pour le <strong>jeudi 24 décembre 2026</strong>.</p>
             <div class="done-actions">
               <button class="btn btn-primary" id="view-invite" type="button">👁️ Afficher &amp; Télécharger mon billet</button>
+              <a class="btn btn-green" id="wa-self-reminder" target="_blank" rel="noopener">🔔 Enregistrer mon rappel WhatsApp</a>
               <button class="btn btn-soft" id="new-rsvp-btn" type="button">Inscrire une autre personne</button>
             </div>
             <div class="invites-share hidden" id="invites-share"></div>
@@ -210,62 +224,76 @@
           <form id="rsvp-form" class="rsvp-form" novalidate>
             <p class="form-error hidden" id="rsvp-error" role="alert"></p>
 
+            <!-- Choix de présence en premier pour masquer immédiatement les invités si absent -->
+            <div class="field">
+              <label for="f-presence-select">Votre participation *</label>
+              <select id="f-presence-select" name="presence">
+                <option value="present" selected>🎄 Je serai présent (avec au moins un invité)</option>
+                <option value="absent">💔 Je ne pourrai pas venir</option>
+              </select>
+            </div>
+
             <!-- Bloc 1 : Vos coordonnées -->
             <div class="form-group-card">
               <div class="fg-title"><span>1</span> Vos informations</div>
 
               <div class="field">
-                <label for="f-nom">Votre nom &amp; prénom *</label>
-                <input id="f-nom" name="nom" type="text" required placeholder="Ex. Kouassi Aya" autocomplete="name" />
+                <label for="f-nom">Votre nom et prénom *</label>
+                <input id="f-nom" name="nom" type="text" required minlength="2" placeholder="Ex. Kouassi Aya Élodie" autocomplete="name" />
+                <small class="field-err hidden" id="err-nom" role="alert"></small>
               </div>
 
               <div class="field-row">
                 <div class="field">
-                  <label for="f-tel">Votre WhatsApp / Téléphone</label>
-                  <input id="f-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="07 00 00 00 00" />
+                  <label for="f-tel">Votre WhatsApp / Téléphone (facultatif)</label>
+                  <input id="f-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="07 00 00 00 00 ou +225…" />
+                  <small class="field-err hidden" id="err-tel" role="alert"></small>
                 </div>
                 <div class="field">
                   <label for="f-statut-select">Vous êtes</label>
                   <select id="f-statut-select" name="statut">
                     <option value="membre" selected>⛪ Membre de l'Église</option>
-                    <option value="ami">🤝 Ami·e / Visiteur·se</option>
+                    <option value="ami">🤝 Ami / Visiteur invité</option>
                   </select>
                 </div>
               </div>
 
               <div id="membre-fields" class="field-row">
                 <div class="field">
-                  <label for="f-branche">Votre branche</label>
+                  <label for="f-branche">Votre branche <span id="branche-req">*</span></label>
                   <select id="f-branche" name="branche">
                     <option value="">Choisissez votre branche…</option>
                     <option value="Branche d'Aboisso 1">Branche d'Aboisso 1</option>
                     <option value="Branche d'Aboisso 2">Branche d'Aboisso 2</option>
-                    <option value="Branche d'Ayame">Branche d'Ayame</option>
-                    <option value="Branche de Mafere">Branche de Mafere</option>
+                    <option value="Branche d'Ayamé">Branche d'Ayamé</option>
+                    <option value="Branche de Maféré">Branche de Maféré</option>
                     <option value="Branche de Rive gauche">Branche de Rive gauche</option>
+                    <option value="Autre / Je ne sais pas">Autre / Je ne sais pas</option>
                   </select>
+                  <small class="field-err hidden" id="err-branche" role="alert"></small>
                 </div>
                 <div class="field">
-                  <label for="f-localite">Localité</label>
+                  <label for="f-localite">Localité (facultatif)</label>
                   <input id="f-localite" name="localite" type="text" placeholder="Ex. Aboisso" />
                 </div>
               </div>
             </div>
 
-            <!-- Bloc 2 : Votre Ticket d'entrée (Votre Invité·e) -->
+            <!-- Bloc 2 : Votre Invité accompagnant (masqué automatiquement si "Je ne pourrai pas venir") -->
             <div class="form-group-card ticket-card" id="invite-block">
               <div class="fg-title">
-                <span>🎟️</span>
+                <span>2</span>
                 <div>
-                  <strong>Votre Ticket d'Entrée : Qui vient avec vous ? *</strong>
-                  <small>Inscrivez au moins 1 invité·e (ami·e, proche ou membre moins actif·ve)</small>
+                  <strong>Qui vient avec vous ? (Au moins 1 invité requis) *</strong>
+                  <small>Inscrivez le nom d'au moins une personne que vous invitez (ami, proche ou membre moins actif)</small>
                 </div>
               </div>
 
               <div class="inv-list" id="inv-amis"></div>
+              <small class="field-err hidden" id="err-invites" role="alert"></small>
 
               <div class="inv-add-bar">
-                <button class="link-btn" type="button" data-add-invite="ami">➕ Ajouter un·e autre invité·e</button>
+                <button class="link-btn" type="button" data-add-invite="ami">➕ Ajouter un autre invité</button>
                 <div class="people-pill">
                   <label for="f-accomp">Total personnes :</label>
                   <input id="f-accomp" name="accomp" type="number" min="2" max="20" value="2" />
@@ -273,24 +301,24 @@
               </div>
             </div>
 
-            <!-- Option discrète petit mot + présence -->
-            <div class="field-row form-footer-row">
-              <div class="field">
-                <label for="f-note">Petit mot (facultatif)</label>
-                <input id="f-note" name="note" type="text" maxlength="120" placeholder="Ex. Nous venons avec les enfants" />
-              </div>
-              <div class="field">
-                <label for="f-presence-select">Confirmation</label>
-                <select id="f-presence-select" name="presence">
-                  <option value="present" selected>🎄 Je serai présent·e (avec mon invité·e)</option>
-                  <option value="absent">💔 Je ne pourrai pas venir</option>
-                </select>
-              </div>
+            <!-- Petit mot -->
+            <div class="field">
+              <label for="f-note">Petit mot (facultatif)</label>
+              <input id="f-note" name="note" type="text" maxlength="120" placeholder="Ex. Nous venons en famille avec les enfants" />
             </div>
 
-            <button class="btn btn-primary btn-lg btn-wide" type="submit">
-              🎟️ Valider &amp; Obtenir mon billet d'entrée
+            <button class="btn btn-primary btn-lg btn-wide" id="rsvp-submit-btn" type="submit">
+              🎟️ Valider et obtenir mon billet
             </button>
+
+            <!-- Mention Données personnelles + Contact WhatsApp d'assistance -->
+            <p class="privacy-note">
+              🔒 <strong>Données personnelles :</strong> Vos informations (nom, téléphone, branche) servent uniquement à organiser cette célébration. Elles sont consultées par les responsables du district d'Aboisso et ne sont partagées avec personne d'autre.
+            </p>
+            <p class="contact-help">
+              Une question ou une difficulté pour vous inscrire ?
+              <a href="https://wa.me/2250574152955?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20la%20c%C3%A9l%C3%A9bration%20de%20No%C3%ABl%20%C3%A0%20Aboisso" target="_blank" rel="noopener">💬 Écrire au responsable du district sur WhatsApp (+225 05 74 15 29 55)</a>
+            </p>
           </form>
         </div>
 
@@ -298,7 +326,7 @@
         <div class="ticket-preview-col reveal">
           <div class="live-ticket" id="live-ticket">
             <div class="lt-top">
-              <span class="lt-badge">✦ Billet d'Entrée Officiel</span>
+              <span class="lt-badge">✦ Billet Personnel</span>
               <span class="lt-num" id="lt-num">N° ---</span>
             </div>
             <h3 class="lt-event">Il est le Cadeau · Noël à Aboisso</h3>
@@ -309,20 +337,20 @@
 
             <div class="lt-guests">
               <div class="lt-row">
-                <small>Participant·e</small>
+                <small>Participant</small>
                 <strong id="lt-name">Votre nom apparaîtra ici</strong>
               </div>
-              <div class="lt-row">
-                <small>🎟️ Ticket d'entrée (Accompagné·e de)</small>
-                <strong id="lt-companion" class="lt-highlight">Votre invité·e apparaîtra ici</strong>
+              <div class="lt-row" id="lt-companion-row">
+                <small>🤝 Accompagné de (votre invité)</small>
+                <strong id="lt-companion" class="lt-highlight">Le nom de votre invité apparaîtra ici</strong>
               </div>
             </div>
 
             <div class="lt-qr-box" id="lt-qr-box">
-              <img id="i-qr" alt="QR Code du billet" width="76" height="76" class="hidden" />
+              <img id="i-qr" alt="Code QR de vérification de votre billet" width="76" height="76" class="hidden" />
               <div class="lt-qr-text">
-                <strong id="lt-status">Remplissez le formulaire pour activer votre QR Code</strong>
-                <small>Ce billet fonctionne même sans connexion Internet le jour J.</small>
+                <strong id="lt-status">Remplissez le formulaire pour activer votre billet QR</strong>
+                <small>Entrée gratuite · Ce billet fonctionne même hors connexion le jour J.</small>
               </div>
             </div>
 
@@ -335,18 +363,18 @@
       </div>
     </section>
 
-    <!-- ============ CINÉMATHÈQUE DE NOËL (5 FILMS 1080P HD) ============ -->
+    <!-- ============ CINÉMATHÈQUE DE NOËL (5 FILMS — ZÉRO CHARGEMENT AVANT CLIC) ============ -->
     <section class="section" id="videos-noel">
       <div class="section-header">
-        <span class="kicker">Cinémathèque de Noël · 1080p Full HD</span>
-        <h2 class="title">Regardez &amp; partagez les films de la Nativité 🎬</h2>
-        <p class="subtitle">Sélectionnez l'un des 5 films ci-dessous. La musique de fond se met automatiquement en pause pendant votre visionnage.</p>
+        <span class="kicker">Cinémathèque de Noël</span>
+        <h2 class="title">Regardez les films de la Nativité 🎬</h2>
+        <p class="subtitle">Aucune vidéo ne se télécharge avant votre clic afin d'économiser votre forfait mobile. Vous pouvez aussi les regarder sur la Bibliothèque d'Évangile de l'Église.</p>
       </div>
 
       <div class="cinema-showcase reveal">
         <div class="cinema-stage">
           <div class="cinema-player-wrap">
-            <video id="main-video" class="cinema-video" controls preload="metadata" playsinline poster="assets/hd-scene-02.jpg">
+            <video id="main-video" class="cinema-video" controls preload="none" playsinline poster="assets/hd-scene-02.jpg">
               <source id="main-video-src" src="assets/il-est-le-cadeau-fra-1080p.mp4" type="video/mp4" />
             </video>
           </div>
@@ -356,7 +384,10 @@
               <span class="cm-scripture" id="vid-scripture">Jean 3:16 · Luc 2</span>
             </div>
             <h3 id="vid-title">Il est le cadeau</h3>
-            <p id="vid-desc">Le premier cadeau de Noël, tout simple, a été fait par un père à tous ses enfants, à nous tous. Il a fait cadeau de son fils, le Christ. Il est le cadeau.</p>
+            <p id="vid-desc">Découvrez comment l'amour d'un Père céleste s'est manifesté par le don de son Fils unique.</p>
+            <div class="cm-links">
+              <a class="link-btn" href="https://www.churchofjesuschrist.org/comeuntochrist/fr/light-the-world" target="_blank" rel="noopener">🌐 Voir sur le site officiel de l'Église (connexion adaptée) →</a>
+            </div>
           </div>
         </div>
 
@@ -367,15 +398,15 @@
                   data-badge="✦ Le premier cadeau de Noël"
                   data-scripture="Jean 3:16 · Luc 2"
                   data-title="Il est le cadeau"
-                  data-desc="Le premier cadeau de Noël, tout simple, a été fait par un père à tous ses enfants, à nous tous. Il a fait cadeau de son fils, le Christ. Il est le cadeau.">
+                  data-desc="Découvrez comment l'amour d'un Père céleste s'est manifesté par le don de son Fils unique.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-02.jpg" alt="Il est le cadeau" width="320" height="180" loading="lazy" />
-              <span class="cp-play">▶</span>
+              <img src="assets/hd-scene-02.jpg" alt="Aperçu du film Il est le cadeau" width="320" height="180" loading="lazy" />
+              <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">2:47</span>
             </div>
             <div class="cp-info">
               <strong>Il est le cadeau</strong>
-              <span>Il a fait cadeau de son Fils, le Christ.</span>
+              <span>Le don du Père à tous ses enfants</span>
             </div>
           </button>
 
@@ -385,33 +416,33 @@
                   data-badge="✦ Souvenons-nous de Lui"
                   data-scripture="Ésaïe 9:5 · Luc 2:11"
                   data-title="Un Sauveur est né"
-                  data-desc="Un Sauveur est né. Chaque année, à la période de Noël, nous célébrons la naissance de notre Sauveur, le Fils de Dieu, qui peut nous délivrer du péché et de la tristesse. Souvenons-nous de lui, aimons-le et suivons-le.">
+                  data-desc="Célébrons la naissance du Fils de Dieu qui apporte la paix, l'espérance et la délivrance.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-03.jpg" alt="Un Sauveur est né" width="320" height="180" loading="lazy" />
-              <span class="cp-play">▶</span>
+              <img src="assets/hd-scene-03.jpg" alt="Aperçu du film Un Sauveur est né" width="320" height="180" loading="lazy" />
+              <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">2:00</span>
             </div>
             <div class="cp-info">
               <strong>Un Sauveur est né</strong>
-              <span>Souvenons-nous de lui, aimons-le et suivons-le.</span>
+              <span>Souvenons-nous de lui et suivons-le</span>
             </div>
           </button>
 
           <button class="cp-item" type="button"
                   data-src="assets/la-bonne-nouvelle-dune-grande-joie-la-naissance-de-jesus-christ-fra-1080p.mp4"
                   data-poster="assets/hd-scene-06.jpg"
-                  data-badge="✦ Proclamez la bonne nouvelle"
-                  data-scripture="Luc 2:1-20 · Luc 2:14"
+                  data-badge="✦ Récit biblique de la Nativité"
+                  data-scripture="Luc 2:1-20"
                   data-title="La bonne nouvelle d’une grande joie : La naissance de Jésus-Christ"
-                  data-desc="Tandis que nous célébrons la naissance de Jésus-Christ en cette période de Noël, nous nous joignons avec joie aux armées célestes d’autrefois pour proclamer : « Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre aux hommes qui lui sont agréables » (Luc 2:14). Proclamez la bonne nouvelle d’une grande joie : il vit !">
+                  data-desc="Le récit complet de la naissance de Jésus à Bethléem, de l'annonce aux bergers jusqu'au chant des armées célestes.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-06.jpg" alt="La bonne nouvelle d'une grande joie" width="320" height="180" loading="lazy" />
-              <span class="cp-play">▶</span>
+              <img src="assets/hd-scene-06.jpg" alt="Aperçu du film La bonne nouvelle d'une grande joie" width="320" height="180" loading="lazy" />
+              <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">5:01</span>
             </div>
             <div class="cp-info">
               <strong>La bonne nouvelle d’une grande joie</strong>
-              <span>La naissance de Jésus-Christ (Luc 2:1-20)</span>
+              <span>Le récit de la Nativité (Luc 2:1-20)</span>
             </div>
           </button>
 
@@ -421,15 +452,15 @@
                   data-badge="✦ Joseph, l'humble charpentier"
                   data-scripture="Matthieu 1:18-25"
                   data-title="Le premier esprit de Noël"
-                  data-desc="Quelle expérience cela a dû être d'avoir élevé Jésus-Christ ? Joseph n’était qu'un humble charpentier quand Dieu lui a confié la responsabilité d'être le père du Christ sur la terre.">
+                  data-desc="L'histoire touchante de Joseph, l'humble charpentier à qui Dieu a confié la responsabilité d'élever le Christ sur la terre.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-12.jpg" alt="Le premier esprit de Noël" width="320" height="180" loading="lazy" />
-              <span class="cp-play">▶</span>
+              <img src="assets/hd-scene-12.jpg" alt="Aperçu du film Le premier esprit de Noël sur Joseph" width="320" height="180" loading="lazy" />
+              <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">6:16</span>
             </div>
             <div class="cp-info">
               <strong>Le premier esprit de Noël</strong>
-              <span>Joseph, père terrestre du Christ</span>
+              <span>L'exemple de foi de Joseph</span>
             </div>
           </button>
 
@@ -439,15 +470,15 @@
                   data-badge="✦ Message de la Première Présidence"
                   data-scripture="Luc 2:14 · Matthieu 5:9"
                   data-title="Devenir des artisans de paix ce Noël"
-                  data-desc="Tandis que nous célébrons la naissance de Jésus-Christ en cette période de Noël, unissons nos voix pour proclamer la paix sur la terre et devenir des artisans de paix envers nos proches.">
+                  data-desc="Un appel chaleureux à suivre le Prince de la paix en semant la réconciliation et la bonté autour de nous.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-09.jpg" alt="Devenir des artisans de paix" width="320" height="180" loading="lazy" />
-              <span class="cp-play">▶</span>
+              <img src="assets/hd-scene-09.jpg" alt="Aperçu du message Devenir des artisans de paix ce Noël" width="320" height="180" loading="lazy" />
+              <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">1:07</span>
             </div>
             <div class="cp-info">
               <strong>Devenir des artisans de paix</strong>
-              <span>Message spécial de la Première Présidence</span>
+              <span>Message de la Première Présidence</span>
             </div>
           </button>
         </div>
@@ -458,8 +489,8 @@
     <section class="section section-soft" id="galerie-hd">
       <div class="section-header">
         <span class="kicker">Galerie Cinématographique HD</span>
-        <h2 class="title">Tableaux animés de la naissance du Sauveur ✨</h2>
-        <p class="subtitle">Scènes haute définition extraites des films de Noël. Cliquez sur une image pour l'agrandir ou lancer le film.</p>
+        <h2 class="title">Tableaux animés de la Nativité ✨</h2>
+        <p class="subtitle">Scènes haute définition extraites des films de Noël. Cliquez sur une image pour l'agrandir ou lancer le film correspondant.</p>
       </div>
 
       <div class="hd-carousel reveal" id="hd-carousel">
@@ -474,43 +505,57 @@
       </div>
     </section>
 
-    <!-- ============ PROGRAMME & LIEU (BENTO DOUX & CLAIR) ============ -->
+    <!-- ============ PROGRAMME COMPLET (10H00 – 15H00) & LIEU ============ -->
     <section class="section" id="programme">
       <div class="section-header">
         <span class="kicker">Jeudi 24 Décembre 2026 · 10h00 – 15h00</span>
         <h2 class="title">Programme &amp; Lieu de la célébration</h2>
-        <p class="subtitle">Une journée de paix, de chants, de théâtre et de partage fraternel à la Salle des fêtes de la mairie d'Aboisso.</p>
+        <p class="subtitle">Voici le déroulé complet de notre journée festive à la Salle des fêtes de la mairie d'Aboisso.</p>
       </div>
 
       <div class="prog-place-grid">
-        <!-- Chronologie douce -->
+        <!-- Chronologie complète de 10h00 à 15h00 -->
         <ol class="timeline">
+          <li class="tl-item reveal">
+            <div class="tl-time">10h00</div>
+            <div class="tl-card">
+              <h3>🤝 Accueil des familles &amp; des invités</h3>
+              <p>Installation chaleureuse dans la salle, vérification rapide des billets et remise du programme.</p>
+            </div>
+          </li>
           <li class="tl-item reveal">
             <div class="tl-time">10h30</div>
             <div class="tl-card">
-              <h3>🌟 Moment Spirituel · « Un Sauveur est né »</h3>
-              <p>Accueil dès 10h00 avec votre invité·e, puis louange et proclamation de la naissance de Jésus-Christ (Luc 2:1-20).</p>
+              <h3>🌟 Moment spirituel · « Un Sauveur est né »</h3>
+              <p>Prières, cantiques de louange et message de Noël consacré à la naissance de Jésus-Christ (Luc 2:1-20).</p>
             </div>
           </li>
           <li class="tl-item reveal">
             <div class="tl-time">11h30</div>
             <div class="tl-card">
-              <h3>🎭 Théâtre &amp; Chorales de Noël</h3>
-              <p>Représentation de la Nativité « Il est le cadeau » et cantiques de Noël en français et en langue locale.</p>
+              <h3>🎭 Théâtre de la Nativité &amp; Chorales</h3>
+              <p>Représentation vivante de la crèche et chants des branches en français et en langue locale.</p>
             </div>
           </li>
           <li class="tl-item reveal">
             <div class="tl-time">12h45</div>
             <div class="tl-card">
-              <h3>🤝 Repas Fraternel &amp; Missionnaires</h3>
-              <p>Partage convivial avec vos invités et tous les missionnaires du district d'Aboisso.</p>
+              <h3>🍽️ Repas fraternel</h3>
+              <p>Partage convivial autour du repas avec vos invités et les missionnaires du district d'Aboisso.</p>
             </div>
           </li>
           <li class="tl-item reveal">
             <div class="tl-time">13h30</div>
             <div class="tl-card">
-              <h3>🎁 Joie des Enfants &amp; Photo de famille</h3>
-              <p>Activités joyeuses pour les enfants, surprises et grande photo souvenir du réveillon.</p>
+              <h3>🎁 Activités &amp; joie des enfants</h3>
+              <p>Animations, jeux, chants des enfants et distribution de petites attentions de Noël.</p>
+            </div>
+          </li>
+          <li class="tl-item reveal">
+            <div class="tl-time">14h30</div>
+            <div class="tl-card">
+              <h3>📸 Grande photo souvenir de Noël &amp; Mot de la fin</h3>
+              <p>Photo de famille par branche, remerciements, prière de clôture et fin de la rencontre à <strong>15h00</strong>.</p>
             </div>
           </li>
         </ol>
@@ -522,7 +567,7 @@
               <iframe
                 src="https://www.google.com/maps?q=Mairie%20d%27Aboisso%2C%20C%C3%B4te%20d%27Ivoire&output=embed"
                 loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"
-                title="Salle des fêtes de la mairie d'Aboisso"></iframe>
+                title="Carte vers la Salle des fêtes de la mairie d'Aboisso"></iframe>
             </div>
             <div class="place-body">
               <h3>📍 Salle des fêtes · Mairie d'Aboisso</h3>
@@ -539,31 +584,39 @@
             <strong>✨ Tenue suggérée (sans contrainte)</strong>
             <p>Une touche de <em>blanc lumière</em>, de <em>rose poudré</em> ou de <em>bordeaux/carmin</em>. Les enfants sont les bienvenus en habits de fête !</p>
           </div>
+
+          <div class="dress-card reveal">
+            <strong>📞 Contact &amp; Renseignements</strong>
+            <p>Présidence du District d'Aboisso — Pour toute question sur l'événement ou l'accueil des invités :</p>
+            <div style="margin-top:0.55rem">
+              <a class="btn btn-green btn-sm" href="https://wa.me/2250574152955?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20la%20c%C3%A9l%C3%A9bration%20de%20No%C3%ABl%20du%2024%20d%C3%A9cembre%20%C3%A0%20Aboisso" target="_blank" rel="noopener">💬 Nous écrire sur WhatsApp</a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- ============ MUR PHOTO & VŒUX DE NOËL ============ -->
+    <!-- ============ MUR PHOTO & VŒUX DE NOËL (AVEC CONSENTEMENT & SIGNALEMENT) ============ -->
     <section class="section section-soft" id="mur-photo">
       <div class="section-header">
         <span class="kicker">Communauté &amp; Partage</span>
-        <h2 class="title">Le mur des lumières &amp; vos vœux 📸</h2>
-        <p class="subtitle">Ajoutez votre photo ou un mot de joie pour annoncer que vous serez là le 24 décembre avec votre invité·e !</p>
+        <h2 class="title">Le mur des sourires &amp; vos vœux 📸</h2>
+        <p class="subtitle">Partagez une photo ou un message de Noël avant la rencontre du 24 décembre !</p>
       </div>
 
       <div class="community-grid">
         <!-- Ajout Photo -->
         <form id="wall-form" class="soft-panel reveal" novalidate>
           <h3>📸 Ajouter ma photo « Je serai là ! »</h3>
-          <p class="wall-count hidden" id="wall-count"><strong id="wall-count-n">0</strong> <span id="wall-count-txt">photo partagée</span></p>
-          <div class="wall-upload" id="wall-drop" role="button" tabindex="0" aria-label="Choisir une photo">
-            <img id="wall-preview" class="wall-preview hidden" alt="Aperçu" />
+          <p class="wall-count hidden" id="wall-count"><strong id="wall-count-n">0</strong> <span id="wall-count-txt">photos partagées</span></p>
+          <div class="wall-upload" id="wall-drop" role="button" tabindex="0" aria-label="Choisir une photo (JPG, PNG ou WebP, 5 Mo maximum)">
+            <img id="wall-preview" class="wall-preview hidden" alt="Aperçu de votre photo avant publication" />
             <div class="wall-placeholder" id="wall-placeholder">
               <span class="wp-emoji" aria-hidden="true">📷</span>
               <p>Touchez pour choisir ou prendre une photo</p>
-              <small>Cadre souvenir « Il est le Cadeau » automatique</small>
+              <small>Formats JPG, PNG ou WebP · Maximum 5 Mo</small>
             </div>
-            <input id="wall-photo" type="file" accept="image/*" hidden />
+            <input id="wall-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden />
           </div>
           <div class="wall-actions-row">
             <button class="btn btn-soft btn-sm" id="btn-camera" type="button">📸 Caméra</button>
@@ -576,17 +629,21 @@
             </div>
             <div class="field">
               <label for="w-msg">Petit mot</label>
-              <input id="w-msg" type="text" maxlength="80" placeholder="Ex. À jeudi 24 avec mon invité·e !" />
+              <input id="w-msg" type="text" maxlength="80" placeholder="Ex. À jeudi 24 avec notre invité !" />
             </div>
           </div>
-          <p class="form-error hidden" id="wall-error" role="alert">Choisissez une photo et indiquez votre nom 🙏</p>
-          <button class="btn btn-primary btn-wide" type="submit">✨ Publier ma photo sur le mur</button>
+          <label class="consent-check" for="w-consent">
+            <input id="w-consent" type="checkbox" required />
+            <span>J'accepte que ma photo et mon nom soient affichés sur ce site (pour les photos d'enfants, seuls les parents ou tuteurs sont autorisés à les publier). *</span>
+          </label>
+          <p class="form-error hidden" id="wall-error" role="alert">Veuillez choisir une photo, indiquer votre nom et cocher la case d'accord 🙏</p>
+          <button class="btn btn-primary btn-wide" id="wall-submit-btn" type="submit">✨ Publier ma photo sur le mur</button>
         </form>
 
         <!-- Livre d'or (Vœux) -->
         <div class="soft-panel reveal" id="mots-doux">
           <h3>💌 Vos vœux &amp; témoignages de Noël</h3>
-          <form id="guestbook-form" class="gb-inline-form">
+          <form id="guestbook-form" class="gb-inline-form" novalidate>
             <div class="field">
               <label for="g-nom">Votre nom *</label>
               <input id="g-nom" type="text" required maxlength="40" placeholder="Ex. Famille Kouamé" />
@@ -595,7 +652,11 @@
               <label for="g-msg">Votre message <span id="g-count">0/200</span></label>
               <textarea id="g-msg" rows="2" maxlength="200" placeholder="Votre joie de célébrer la naissance du Sauveur…"></textarea>
             </div>
-            <button class="btn btn-soft btn-wide" type="submit">✍️ Publier mes vœux</button>
+            <label class="consent-check" for="g-consent">
+              <input id="g-consent" type="checkbox" required />
+              <span>J'accepte que mon nom et mon message soient publiés sur cette page. *</span>
+            </label>
+            <button class="btn btn-soft btn-wide" id="gb-submit-btn" type="submit">✍️ Publier mes vœux</button>
           </form>
           <ul class="gb-list" id="gb-list"></ul>
         </div>
@@ -606,7 +667,7 @@
       <div class="wall-more-wrap hidden" id="wall-more-wrap">
         <button class="btn btn-soft" id="wall-more-btn" type="button">✨ Voir plus de photos</button>
       </div>
-      <p class="wall-empty" id="wall-empty">Soyez la première personne à afficher votre sourire sur le mur ✨</p>
+      <p class="wall-empty hidden" id="wall-empty">Soyez la première personne à afficher votre sourire sur le mur ✨</p>
 
       <!-- Modale Caméra -->
       <div class="cam-modal hidden" id="cam-modal" role="dialog" aria-modal="true" aria-label="Prendre une photo">
@@ -627,7 +688,7 @@
       <div class="wall-lightbox hidden" id="wall-lightbox" role="dialog" aria-modal="true" aria-label="Aperçu en grand">
         <button class="wl-close" id="wl-close" type="button" aria-label="Fermer">✕</button>
         <figure class="wl-figure">
-          <img id="wl-img" alt="Aperçu en grand" />
+          <img id="wl-img" alt="Aperçu agrandi de la photo sélectionnée" />
           <figcaption>
             <strong id="wl-name"></strong>
             <small id="wl-msg"></small>
@@ -637,26 +698,30 @@
     </section>
   </main>
 
-  <!-- ============ FOOTER DOUX & ÉPURÉ ============ -->
+  <!-- ============ FOOTER DOUX, CONTACT & CRÉDITS LÉGAUX ============ -->
   <footer class="footer">
     <div class="footer-inner">
-      <img class="footer-logo" src="assets/light_the_world.webp" alt="Éclairer le Monde" width="68" height="68" loading="lazy" />
-      <h3>« Il a fait cadeau de son Fils, le Christ. Il est le cadeau. »</h3>
-      <p>Église de Jésus-Christ des Saints des Derniers Jours — District d'Aboisso</p>
+      <img class="footer-logo" src="assets/light_the_world.webp" alt="Emblème de la campagne de Noël Éclairer le Monde" width="64" height="64" loading="lazy" />
+      <p class="footer-org">Église de Jésus-Christ des Saints des Derniers Jours — District d'Aboisso</p>
       <p class="footer-meta">📍 Salle des fêtes de la mairie d'Aboisso · Jeudi 24 décembre 2026 · 10h00 – 15h00</p>
       <div class="footer-actions">
         <a class="btn btn-green btn-sm" data-share-wa target="_blank" rel="noopener">💬 Inviter un proche sur WhatsApp</a>
+        <a class="btn btn-soft btn-sm" href="https://wa.me/2250574152955?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20la%20c%C3%A9l%C3%A9bration%20de%20No%C3%ABl%20%C3%A0%20Aboisso" target="_blank" rel="noopener">📞 Contact WhatsApp District</a>
         <button class="btn btn-soft btn-sm" data-copy-link type="button">🔗 Copier le lien du site</button>
       </div>
       <p class="footer-copy">© 2026 District d'Aboisso · #IlEstLeCadeau · #ÉclairerLeMonde</p>
+      <p class="footer-legal">
+        Ce site est une initiative locale non commerciale du District d'Aboisso pour l'organisation de sa célébration de Noël.
+        Films, cantiques et visuels de la Nativité : © Intellectual Reserve, Inc. Tous droits réservés — utilisés dans le cadre autorisé des activités de l'Église.
+      </p>
     </div>
   </footer>
 
   <!-- ============ BOUTON FLOTTANT D'INSCRIPTION RAPIDE ============ -->
-  <a class="cta-float" id="cta-float" href="#rsvp">🎟️ S'inscrire (+1 invité·e)</a>
+  <a class="cta-float" id="cta-float" href="#rsvp">🎟️ S'inscrire (gratuit)</a>
 
-  <!-- ============ LECTEUR DE CANTIQUES DISCRET ============ -->
-  <button class="music-fab" id="music-fab" aria-label="Cantiques de Noël" title="Écouter les cantiques de Noël">
+  <!-- ============ LECTEUR DE CANTIQUES DISCRET (ZÉRO CHARGEMENT AUTO) ============ -->
+  <button class="music-fab paused" id="music-fab" aria-label="Écouter les cantiques de Noël" title="Écouter les cantiques de Noël">
     <span class="eq"><i></i><i></i><i></i><i></i></span>
   </button>
 
@@ -665,7 +730,7 @@
       <span>🎶 Cantiques de Noël</span>
       <button id="mp-close" class="mp-x" type="button" aria-label="Fermer">✕</button>
     </div>
-    <p class="mp-title" id="mp-title">Choisissez un cantique ✨</p>
+    <p class="mp-title" id="mp-title">Appuyez sur ▶ pour écouter un cantique ✨</p>
     <div class="mp-progress" id="mp-progress" role="slider" tabindex="0" aria-label="Progression" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
       <div class="mp-bar" id="mp-bar"></div>
     </div>
@@ -686,8 +751,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/shared.js?v=25" defer></script>
+  <script src="assets/shared.js?v=26" defer></script>
   <script src="assets/qrcode-generator.js" defer></script>
-  <script src="script.js?v=25" defer></script>
+  <script src="script.js?v=26" defer></script>
 </body>
 </html>

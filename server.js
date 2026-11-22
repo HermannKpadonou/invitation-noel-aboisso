@@ -17,6 +17,8 @@ const CONFIG = {
   // ⚠️ Mot de passe du back office : variable d'environnement ADMIN_PASSWORD
   adminPassword: process.env.ADMIN_PASSWORD || "noel2026",
   dataDir: path.join(__dirname, "data"),
+  rsvpMaxCapacity: parseInt(process.env.RSVP_MAX_CAPACITY || "350", 10) || 350,
+  googleWebhookUrl: process.env.GOOGLE_SHEETS_WEBHOOK_URL || "",
 };
 
 const MIME = {
@@ -116,6 +118,10 @@ async function initDB() {
   }
   await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS checked_in BOOLEAN DEFAULT FALSE`);
   await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ`);
+  await db.query(`ALTER TABLE guestbook ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT TRUE`);
+  await db.query(`ALTER TABLE guestbook ADD COLUMN IF NOT EXISTS reported BOOLEAN DEFAULT FALSE`);
+  await db.query(`ALTER TABLE photo_wall ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT TRUE`);
+  await db.query(`ALTER TABLE photo_wall ADD COLUMN IF NOT EXISTS reported BOOLEAN DEFAULT FALSE`);
 
   /* Import automatique des données locales si les tables sont vides */
   const local = {
@@ -396,29 +402,46 @@ async function findTicketByNum(num) {
   };
 }
 
-async function listGuestbook() {
+/* Filtre anti-mots interdits / spam sur les messages publics */
+const BAD_WORDS_RE = /\b(con|connard|connasse|merde|putain|pute|salope|encul|fdp|ntm|bâtard|batard|arnaque|sexe|porn|casino|bitcoin|viagra)\b/i;
+function hasBadWords(text) {
+  return BAD_WORDS_RE.test(String(text || ""));
+}
+
+const DEFAULT_GUESTBOOK_SEEDS = [
+  { id: 101, nom: "Présidence du District d'Aboisso", msg: "Soyez les bienvenus avec vos proches et vos invités pour célébrer la naissance de notre Sauveur Jésus-Christ ce jeudi 24 décembre !", approved: true, reported: false, at: "2026-11-15T10:00:00.000Z" },
+  { id: 102, nom: "Famille Kouamé (Aboisso 1)", msg: "Quelle joie de proclamer ensemble : « Un Sauveur est né, Il est le cadeau ! » Nous viendrons avec nos voisins.", approved: true, reported: false, at: "2026-11-16T14:30:00.000Z" },
+  { id: 103, nom: "Sœur Adjoua (Branche d'Ayamé)", msg: "Hâte de partager les cantiques, le théâtre de la Nativité et le repas fraternel avec tous nos amis invités !", approved: true, reported: false, at: "2026-11-18T17:15:00.000Z" },
+];
+
+async function listGuestbook(includeUnapproved = false) {
   if (db) {
-    /* les 80 derniers messages, du plus ancien au plus récent */
+    const where = includeUnapproved ? "" : "WHERE COALESCE(approved, TRUE) = TRUE";
     const r = await db.query(
-      `SELECT id, nom, msg, at FROM (SELECT id, nom, msg, at FROM guestbook ORDER BY id DESC LIMIT 80) t ORDER BY id ASC`
+      `SELECT id, nom, msg, COALESCE(approved, TRUE) AS approved, COALESCE(reported, FALSE) AS reported, at FROM (SELECT id, nom, msg, approved, reported, at FROM guestbook ${where} ORDER BY id DESC LIMIT 80) t ORDER BY id ASC`
     );
-    return r.rows;
+    return r.rows.length ? r.rows : (includeUnapproved ? [] : DEFAULT_GUESTBOOK_SEEDS);
   }
-  return readJSON("guestbook.json", []).slice(-80);
+  const raw = readJSON("guestbook.json", []);
+  const source = raw.length ? raw : DEFAULT_GUESTBOOK_SEEDS;
+  const filtered = includeUnapproved ? source : source.filter((g) => g.approved !== false);
+  return filtered.slice(-80);
 }
 
 async function addGuestbook(entry) {
+  const approved = entry.approved !== undefined ? !!entry.approved : true;
   if (db) {
     const r = await db.query(
-      `INSERT INTO guestbook (nom, msg) VALUES ($1,$2) RETURNING id, nom, msg, at`,
-      [entry.nom, entry.msg]
+      `INSERT INTO guestbook (nom, msg, approved, reported) VALUES ($1,$2,$3,FALSE) RETURNING id, nom, msg, approved, reported, at`,
+      [entry.nom, entry.msg, approved]
     );
     return r.rows[0];
   }
   const all = readJSON("guestbook.json", []);
-  all.push(entry);
+  const item = { ...entry, approved, reported: false };
+  all.push(item);
   writeJSON("guestbook.json", all);
-  return entry;
+  return item;
 }
 
 /* ---------- Constellation d'Aboisso (Bougies allumées — Défi Éclairer le Monde) ---------- */
@@ -446,22 +469,37 @@ async function addLight({ nom, inspiration }) {
   return getLightsSummary();
 }
 
+const DEFAULT_WALL_SEEDS = [
+  { id: "seed-1", nom: "Présidence du District", msg: "Soyez les bienvenus à Aboisso le 24 décembre !", approved: true, reported: false, photo: "assets/photo-event.jpg", at: "2026-11-14T09:00:00.000Z" },
+  { id: "seed-2", nom: "Chorales & Jeunes d'Aboisso", msg: "En répétition pour les cantiques de la Nativité 🎶", approved: true, reported: false, photo: "assets/nativite-famille.jpg", at: "2026-11-15T11:30:00.000Z" },
+  { id: "seed-3", nom: "Équipe d'Accueil & Missionnaires", msg: "Nous vous attendons dès 10h00 avec votre invité !", approved: true, reported: false, photo: "assets/sapin-noel.jpg", at: "2026-11-17T16:00:00.000Z" },
+];
+
 /* Liste légère des métadonnées du Mur Photo (sans renvoyer les Mo de Base64 à chaque poll) */
-async function listWallMeta() {
+async function listWallMeta(includeUnapproved = false) {
   if (db) {
-    const r = await db.query(`SELECT id, nom, msg, at FROM photo_wall ORDER BY id ASC`);
+    const where = includeUnapproved ? "" : "WHERE COALESCE(approved, TRUE) = TRUE";
+    const r = await db.query(`SELECT id, nom, msg, COALESCE(approved, TRUE) AS approved, COALESCE(reported, FALSE) AS reported, at FROM photo_wall ${where} ORDER BY id ASC`);
+    if (!r.rows.length && !includeUnapproved) return DEFAULT_WALL_SEEDS;
     return r.rows.map((row) => ({
       id: row.id,
       nom: row.nom,
       msg: row.msg,
+      approved: row.approved,
+      reported: row.reported,
       photo: `/api/photo-wall/img?id=${encodeURIComponent(row.id)}`,
       at: row.at,
     }));
   }
-  return readJSON("photo-wall.json", []).map((row) => ({
+  const all = readJSON("photo-wall.json", []);
+  if (!all.length && !includeUnapproved) return DEFAULT_WALL_SEEDS;
+  const filtered = includeUnapproved ? all : all.filter((row) => row.approved !== false);
+  return filtered.map((row) => ({
     id: row.id,
     nom: row.nom,
     msg: row.msg,
+    approved: row.approved !== false,
+    reported: !!row.reported,
     photo: row.id ? `/api/photo-wall/img?id=${encodeURIComponent(row.id)}` : row.photo,
     at: row.at,
   }));
@@ -537,31 +575,81 @@ async function addInvites(rsvpId, list) {
 }
 
 async function addWall(entry) {
+  const approved = entry.approved !== undefined ? !!entry.approved : true;
   if (db) {
     const r = await db.query(
-      `INSERT INTO photo_wall (nom, msg, photo) VALUES ($1,$2,$3) RETURNING id, nom, msg, at`,
-      [entry.nom, entry.msg, entry.photo]
+      `INSERT INTO photo_wall (nom, msg, photo, approved, reported) VALUES ($1,$2,$3,$4,FALSE) RETURNING id, nom, msg, approved, reported, at`,
+      [entry.nom, entry.msg, entry.photo, approved]
     );
     const row = r.rows[0];
     return {
       id: row.id,
       nom: row.nom,
       msg: row.msg,
+      approved: row.approved,
+      reported: row.reported,
       photo: `/api/photo-wall/img?id=${encodeURIComponent(row.id)}`,
       at: row.at,
     };
   }
   const all = readJSON("photo-wall.json", []);
   if (all.length >= 300) all.shift();
-  all.push(entry);
+  const item = { ...entry, approved, reported: false };
+  all.push(item);
   writeJSON("photo-wall.json", all);
   return {
-    id: entry.id,
-    nom: entry.nom,
-    msg: entry.msg,
-    photo: `/api/photo-wall/img?id=${encodeURIComponent(entry.id)}`,
-    at: entry.at,
+    id: item.id,
+    nom: item.nom,
+    msg: item.msg,
+    approved: item.approved,
+    reported: item.reported,
+    photo: `/api/photo-wall/img?id=${encodeURIComponent(item.id)}`,
+    at: item.at,
   };
+}
+
+async function setCommunityModeration(type, id, { approved, reported }) {
+  const numId = parseInt(id, 10);
+  if (!numId) return null;
+  if (db) {
+    const table = type === "photo-wall" ? "photo_wall" : type === "guestbook" ? "guestbook" : null;
+    if (!table) return null;
+    if (approved !== undefined) {
+      await db.query(`UPDATE ${table} SET approved = $1, reported = FALSE WHERE id = $2`, [!!approved, numId]);
+    } else if (reported !== undefined) {
+      await db.query(`UPDATE ${table} SET reported = $1 WHERE id = $2`, [!!reported, numId]);
+    }
+    return { id: numId, approved, reported };
+  }
+  const file = type === "photo-wall" ? "photo-wall.json" : type === "guestbook" ? "guestbook.json" : null;
+  if (!file) return null;
+  const all = readJSON(file, []);
+  const target = all.find((x) => Number(x.id) === numId);
+  if (!target) return null;
+  if (approved !== undefined) {
+    target.approved = !!approved;
+    target.reported = false;
+  } else if (reported !== undefined) {
+    target.reported = !!reported;
+  }
+  writeJSON(file, all);
+  return target;
+}
+
+/* Détection de doublon d'inscription (même téléphone ou même nom + même branche) */
+async function findExistingRsvp(nom, tel, branche) {
+  const nk = normName(nom), tk = normTel(tel), bk = normName(branche);
+  const all = await listRsvps();
+  for (const r of all) {
+    if (tk && tk.length >= 8 && normTel(r.tel) === tk) return r;
+    if (nk && normName(r.nom) === nk && (!bk || !normName(r.branche) || normName(r.branche) === bk)) return r;
+  }
+  return null;
+}
+
+async function getCurrentExpectedPeople() {
+  const all = await listRsvps();
+  return all.filter((r) => r.presence === "present").reduce((s, r) => s + (r.people || 1), 0);
 }
 
 async function deleteRow(table, id) {
@@ -596,6 +684,11 @@ function escCSV(v) {
 async function handleAPI(req, res, url) {
   const { pathname, searchParams } = url;
 
+  /* --- Santé / Keep-Alive anti-sommeil Render (pour UptimeRobot / cron-job.org) --- */
+  if (pathname === "/api/health" && req.method === "GET") {
+    return send(req, res, 200, { ok: true, status: "awake", ts: new Date().toISOString() });
+  }
+
   /* --- Connexion admin (avec protection anti-bruteforce) --- */
   if (pathname === "/api/login" && req.method === "POST") {
     if (!checkRateLimit(req, "login", 10, 60_000)) {
@@ -617,34 +710,78 @@ async function handleAPI(req, res, url) {
     return send(req, res, 200, { ok: true, entry });
   }
 
-  /* --- RSVP (public : envoi — Ticket d'entrée : venir avec au moins 1 invité si présent) --- */
+  /* --- RSVP (public : envoi — Entrée gratuite, venir avec au moins 1 invité si présent) --- */
   if (pathname === "/api/rsvp" && req.method === "POST") {
     if (!checkRateLimit(req, "rsvp", 20, 60_000)) {
       return send(req, res, 429, { ok: false, error: "Trop de requêtes. Veuillez patienter un instant." });
     }
     const body = await readBody(req);
     const nom = clean(body.nom, 80);
-    if (!nom) return send(req, res, 400, { ok: false, error: "Nom requis" });
+    if (!nom || nom.length < 2) return send(req, res, 400, { ok: false, error: "Veuillez indiquer votre nom complet (au moins 2 caractères)." });
     const presence = body.presence === "absent" ? "absent" : "present";
+    const statut = body.statut === "ami" ? "ami" : "membre";
+    const tel = clean(body.tel, 30);
+    const branche = clean(body.branche, 80);
+
+    if (statut === "membre" && !branche) {
+      return send(req, res, 400, { ok: false, error: "Veuillez choisir votre branche dans la liste." });
+    }
+
+    const rawInvites = Array.isArray(body.invites) ? body.invites.filter((i) => i && clean(i.nom, 80)) : [];
+    if (presence === "present" && rawInvites.length < 1 && !clean(body.ami_nom, 80)) {
+      return send(req, res, 400, { ok: false, error: "Ajoutez au moins une personne que vous invitez pour venir avec vous." });
+    }
+
+    /* Détection de doublon : si la personne s'est déjà inscrite (même téléphone ou même nom + branche), on lui renvoie son billet existant */
+    const existing = await findExistingRsvp(nom, tel, branche);
+    if (existing) {
+      return send(req, res, 200, { ok: true, duplicate: true, entry: existing, saved: [], skipped: [] });
+    }
+
+    /* Vérification de la capacité maximale de la salle */
     const minPeople = presence === "present" ? 2 : 1;
+    const requestedPeople = presence === "present"
+      ? Math.min(Math.max(parseInt(body.people, 10) || minPeople, minPeople), 30)
+      : 1;
+    if (presence === "present" && CONFIG.rsvpMaxCapacity > 0) {
+      const currentPeople = await getCurrentExpectedPeople();
+      if (currentPeople >= CONFIG.rsvpMaxCapacity) {
+        return send(req, res, 409, {
+          ok: false,
+          full: true,
+          error: `La capacité maximale de la salle (${CONFIG.rsvpMaxCapacity} places) est atteinte. Contactez-nous sur WhatsApp pour la liste d'attente.`,
+        });
+      }
+    }
+
     const num = await generateUniqueTicketNum();
     const entry = await addRsvp({
       num,
       nom,
       presence,
-      statut: body.statut === "ami" ? "ami" : "membre",
-      tel: clean(body.tel, 30),
-      people: Math.min(Math.max(parseInt(body.people, 10) || minPeople, minPeople), 30),
-      branche: clean(body.branche, 80),
+      statut,
+      tel,
+      people: requestedPeople,
+      branche,
       localite: clean(body.localite, 80),
-      ami_nom: clean(body.ami_nom, 80),
-      ami_tel: clean(body.ami_tel, 30),
-      inactif_nom: clean(body.inactif_nom, 80),
-      inactif_tel: clean(body.inactif_tel, 30),
+      ami_nom: clean(body.ami_nom || rawInvites[0]?.nom, 80),
+      ami_tel: clean(body.ami_tel || rawInvites[0]?.tel, 30),
+      inactif_nom: clean(body.inactif_nom || rawInvites[1]?.nom, 80),
+      inactif_tel: clean(body.inactif_tel || rawInvites[1]?.tel, 30),
       note: clean(body.note, 150),
     });
     /* Invitations dynamiques : doublons filtrés (nom / téléphone déjà connus) */
     const { saved, skipped } = await addInvites(entry.id, body.invites);
+
+    /* Sauvegarde externe optionnelle vers Google Sheets / Webhook */
+    if (CONFIG.googleWebhookUrl && typeof fetch === "function") {
+      fetch(CONFIG.googleWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "rsvp", entry, saved }),
+      }).catch(() => {});
+    }
+
     return send(req, res, 200, { ok: true, entry, saved, skipped });
   }
 
@@ -659,14 +796,14 @@ async function handleAPI(req, res, url) {
     if (!nom) return send(req, res, 400, { ok: false, error: "Nom requis" });
     const dup = await findInviteDup(nom, tel);
     const info = dup
-      ? (dup.src === "inscriptions" ? "déjà inscrit·e" : "déjà dans les invitations")
+      ? (dup.src === "inscriptions" ? "déjà inscrit" : "déjà dans les invitations")
       : "";
     return send(req, res, 200, { ok: true, dup: !!dup, info });
   }
 
   /* --- Livre d'or (public : lire / écrire) --- */
   if (pathname === "/api/guestbook" && req.method === "GET") {
-    return send(req, res, 200, await listGuestbook());
+    return send(req, res, 200, await listGuestbook(false));
   }
   if (pathname === "/api/guestbook" && req.method === "POST") {
     if (!checkRateLimit(req, "guestbook", 12, 60_000)) {
@@ -674,15 +811,29 @@ async function handleAPI(req, res, url) {
     }
     const body = await readBody(req);
     const nom = clean(body.nom, 60);
-    const msg = clean(body.msg, 250);
+    const msg = clean(body.msg, 200);
     if (!nom || !msg) return send(req, res, 400, { ok: false, error: "Nom et message requis" });
-    const entry = await addGuestbook({ id: Date.now(), nom, msg, at: new Date().toISOString() });
+    if (hasBadWords(nom) || hasBadWords(msg)) {
+      return send(req, res, 400, { ok: false, error: "Merci d'utiliser un langage respectueux et bienveillant." });
+    }
+    const entry = await addGuestbook({ id: Date.now(), nom, msg, approved: true, at: new Date().toISOString() });
     return send(req, res, 200, { ok: true, entry });
+  }
+
+  /* --- Signalement public d'une photo ou d'un vœu --- */
+  if (pathname === "/api/report" && req.method === "POST") {
+    if (!checkRateLimit(req, "report", 10, 60_000)) {
+      return send(req, res, 429, { ok: false, error: "Trop de signalements." });
+    }
+    const body = await readBody(req);
+    const type = body.type === "photo-wall" ? "photo-wall" : "guestbook";
+    await setCommunityModeration(type, body.id, { reported: true });
+    return send(req, res, 200, { ok: true });
   }
 
   /* --- Mur photo « Je serai là ! » (public : lire métadonnées / servir image binaire / ajouter) --- */
   if (pathname === "/api/photo-wall" && req.method === "GET") {
-    return send(req, res, 200, await listWallMeta());
+    return send(req, res, 200, await listWallMeta(false));
   }
   if (pathname === "/api/photo-wall/img" && req.method === "GET") {
     const id = searchParams.get("id");
@@ -717,9 +868,12 @@ async function handleAPI(req, res, url) {
     const msg = clean(body.msg, 80);
     const photo = typeof body.photo === "string" ? body.photo : "";
     if (!nom) return send(req, res, 400, { ok: false, error: "Nom requis" });
-    if (!photo.startsWith("data:image/")) return send(req, res, 400, { ok: false, error: "Photo requise" });
+    if (hasBadWords(nom) || hasBadWords(msg)) {
+      return send(req, res, 400, { ok: false, error: "Merci d'utiliser un langage respectueux." });
+    }
+    if (!photo.startsWith("data:image/")) return send(req, res, 400, { ok: false, error: "Photo requise (formats JPG, PNG ou WebP)" });
     if (photo.length > 45e4) return send(req, res, 413, { ok: false, error: "Photo trop lourde — choisissez-en une plus petite" });
-    const entry = await addWall({ id: Date.now(), nom, msg, photo, at: new Date().toISOString() });
+    const entry = await addWall({ id: Date.now(), nom, msg, photo, approved: true, at: new Date().toISOString() });
     return send(req, res, 200, { ok: true, entry });
   }
 
@@ -730,8 +884,8 @@ async function handleAPI(req, res, url) {
     if (pathname === "/api/admin/summary" && req.method === "GET") {
       const [rsvps, guestbook, wall, invites] = await Promise.all([
         listRsvps(),
-        listGuestbook(),
-        listWallMeta(),
+        listGuestbook(true),
+        listWallMeta(true),
         listInvitesRaw(),
       ]);
       const checkedInList = rsvps.filter((r) => r.checked_in);
@@ -740,12 +894,20 @@ async function handleAPI(req, res, url) {
         presents: rsvps.filter((r) => r.presence === "present").length,
         absents: rsvps.filter((r) => r.presence === "absent").length,
         people: rsvps.filter((r) => r.presence === "present").reduce((s, r) => s + (r.people || 1), 0),
+        maxCapacity: CONFIG.rsvpMaxCapacity,
         checkedInRsvps: checkedInList.length,
         checkedInPeople: checkedInList.reduce((s, r) => s + (r.people || 1), 0),
         messages: guestbook.length,
         invites: invites.length,
       };
       return send(req, res, 200, { ok: true, rsvps, guestbook, wall, invites, stats });
+    }
+
+    /* Modération admin (approuver / masquer une photo ou un vœu) */
+    if (pathname === "/api/admin/moderate" && req.method === "POST") {
+      const body = await readBody(req);
+      const updated = await setCommunityModeration(body.type, body.id, { approved: !!body.approved });
+      return send(req, res, 200, { ok: true, updated });
     }
 
     /* Pointage Jour J (Check-in par ID ou par N° de billet scanné au QR code) */

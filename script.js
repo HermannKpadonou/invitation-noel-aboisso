@@ -41,13 +41,25 @@ const drawRoundRect = ELW.drawRoundRect || function (x, px, py, w, h, r) {
   x.beginPath();
   x.moveTo(px + r, py);
   x.arcTo(px + w, py, px + w, py + h, r);
-  x.arcTo(px + w, py + h, x, y + h, r);
-  x.arcTo(px, y + h, x, y, r);
+  x.arcTo(px + w, py + h, px, py + h, r);
+  x.arcTo(px, py + h, px, py, r);
   x.arcTo(px, py, px + w, py, r);
   x.closePath();
 };
 const playChime = ELW.playChime || (() => {});
 const isReducedMotion = ELW.isReducedMotion || (() => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+/* Validation souple des numéros ivoiriens (10 chiffres commençant par 01/05/07 ou +225, ou international) */
+function isValidIvorianOrIntlPhone(raw) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed) return true; // le téléphone est facultatif
+  const digits = trimmed.replace(/\D/g, "");
+  if (/^(01|05|07)\d{8}$/.test(digits)) return true;
+  if (/^225(01|05|07)\d{8}$/.test(digits)) return true;
+  if (/^225\d{8,10}$/.test(digits)) return true;
+  if (trimmed.startsWith("+") && digits.length >= 10 && digits.length <= 15) return true;
+  return false;
+}
 
 /* ---------- Service Worker (PWA) ---------- */
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
@@ -123,7 +135,7 @@ function getLastRsvp() {
 }
 
 /* =========================================================
-   ÉCRAN D'OUVERTURE SOFT & FLUIDE
+   ÉCRAN D'OUVERTURE SOFT & FLUIDE (SANS CHARGEMENT AUDIO FORCÉ)
    ========================================================= */
 (function initIntro() {
   const intro = $("#intro");
@@ -134,9 +146,15 @@ function getLastRsvp() {
   const urlPour = (params.get("pour") || params.get("invite") || "").trim();
   const urlDe = (params.get("de") || params.get("par") || "").trim();
   const lastR = getLastRsvp();
-  const recipientName = urlPour || (lastR && lastR.nom ? lastR.nom.split(" ")[0] : "");
+  const recipientName = urlPour || (lastR && lastR.nom ? lastR.nom.trim().split(/\s+/)[0] : "");
 
-  if ($("#ir-nom")) $("#ir-nom").textContent = recipientName || "ami·e";
+  if (recipientName) {
+    if ($("#ir-prefix")) $("#ir-prefix").textContent = "Bonjour ";
+    if ($("#ir-nom")) $("#ir-nom").textContent = recipientName;
+  } else {
+    if ($("#ir-prefix")) $("#ir-prefix").textContent = "Cher ami, chère amie";
+    if ($("#ir-nom")) $("#ir-nom").textContent = "";
+  }
 
   const envTag = $("#envelope-tag");
   if (envTag && (recipientName || urlDe)) {
@@ -165,7 +183,6 @@ function getLastRsvp() {
     if (opened) return;
     opened = true;
     if (!isReducedMotion()) playChime("envelope");
-    if (window.__startMusic) window.__startMusic(true);
 
     intro.classList.add("env-open");
     const delay = isReducedMotion() ? 50 : 620;
@@ -209,7 +226,7 @@ function getLastRsvp() {
   addEventListener("resize", resize);
 
   function makeFlakes() {
-    const count = Math.min(45, Math.floor(innerWidth / 26));
+    const count = Math.min(40, Math.floor(innerWidth / 28));
     flakes = Array.from({ length: count }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -244,7 +261,7 @@ function getLastRsvp() {
 })();
 
 /* =========================================================
-   CINÉMATHÈQUE DE NOËL (5 Vidéos 1080p HD + Pause auto musique)
+   CINÉMATHÈQUE DE NOËL (preload="none" + Pause auto musique)
    ========================================================= */
 (function initCinema() {
   const video = $("#main-video");
@@ -322,7 +339,7 @@ function getLastRsvp() {
       img: "assets/hd-scene-02.jpg",
       kicker: "Il est le cadeau · Jean 3:16",
       title: "Il a donné son Fils",
-      desc: "Le premier cadeau de Noël, tout simple, a été fait par un Père à tous ses enfants, à nous tous. Il a fait cadeau de son Fils, le Christ. Il est le cadeau.",
+      desc: "Le premier cadeau de Noël, tout simple, a été fait par un Père à tous ses enfants, à nous tous.",
       video: "assets/il-est-le-cadeau-fra-1080p.mp4",
     },
     {
@@ -343,14 +360,14 @@ function getLastRsvp() {
       img: "assets/hd-scene-12.jpg",
       kicker: "Le premier esprit de Noël · Joseph",
       title: "Élever le Fils de Dieu sur la terre",
-      desc: "Quelle expérience cela a dû être d'avoir élevé Jésus-Christ ? Joseph n’était qu'un humble charpentier quand Dieu lui a confié cette responsabilité sacrée.",
+      desc: "Joseph n'était qu'un humble charpentier quand Dieu lui a confié cette responsabilité sacrée.",
       video: "assets/le-premier-esprit-de-noel-fra-1080p.mp4",
     },
     {
       img: "assets/hd-scene-03.jpg",
       kicker: "Un Sauveur est né · Luc 2:11",
-      title: "Souvenons-nous de Lui, aimons-Le et suivons-Le",
-      desc: "Chaque année, à la période de Noël, nous célébrons la naissance de notre Sauveur, le Fils de Dieu, qui peut nous délivrer du péché et de la tristesse.",
+      title: "Souvenons-nous de Lui et suivons-Le",
+      desc: "Célébrons la naissance du Fils de Dieu, qui peut nous délivrer du péché et de la tristesse.",
       video: "assets/a-savior-is-born-fra-1080p.mp4",
     },
     {
@@ -371,7 +388,7 @@ function getLastRsvp() {
       img: "assets/hd-scene-09.jpg",
       kicker: "Message de la Première Présidence",
       title: "Devenir des artisans de paix ce Noël",
-      desc: "Nous nous réjouissons que Jéhovah, le Fils de Dieu, soit venu dans le monde apporter sa lumière et sa paix éternelle.",
+      desc: "Unissons nos voix pour apporter la lumière et la paix du Sauveur autour de nous.",
       video: "assets/2026-12-becoming-peacemakers-this-christmas-a-special-message-from-the-first-presidency-1080p-fra.mp4",
     },
   ];
@@ -384,7 +401,7 @@ function getLastRsvp() {
     const slide = document.createElement("article");
     slide.className = "hdc-slide" + (i === 0 ? " active" : "");
     slide.innerHTML = `
-      <img src="${s.img}" alt="${escapeHTML(s.title)}" width="1280" height="720" loading="${i === 0 ? "eager" : "lazy"}" decoding="async" />
+      <img src="${s.img}" alt="Scène de la Nativité : ${escapeHTML(s.title)}" width="1280" height="720" loading="lazy" decoding="async" />
       <div class="hdc-caption">
         <div class="hdc-text">
           <span class="hdc-kicker">✦ ${escapeHTML(s.kicker)}</span>
@@ -412,7 +429,7 @@ function getLastRsvp() {
     thumb.setAttribute("role", "button");
     thumb.setAttribute("aria-label", `Afficher : ${s.title}`);
     thumb.innerHTML = `
-      <img src="${s.img}" alt="${escapeHTML(s.title)}" width="320" height="200" loading="lazy" decoding="async" />
+      <img src="${s.img}" alt="Miniature : ${escapeHTML(s.title)}" width="320" height="200" loading="lazy" decoding="async" />
       <span>${escapeHTML(s.title)}</span>
     `;
     thumb.addEventListener("click", () => goTo(i));
@@ -506,7 +523,7 @@ function getLastRsvp() {
 })();
 
 /* =========================================================
-   COMPTE À REBOURS + CALENDRIER
+   COMPTE À REBOURS + MESSAGE JOUR J + CALENDRIER
    ========================================================= */
 (function initCountdown() {
   const start = new Date(CONFIG.eventStart);
@@ -516,14 +533,19 @@ function getLastRsvp() {
   function tick() {
     const now = new Date();
     const diff = start - now;
-    if (diff <= 0) {
+    const isSameDay = now.getUTCFullYear() === start.getUTCFullYear() &&
+                      now.getUTCMonth() === start.getUTCMonth() &&
+                      now.getUTCDate() === start.getUTCDate();
+    if (diff <= 0 || isSameDay) {
       const cd = $("#countdown");
       if (cd) {
-        cd.innerHTML = now < end
-          ? '<div class="cd-box" style="min-width:210px"><span>🎄 En cours</span><small>Jusqu\'à 15h00</small></div>'
-          : '<div class="cd-box" style="min-width:210px"><span>Joyeux Noël ✦</span><small>Événement célébré</small></div>';
+        if (now <= end) {
+          cd.innerHTML = '<div class="cd-box" style="min-width:280px;padding:0.85rem 1.2rem"><span>🎄 C\'est aujourd\'hui !</span><small>10h00 – 15h00 · Salle des fêtes de la Mairie d\'Aboisso</small></div>';
+        } else {
+          cd.innerHTML = '<div class="cd-box" style="min-width:260px;padding:0.85rem 1.2rem"><span>Merci d\'être venus ! ✦</span><small>Découvrez et partagez les photos de la journée ci-dessous</small></div>';
+        }
       }
-      clearInterval(timer);
+      if (diff <= 0) clearInterval(timer);
       return;
     }
     const d = Math.floor(diff / 864e5);
@@ -543,7 +565,7 @@ function getLastRsvp() {
     action: "TEMPLATE",
     text: CONFIG.eventName,
     dates: `${fmt(start)}/${fmt(end)}`,
-    details: "Un Sauveur est né : Il est le cadeau ! Ticket d'entrée : venir accompagné(e) d'au moins un(e) invité(e).",
+    details: "Un Sauveur est né : Il est le cadeau ! Entrée gratuite — venez avec au moins une personne que vous invitez.",
     location: CONFIG.place,
   });
   if ($("#btn-gcal")) $("#btn-gcal").href = `https://calendar.google.com/calendar/render?${params}`;
@@ -556,7 +578,7 @@ function getLastRsvp() {
     `DTSTART:${fmt(start)}`,
     `DTEND:${fmt(end)}`,
     `SUMMARY:${CONFIG.eventName}`,
-    "DESCRIPTION:Un Sauveur est né : Il est le cadeau ! Ticket d'entrée : venir accompagné(e) d'au moins 1 invité(e).",
+    "DESCRIPTION:Un Sauveur est né : Il est le cadeau ! Entrée gratuite — venez avec au moins un invité.",
     `LOCATION:${CONFIG.place}`,
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");
@@ -585,7 +607,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 });
 
 (function initShare() {
-  const text = "✦ Un Sauveur est né · Il est le Cadeau ✦\nVous êtes invité·e au Grand Noël des Enfants & Familles 🎄\n« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre » (Luc 2:14)\n📅 Jeudi 24 décembre 2026, 10h–15h\n📍 Salle des fêtes de la mairie d'Aboisso\n🎟️ Ticket d'entrée : venir accompagné·e d'au moins un·e invité·e !";
+  const text = "✦ Un Sauveur est né · Il est le Cadeau ✦\nVous êtes cordialement invité au Grand Noël des Enfants & Familles 🎄\n« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre » (Luc 2:14)\n📅 Jeudi 24 décembre 2026, 10h00–15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n🤝 Entrée gratuite — venez avec au moins une personne que vous invitez !";
   const url = location.href;
   document.querySelectorAll("[data-share-wa]").forEach((a) => {
     a.href = `https://wa.me/?text=${encodeURIComponent(text + "\n👉 " + url)}`;
@@ -601,23 +623,80 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   if (!form || !done) return;
 
   const nomInput = $("#f-nom");
+  const telInput = $("#f-tel");
+  const brancheSelect = $("#f-branche");
   const statutSelect = $("#f-statut-select");
   const presenceSelect = $("#f-presence-select");
   const membreFields = $("#membre-fields");
   const inviteBlock = $("#invite-block");
   const accompInput = $("#f-accomp");
   const invList = $("#inv-amis");
+  const submitBtn = $("#rsvp-submit-btn");
+
+  /* Messages d'erreur sous chaque champ */
+  const errNom = $("#err-nom");
+  const errTel = $("#err-tel");
+  const errBranche = $("#err-branche");
+  const errInvites = $("#err-invites");
 
   /* Éléments du Billet en Direct (Colonne de droite) */
   const ltNum = $("#lt-num");
   const ltName = $("#lt-name");
   const ltCompanion = $("#lt-companion");
+  const ltCompanionRow = $("#lt-companion-row");
   const ltStatus = $("#lt-status");
   const ltQrImg = $("#i-qr");
   const ltActions = $("#lt-actions");
 
   let currentInvite = null;
   let invCounter = 0;
+
+  function setFieldError(el, msg) {
+    if (!el) return;
+    el.textContent = msg || "";
+    el.classList.toggle("hidden", !msg);
+  }
+
+  function clearAllFieldErrors() {
+    setFieldError(errNom, "");
+    setFieldError(errTel, "");
+    setFieldError(errBranche, "");
+    setFieldError(errInvites, "");
+    $("#rsvp-error")?.classList.add("hidden");
+  }
+
+  /* Formatage propre du titre de confirmation sans virgule orpheline */
+  function setDoneHeading(nom, presence = "present") {
+    const prenom = String(nom || "").trim().split(/\s+/)[0] || "";
+    const titleEl = $("#done-title");
+    const descEl = $("#done-desc");
+    if (titleEl) {
+      if (presence === "absent") {
+        titleEl.textContent = prenom ? `Merci pour votre réponse, ${prenom} !` : "Merci pour votre réponse !";
+      } else {
+        titleEl.textContent = prenom ? `Votre billet est prêt, ${prenom} !` : "Votre billet est prêt !";
+      }
+    }
+    if (descEl) {
+      descEl.innerHTML = presence === "absent"
+        ? "Nous avons bien noté que vous ne pourrez pas être présent le jeudi 24 décembre 2026. Joyeux Noël à vous et à votre famille !"
+        : "Votre inscription et celle de votre invité sont bien enregistrées pour le <strong>jeudi 24 décembre 2026 (10h00 – 15h00)</strong>.";
+    }
+  }
+
+  function updateSelfReminderLink(d) {
+    const btn = $("#wa-self-reminder");
+    if (!btn || !d) return;
+    if (d.presence === "absent") {
+      btn.classList.add("hidden");
+      return;
+    }
+    btn.classList.remove("hidden");
+    const link = inviteLink(d);
+    const msg = `🔔 *Rappel — Noël à Aboisso (Billet N°${d.num})*\n📅 Jeudi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n👤 Participant : ${d.nom}\n🤝 Invité(s) : ${getCompanionText(d)}\n🎟️ Lien de mon billet QR : ${link}`;
+    const num = telKey(d.tel) ? normalizePhone(d.tel) : "";
+    btn.href = num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  }
 
   function addInviteRow() {
     invCounter += 1;
@@ -627,14 +706,14 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     row.className = "inv-row";
     row.innerHTML = `
       <div class="field">
-        <label for="${idNom}">${invCounter === 1 ? "Nom & prénom de votre invité·e *" : "Autre invité·e"}</label>
+        <label for="${idNom}">${invCounter === 1 ? "Nom et prénom de votre invité *" : "Autre invité"}</label>
         <input id="${idNom}" class="inv-nom" type="text" maxlength="80" placeholder="Ex. Koffi Yao" />
       </div>
       <div class="field">
         <label for="${idTel}">Son WhatsApp (facultatif)</label>
         <input id="${idTel}" class="inv-tel" type="tel" inputmode="tel" placeholder="07 00 00 00 00" />
       </div>
-      <button class="inv-x" type="button" title="Retirer" aria-label="Retirer cette personne">✕</button>
+      <button class="inv-x" type="button" title="Retirer" aria-label="Retirer cet invité">✕</button>
       <p class="inv-msg hidden" aria-live="polite"></p>
     `;
     row.querySelector(".inv-x").addEventListener("click", () => {
@@ -644,7 +723,10 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     });
     const nEl = row.querySelector(".inv-nom");
     const tEl = row.querySelector(".inv-tel");
-    nEl.addEventListener("input", updateLiveTicketPreview);
+    nEl.addEventListener("input", () => {
+      setFieldError(errInvites, "");
+      updateLiveTicketPreview();
+    });
     nEl.addEventListener("change", () => checkInviteRow(row));
     tEl.addEventListener("change", () => checkInviteRow(row));
     invList.appendChild(row);
@@ -673,7 +755,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     const nom = row.querySelector(".inv-nom")?.value.trim() || "";
     const tel = row.querySelector(".inv-tel")?.value.trim() || "";
     if (!nom && !tel) { rowMsg(row, ""); return; }
-    if (!nom) { rowMsg(row, "Indiquez aussi son nom 🙏"); return; }
+    if (!nom) { rowMsg(row, "Indiquez aussi le nom de votre invité 🙏"); return; }
     try {
       const res = await fetch("/api/invites/check", {
         method: "POST",
@@ -681,8 +763,8 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
         body: JSON.stringify({ nom, tel }),
       });
       const j = await res.json();
-      if (j.dup) rowMsg(row, `ℹ️ « ${nom} » a déjà été invité·e (${j.info || "inscrit·e"})`);
-      else rowMsg(row, "✓ Ticket d'entrée validé avec cet·te invité·e !", true);
+      if (j.dup) rowMsg(row, `ℹ️ « ${nom} » a déjà été invité (${j.info || "inscrit"})`);
+      else rowMsg(row, "✓ Invité validé !", true);
     } catch { rowMsg(row, ""); }
   }
 
@@ -692,23 +774,37 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   });
   addInviteRow();
 
-  /* Synchronisation Statut (Membre / Ami) & Présence */
+  /* Synchronisation Statut (Membre / Ami) & Présence (Présent / Absent) */
   function syncFormUI() {
     const isMembre = (statutSelect?.value || "membre") === "membre";
     const isPresent = (presenceSelect?.value || "present") === "present";
     membreFields?.classList.toggle("hidden", !isMembre);
     inviteBlock?.classList.toggle("hidden", !isPresent);
+    ltCompanionRow?.classList.toggle("hidden", !isPresent);
+    if (!isPresent) setFieldError(errInvites, "");
+    if (!isMembre) setFieldError(errBranche, "");
     if (accompInput) {
       accompInput.min = isPresent ? "2" : "1";
       if (isPresent && parseInt(accompInput.value, 10) < 2) accompInput.value = "2";
+    }
+    if (submitBtn && !submitBtn.disabled) {
+      submitBtn.textContent = isPresent
+        ? "🎟️ Valider et obtenir mon billet"
+        : "📩 Enregistrer ma réponse";
     }
     updateLiveTicketPreview();
   }
   statutSelect?.addEventListener("change", syncFormUI);
   presenceSelect?.addEventListener("change", syncFormUI);
-  nomInput?.addEventListener("input", updateLiveTicketPreview);
+  nomInput?.addEventListener("input", () => {
+    setFieldError(errNom, "");
+    updateLiveTicketPreview();
+  });
+  telInput?.addEventListener("input", () => setFieldError(errTel, ""));
+  brancheSelect?.addEventListener("change", () => setFieldError(errBranche, ""));
 
   function getCompanionText(d) {
+    if (d?.presence === "absent") return "Absence signalée";
     const names = [];
     if (Array.isArray(d?.invites) && d.invites.length) {
       d.invites.forEach((i) => { if (i && i.nom) names.push(i.nom); });
@@ -717,7 +813,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       if (d?.inactif_nom) names.push(d.inactif_nom);
     }
     if (names.length) return names.join(", ");
-    return "1 invité·e accompagnant·e";
+    return "1 invité accompagnant";
   }
 
   function inviteLink(d) {
@@ -739,14 +835,15 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   function updateLiveTicketPreview() {
     if (!form.classList.contains("hidden")) {
       const typedNom = nomInput?.value.trim() || "";
-      const typedInvites = collectInvites().filter((i) => i.nom).map((i) => i.nom);
+      const isPresent = (presenceSelect?.value || "present") === "present";
+      const typedInvites = isPresent ? collectInvites().filter((i) => i.nom).map((i) => i.nom) : [];
       if (ltName) ltName.textContent = typedNom || "Votre nom apparaîtra ici";
       if (ltCompanion) {
         ltCompanion.textContent = typedInvites.length
           ? typedInvites.join(", ")
-          : "Votre invité·e apparaîtra ici";
+          : "Le nom de votre invité apparaîtra ici";
       }
-      if (accompInput && typedInvites.length >= 1) {
+      if (isPresent && accompInput && typedInvites.length >= 1) {
         const minP = 1 + typedInvites.length;
         if (parseInt(accompInput.value, 10) < minP) accompInput.value = String(minP);
       }
@@ -757,17 +854,23 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   function showInvite(d) {
     if (!d) return;
     currentInvite = d;
+    const isAbsent = d.presence === "absent";
     if (ltNum) ltNum.textContent = `Billet N°${d.num}`;
-    if (ltName) ltName.textContent = d.nom;
-    if (ltCompanion) ltCompanion.textContent = getCompanionText(d);
-    if (ltStatus) ltStatus.textContent = `✅ Billet N°${d.num} validé (${d.people || 2} personnes)`;
+    if (ltName) ltName.textContent = d.nom || "Invité";
+    ltCompanionRow?.classList.toggle("hidden", isAbsent);
+    if (ltCompanion && !isAbsent) ltCompanion.textContent = getCompanionText(d);
+    if (ltStatus) {
+      ltStatus.textContent = isAbsent
+        ? `📩 Réponse enregistrée (N°${d.num})`
+        : `✅ Billet N°${d.num} validé (${d.people || 2} personnes)`;
+    }
 
     const qrData = makeQR(inviteLink(d));
     if (ltQrImg && qrData) {
       ltQrImg.src = qrData;
       ltQrImg.classList.remove("hidden");
     }
-    ltActions?.classList.remove("hidden");
+    ltActions?.classList.toggle("hidden", isAbsent);
     $("#live-ticket")?.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth", block: "nearest" });
   }
 
@@ -779,13 +882,13 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     if (!list.length) { box.classList.add("hidden"); return; }
     const h = document.createElement("p");
     h.className = "is-title";
-    h.textContent = "💌 Envoyez maintenant son invitation personnalisée à votre invité·e :";
+    h.textContent = "💌 Envoyez maintenant son invitation personnalisée à votre invité :";
     box.appendChild(h);
     const base = location.protocol.startsWith("http") ? location.origin + location.pathname : "https://invitation-noel-aboisso.onrender.com/";
     for (const inv of list) {
       const qs = new URLSearchParams({ pour: inv.nom, de: membreNom });
       const personalUrl = `${base}?${qs.toString()}`;
-      const msg = `✦ Un Sauveur est né · Il est le Cadeau ✦\nCher·ère ${inv.nom},\n${membreNom} vous a inscrit·e comme son invité·e pour la fête de Noël « Éclairer le Monde » 🎄\n📅 Jeudi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Ouvrez votre invitation personnelle : ${personalUrl}`;
+      const msg = `✦ Un Sauveur est né · Il est le Cadeau ✦\nBonjour ${inv.nom},\n${membreNom} vous a inscrit comme son invité pour la célébration de Noël « Éclairer le Monde » 🎄\n📅 Jeudi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n💌 Ouvrez votre invitation personnelle : ${personalUrl}`;
       const num = telKey(inv.tel) ? normalizePhone(inv.tel) : "";
       const a = document.createElement("a");
       a.className = "btn btn-green btn-sm";
@@ -800,7 +903,8 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   /* État initial si un billet existe déjà sur l'appareil */
   let last = getLastRsvp();
   if (last) {
-    $("#done-name").textContent = last.nom.split(" ")[0];
+    setDoneHeading(last.nom, last.presence);
+    updateSelfReminderLink(last);
     form.classList.add("hidden");
     done.classList.remove("hidden");
     showInvite(last);
@@ -818,6 +922,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   $("#new-rsvp-btn")?.addEventListener("click", () => {
     done.classList.add("hidden");
     form.classList.remove("hidden");
+    clearAllFieldErrors();
     nomInput?.focus();
     updateLiveTicketPreview();
   });
@@ -833,27 +938,45 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    clearAllFieldErrors();
+
     const nom = (nomInput?.value || "").trim();
-    if (!nom) {
-      showFormError("Merci d'indiquer votre nom & prénom 🙏", nomInput);
+    const tel = (telInput?.value || "").trim();
+    const presence = presenceSelect?.value || "present";
+    const statut = statutSelect?.value || "membre";
+    const branche = (brancheSelect?.value || "").trim();
+
+    /* 1. Validation du nom (au moins 2 caractères) */
+    if (nom.length < 2) {
+      setFieldError(errNom, "Veuillez indiquer votre nom et prénom (au moins 2 caractères).");
+      nomInput?.focus();
       return;
     }
 
-    const presence = presenceSelect?.value || "present";
-    const statut = statutSelect?.value || "membre";
+    /* 2. Validation du téléphone ivoirien / international (si renseigné) */
+    if (tel && !isValidIvorianOrIntlPhone(tel)) {
+      setFieldError(errTel, "Numéro invalide. Utilisez un numéro à 10 chiffres (01, 05, 07…) ou +225.");
+      telInput?.focus();
+      return;
+    }
+
+    /* 3. Validation de la branche (obligatoire pour les membres) */
+    if (statut === "membre" && !branche) {
+      setFieldError(errBranche, "Veuillez choisir votre branche dans la liste.");
+      brancheSelect?.focus();
+      return;
+    }
+
+    /* 4. Validation de l'invité (uniquement si la personne a choisi "Je serai présent") */
     const invites = presence === "present" ? collectInvites() : [];
-    const namedInvites = invites.filter((i) => i.nom);
+    const namedInvites = invites.filter((i) => i.nom && i.nom.length >= 2);
 
     if (presence === "present" && namedInvites.length < 1) {
       const firstInvInput = invList.querySelector(".inv-nom");
-      showFormError(
-        "🎟️ Votre ticket d'entrée est de venir avec au moins 1 invité·e ! Merci d'indiquer son nom ci-dessous 🙏",
-        firstInvInput
-      );
+      setFieldError(errInvites, "Ajoutez le nom d'au moins une personne que vous invitez pour venir avec vous.");
+      firstInvInput?.focus();
       return;
     }
-
-    $("#rsvp-error")?.classList.add("hidden");
 
     const minPeople = presence === "present" ? Math.max(2, 1 + namedInvites.length) : 1;
     const rawPeople = parseInt(accompInput?.value || String(minPeople), 10) || minPeople;
@@ -863,9 +986,9 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       nom,
       presence,
       statut,
-      tel: ($("#f-tel")?.value || "").trim(),
-      people: Math.min(Math.max(rawPeople, minPeople), 30),
-      branche: ($("#f-branche")?.value || "").trim(),
+      tel,
+      people: presence === "present" ? Math.min(Math.max(rawPeople, minPeople), 30) : 1,
+      branche: statut === "membre" ? branche : "",
       localite: ($("#f-localite")?.value || "").trim(),
       note: ($("#f-note")?.value || "").trim(),
       invites: namedInvites,
@@ -876,17 +999,50 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       at: new Date().toISOString(),
     };
 
+    /* Désactivation du bouton pendant l'envoi pour éviter les doubles clics */
+    const originalBtnText = submitBtn ? submitBtn.textContent : "";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "⏳ Envoi en cours…";
+    }
+
     try {
       const res = await fetch("/api/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (res.ok) {
-        const j = await res.json();
-        if (j.entry && j.entry.num) data.num = j.entry.num;
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showFormError(j.error || "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalBtnText;
+        }
+        return;
       }
-    } catch {}
+      if (j.entry && j.entry.num) data.num = j.entry.num;
+      if (j.duplicate) {
+        toast(`ℹ️ Vous étiez déjà inscrit : voici votre billet N°${data.num}`);
+      } else {
+        toast(presence === "present" ? "🎟️ Votre billet est prêt !" : "📩 Votre réponse a bien été enregistrée.");
+      }
+    } catch {
+      /* Pas de connexion ou erreur réseau : message clair sans perdre la saisie */
+      if (!navigator.onLine) {
+        showFormError("Pas de connexion Internet. Vérifiez votre réseau et réessayez (vos informations saisies sont conservées).");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalBtnText;
+        }
+        return;
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+      }
+    }
 
     saveRsvp(data);
     currentInvite = data;
@@ -900,10 +1056,10 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     syncFormUI();
 
     form.classList.add("hidden");
-    $("#done-name").textContent = nom.split(" ")[0];
+    setDoneHeading(nom, presence);
+    updateSelfReminderLink(data);
     done.classList.remove("hidden");
     renderInvitesShare(namedInvites, nom);
-    toast("🎟️ Billet d'entrée généré avec succès !");
   });
 
   /* ---------- Génération de la Carte Billet en Image HD (Canvas 2x) ---------- */
@@ -983,15 +1139,15 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
     x.fillStyle = "#FCECEF";
     x.font = "500 22px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Billet d'entrée officiel de", W / 2, y + 104);
+    x.fillText("Billet personnel de", W / 2, y + 104);
 
-    const rawName = String(d.nom || "Invité·e").trim();
+    const rawName = String(d.nom || "Invité").trim();
     const fontSize = rawName.length > 26 ? 32 : rawName.length > 18 ? 38 : 42;
     x.fillStyle = "#FFFFFF";
     x.font = `800 ${fontSize}px 'Plus Jakarta Sans', sans-serif`;
     x.fillText(rawName.length > 36 ? rawName.slice(0, 35) + "…" : rawName, W / 2, y + 150);
 
-    const comp = `🎟️ Invité·e(s) : ${getCompanionText(d)}`;
+    const comp = `🤝 Accompagné de : ${getCompanionText(d)}`;
     x.fillStyle = "#FFE09E";
     x.font = "700 21px 'Plus Jakarta Sans', sans-serif";
     x.fillText(comp.length > 44 ? comp.slice(0, 43) + "…" : comp, W / 2, y + 188);
@@ -1012,12 +1168,12 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
           x.strokeStyle = "rgba(200, 16, 46, 0.25)"; x.lineWidth = 2;
           drawRoundRect(x, W / 2 - 80, qy, 160, 160, 18); x.stroke();
           x.drawImage(img, W / 2 - 68, qy + 12, 136, 136);
-          x.fillStyle = "#5A4349";
+          x.fillStyle = "#4A3339";
           x.font = "600 19px 'Plus Jakarta Sans', sans-serif";
           x.fillText("Église de Jésus-Christ des Saints des Derniers Jours", W / 2, H - 72);
-          x.fillStyle = "#7C636A";
+          x.fillStyle = "#654E55";
           x.font = "500 16px 'Plus Jakarta Sans', sans-serif";
-          x.fillText(`Billet N°${d.num} · Ticket d'entrée : Participant·e + Invité·e`, W / 2, H - 42);
+          x.fillText(`Billet N°${d.num} (${d.people || 2} pers.) · Entrée gratuite`, W / 2, H - 42);
           done();
         };
         img.onerror = done;
@@ -1047,7 +1203,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     const c = await buildInviteCanvas(d);
     const blob = await new Promise((r) => c.toBlob(r, "image/png"));
     const file = new File([blob], `billet-noel-aboisso-${d.num}.png`, { type: "image/png" });
-    const msg = `✦ Un Sauveur est né · Il est le Cadeau ✦\nVoici notre billet d'entrée (N°${d.num}) pour la fête de Noël du jeudi 24 décembre 2026 (10h–15h) à la salle des fêtes de la mairie d'Aboisso 🎄`;
+    const msg = `✦ Un Sauveur est né · Il est le Cadeau ✦\nVoici notre billet (N°${d.num}) pour la fête de Noël du jeudi 24 décembre 2026 (10h00–15h00) à la salle des fêtes de la mairie d'Aboisso 🎄`;
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: "Billet Noël à Aboisso", text: msg });
@@ -1088,8 +1244,27 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   addEventListener("hashchange", checkTicketHash);
 })();
 
+/* ---------- Signalement public d'un contenu (Mur photo ou Vœu) ---------- */
+async function reportCommunityItem(type, id) {
+  if (!id || String(id).startsWith("seed-")) {
+    toast("ℹ️ Cet élément fait partie de la présentation officielle.");
+    return;
+  }
+  if (!confirm("Signaler ce contenu aux responsables du district pour vérification ?")) return;
+  try {
+    await fetch("/api/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, id }),
+    });
+    toast("🚩 Merci, ce contenu a été signalé à l'administrateur.");
+  } catch {
+    toast("Impossible d'envoyer le signalement pour le moment.");
+  }
+}
+
 /* =========================================================
-   LIVRE D'OR
+   LIVRE D'OR (AVEC PRÉ-REMPLISSAGE, CONSENTEMENT & SIGNALEMENT)
    ========================================================= */
 (function initGuestbook() {
   const KEY = "noel-aboisso-guestbook";
@@ -1097,9 +1272,21 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   const list = $("#gb-list");
   const msg = $("#g-msg");
   const count = $("#g-count");
+  const consent = $("#g-consent");
   if (!form || !list || !msg || !count) return;
 
-  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
+  const DEFAULT_SEEDS = [
+    { id: 101, nom: "Présidence du District d'Aboisso", msg: "Soyez les bienvenus avec vos proches et vos invités pour célébrer la naissance de notre Sauveur Jésus-Christ ce jeudi 24 décembre !", at: "2026-11-15T10:00:00.000Z" },
+    { id: 102, nom: "Famille Kouamé (Aboisso 1)", msg: "Quelle joie de proclamer ensemble : « Un Sauveur est né, Il est le cadeau ! » Nous viendrons avec nos voisins.", at: "2026-11-16T14:30:00.000Z" },
+    { id: 103, nom: "Sœur Adjoua (Branche d'Ayamé)", msg: "Hâte de partager les cantiques, le théâtre de la Nativité et le repas fraternel avec tous nos amis invités !", at: "2026-11-18T17:15:00.000Z" },
+  ];
+
+  const load = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(KEY) || "[]");
+      return parsed.length ? parsed : DEFAULT_SEEDS;
+    } catch { return DEFAULT_SEEDS; }
+  };
   const save = (arr) => { try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch {} };
 
   let serverEntries = null;
@@ -1125,13 +1312,24 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     entriesList.slice().reverse().forEach((e) => {
       const li = document.createElement("li");
       li.className = "gb-item";
-      const who = document.createElement("p");
+      const who = document.createElement("div");
       who.className = "who";
-      who.textContent = e.nom;
+      const left = document.createElement("span");
+      left.textContent = e.nom;
       const when = document.createElement("span");
       when.className = "when";
       when.textContent = new Date(e.at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-      who.appendChild(when);
+      left.appendChild(when);
+
+      const repBtn = document.createElement("button");
+      repBtn.type = "button";
+      repBtn.className = "gb-report";
+      repBtn.title = "Signaler ce message";
+      repBtn.setAttribute("aria-label", `Signaler le message de ${e.nom}`);
+      repBtn.textContent = "🚩 Signaler";
+      repBtn.addEventListener("click", () => reportCommunityItem("guestbook", e.id));
+
+      who.append(left, repBtn);
       const txt = document.createElement("p");
       txt.className = "txt";
       txt.textContent = e.msg;
@@ -1147,6 +1345,11 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     const nom = $("#g-nom").value.trim();
     const texte = msg.value.trim();
     if (!nom || !texte) { toast("Merci de remplir votre nom et votre message 🙏"); return; }
+    if (consent && !consent.checked) { toast("Veuillez cocher la case d'accord avant de publier 🙏"); return; }
+
+    const submitBtn = $("#gb-submit-btn");
+    if (submitBtn) submitBtn.disabled = true;
+
     const payload = { nom, msg: texte, at: new Date().toISOString() };
     try {
       const res = await fetch("/api/guestbook", {
@@ -1154,14 +1357,19 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        const saved = (await res.json()).entry;
-        serverEntries = [...(serverEntries ?? []), saved];
-      } else {
-        const arr = load(); arr.push(payload); save(arr);
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast(j.error || "Envoi impossible.");
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
+      if (j.entry) {
+        serverEntries = [...(serverEntries ?? []), j.entry];
       }
     } catch {
       const arr = load(); arr.push(payload); save(arr);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
     form.reset();
     count.textContent = "0/200";
@@ -1173,11 +1381,14 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 })();
 
 /* =========================================================
-   MUR PHOTO — « Je serai là ! »
+   MUR PHOTO — « Je serai là ! » (AVEC CONSENTEMENT, LIMITE 5 Mo & SIGNALEMENT)
    ========================================================= */
 (function initPhotoWall() {
   const KEY = "noel-aboisso-wall";
   const PAGE_SIZE = 24;
+  const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 Mo max
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
   const form = $("#wall-form");
   const grid = $("#wall-grid");
   const empty = $("#wall-empty");
@@ -1188,10 +1399,17 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   const preview = $("#wall-preview");
   const placeholder = $("#wall-placeholder");
   const error = $("#wall-error");
+  const consent = $("#w-consent");
   const camModal = $("#cam-modal");
   const camVideo = $("#cam-video");
   const camCanvas = $("#cam-canvas");
   if (!form || !grid || !drop || !fileInput) return;
+
+  const DEFAULT_WALL_SEEDS = [
+    { id: "seed-1", nom: "Présidence du District", msg: "Soyez les bienvenus à Aboisso le 24 décembre !", photo: "assets/photo-event.jpg", at: "2026-11-14T09:00:00.000Z" },
+    { id: "seed-2", nom: "Chorales & Jeunes d'Aboisso", msg: "En répétition pour les cantiques de la Nativité 🎶", photo: "assets/nativite-famille.jpg", at: "2026-11-15T11:30:00.000Z" },
+    { id: "seed-3", nom: "Équipe d'Accueil & Missionnaires", msg: "Nous vous attendons dès 10h00 avec votre invité !", photo: "assets/sapin-noel.jpg", at: "2026-11-17T16:00:00.000Z" },
+  ];
 
   let camStream = null;
   let photoData = null;
@@ -1215,7 +1433,12 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     try { localStorage.setItem(LIKES_KEY, JSON.stringify(likes)); } catch {}
   }
 
-  const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
+  const load = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(KEY) || "[]");
+      return parsed.length ? parsed : DEFAULT_WALL_SEEDS;
+    } catch { return DEFAULT_WALL_SEEDS; }
+  };
   const save = (arr) => { try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch {} };
   const entries = () => serverEntries ?? load();
 
@@ -1257,11 +1480,22 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   fileInput.addEventListener("change", async () => {
     const f = fileInput.files[0];
     if (!f) return;
+    if (f.type && !ALLOWED_TYPES.includes(f.type)) {
+      toast("Format non supporté : choisissez une image JPG, PNG ou WebP.");
+      fileInput.value = "";
+      return;
+    }
+    if (f.size > MAX_FILE_BYTES) {
+      toast("Cette photo dépasse 5 Mo. Choisissez une photo plus légère.");
+      fileInput.value = "";
+      return;
+    }
     try {
       photoData = await resizeImage(f);
       preview.src = photoData;
       preview.classList.remove("hidden");
       placeholder.classList.add("hidden");
+      error?.classList.add("hidden");
     } catch { toast("Impossible de lire cette image 😕"); }
   });
 
@@ -1331,7 +1565,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
         x.font = "700 26px 'Plus Jakarta Sans', sans-serif";
         x.fillText(e.nom, W / 2, py + pw + 115);
       }
-      x.fillStyle = "#7C636A";
+      x.fillStyle = "#654E55";
       x.font = "500 18px 'Plus Jakarta Sans', sans-serif";
       x.fillText("Jeudi 24 Décembre 2026 · Mairie d'Aboisso", W / 2, py + pw + 150);
       finish();
@@ -1343,7 +1577,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   function render() {
     const all = entries();
     grid.innerHTML = "";
-    empty.classList.toggle("hidden", all.length > 0);
+    empty?.classList.toggle("hidden", all.length > 0);
 
     const countEl = $("#wall-count");
     if (countEl) {
@@ -1367,7 +1601,8 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       const ph = document.createElement("div");
       ph.className = "wc-ph";
       const img = document.createElement("img");
-      img.src = e.photo; img.alt = e.nom || "Participant";
+      img.src = e.photo;
+      img.alt = `Photo partagée par ${e.nom || "un participant"}${e.msg ? " : " + e.msg : ""}`;
       img.width = 250; img.height = 250; img.loading = "lazy";
       ph.appendChild(img);
       const cap = document.createElement("figcaption");
@@ -1377,14 +1612,23 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       const pid = photoId(e);
       const like = document.createElement("button");
       like.type = "button"; like.className = "wc-like" + (getLikes()[pid] ? " on" : "");
+      like.setAttribute("aria-label", `Aimer la photo de ${e.nom}`);
       like.innerHTML = getLikes()[pid] ? "❤️<b>1</b>" : "🤍";
       like.addEventListener("click", (ev) => { ev.stopPropagation(); toggleLike(pid, like); });
       fig.appendChild(like);
 
       const dl = document.createElement("button");
       dl.type = "button"; dl.className = "wc-dl"; dl.textContent = "⬇️";
+      dl.setAttribute("aria-label", `Télécharger la photo souvenir de ${e.nom}`);
       dl.addEventListener("click", (ev) => { ev.stopPropagation(); drawFramedPhoto(e); });
       fig.appendChild(dl);
+
+      const rep = document.createElement("button");
+      rep.type = "button"; rep.className = "wc-report"; rep.textContent = "🚩";
+      rep.title = "Signaler cette photo";
+      rep.setAttribute("aria-label", `Signaler la photo de ${e.nom}`);
+      rep.addEventListener("click", (ev) => { ev.stopPropagation(); reportCommunityItem("photo-wall", e.id); });
+      fig.appendChild(rep);
 
       fig.addEventListener("click", () => openLightbox(e));
       grid.appendChild(fig);
@@ -1410,8 +1654,14 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const nom = $("#w-nom").value.trim();
-    if (!photoData || !nom) { error.classList.remove("hidden"); return; }
+    if (!photoData || !nom || (consent && !consent.checked)) {
+      error.classList.remove("hidden");
+      return;
+    }
     error.classList.add("hidden");
+    const submitBtn = $("#wall-submit-btn");
+    if (submitBtn) submitBtn.disabled = true;
+
     const payload = { nom, msg: $("#w-msg").value.trim(), photo: photoData, at: new Date().toISOString() };
     try {
       const res = await fetch("/api/photo-wall", {
@@ -1420,10 +1670,16 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
         body: JSON.stringify(payload),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) { toast(json.error || "Envoi impossible 😕"); return; }
+      if (!res.ok) {
+        toast(json.error || "Envoi impossible 😕");
+        if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
       serverEntries = [...(serverEntries ?? []), json.entry];
     } catch {
       const arr = load(); arr.push(payload); save(arr);
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
     form.reset();
     photoData = null;
@@ -1439,13 +1695,13 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 })();
 
 /* =========================================================
-   LECTEUR DE MUSIQUE DISCRET (AVEC FONDU 3S)
+   LECTEUR DE MUSIQUE DISCRET (preload="none" — LANCÉ UNIQUEMENT AU CLIC)
    ========================================================= */
 (function initMusic() {
   const KEY_VOL = "noel-aboisso-volume";
   const audio = new Audio();
   window.__musicAudio = audio;
-  audio.preload = "metadata";
+  audio.preload = "none";
   let savedVol = 0.7;
   try { savedVol = parseFloat(localStorage.getItem(KEY_VOL) ?? "0.7") || 0.7; } catch {}
   if (savedVol > 1) savedVol = savedVol / 100;
@@ -1558,7 +1814,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
   let panelOpen = false;
   fab.addEventListener("click", () => {
-    if (!started) { playRandom(false); panelOpen = true; panel.classList.remove("hidden"); return; }
+    if (!started) { playRandom(true); panelOpen = true; panel.classList.remove("hidden"); return; }
     panelOpen = !panelOpen;
     panel.classList.toggle("hidden", !panelOpen);
   });
