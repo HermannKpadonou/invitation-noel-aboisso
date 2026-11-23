@@ -14,8 +14,9 @@ const zlib = require("zlib");
 /* ---------- CONFIGURATION ---------- */
 const CONFIG = {
   port: process.env.PORT || 3000,
-  // ⚠️ Mot de passe du back office : variable d'environnement ADMIN_PASSWORD
+  // ⚠️ Mot de passe du back office : variable d'environnement ADMIN_PASSWORD sur Render
   adminPassword: process.env.ADMIN_PASSWORD || "noel2026",
+  isDefaultAdminPassword: !process.env.ADMIN_PASSWORD,
   dataDir: path.join(__dirname, "data"),
   rsvpMaxCapacity: parseInt(process.env.RSVP_MAX_CAPACITY || "350", 10) || 350,
   googleWebhookUrl: process.env.GOOGLE_SHEETS_WEBHOOK_URL || "",
@@ -1016,7 +1017,7 @@ initDB()
       console.log(db
         ? "✦ Stockage    : PostgreSQL (Neon) ✨"
         : `✦ Stockage    : fichiers JSON locaux (data/) — définissez DATABASE_URL pour Neon`);
-      console.log(`✦ Mot de passe admin : ${CONFIG.adminPassword === "noel2026" ? "noel2026 (PENSEZ À LE CHANGER)" : "(personnalisé)"}`);
+      console.log(`✦ Mot de passe admin : ${CONFIG.isDefaultAdminPassword ? "⚠️ par défaut (définissez ADMIN_PASSWORD sur Render)" : "personnalisé ✅"}`);
     });
   })
   .catch((e) => {
