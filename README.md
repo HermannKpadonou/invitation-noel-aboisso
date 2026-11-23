@@ -159,3 +159,5 @@ et photos sont centralisés (Neon PostgreSQL) et consultables dans le
 **back office** `/admin.html`. Sans serveur (double-clic sur `index.html`),
 le site fonctionne en mode local : les données restent sur l'appareil du
 visiteur.
+ 
+ 
