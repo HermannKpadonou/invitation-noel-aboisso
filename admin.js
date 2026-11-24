@@ -809,7 +809,7 @@ $("#btn-logout-mob")?.addEventListener("click", () => {
   logout();
 });
 window.addEventListener("resize", () => {
-  if (window.innerWidth > 760) setAdminMenuOpen(false);
+  if (window.innerWidth > 960) setAdminMenuOpen(false);
 });
 
 /* ---------- Ouverture du Tiroir Latéral (Drawer) au clic ou au clavier ---------- */

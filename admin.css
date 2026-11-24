@@ -153,13 +153,13 @@ code{background:var(--surface-soft);border-radius:6px;padding:.1rem .4rem;font-s
 .amn-actions{display:flex;flex-wrap:wrap;gap:.5rem;padding-top:.35rem;border-top:1px dashed var(--line)}
 .amn-actions .btn{flex:1 1 auto}
 
-@media(max-width:760px){
+@media(max-width:960px){
   .dash-actions,
-  .tabs{display:none}
-  .admin-burger{display:inline-flex}
+  .tabs{display:none!important}
+  .admin-burger{display:inline-flex!important}
   .dash-brand img{width:40px;height:40px}
 }
-@media(min-width:761px){
+@media(min-width:961px){
   .admin-mobile-nav{display:none!important}
 }
 

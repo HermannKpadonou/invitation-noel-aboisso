@@ -281,7 +281,7 @@ function streamStaticFile(req, res, filePath, st) {
   const ext = path.extname(filePath).toLowerCase();
   const baseName = path.basename(filePath).toLowerCase();
   const contentType = MIME[ext] || "application/octet-stream";
-  const cacheControl = (ext === ".html" || baseName === "sw.js") ? "no-cache" : "public, max-age=86400";
+  const cacheControl = (ext === ".html" || baseName === "sw.js") ? "no-store, must-revalidate" : "public, max-age=86400";
 
   /* Support HTTP 206 Partial Content (streaming fluide des MP3 et vidéos MP4 sur mobile/Safari) */
   const isMedia = ext === ".mp3" || ext === ".mp4";

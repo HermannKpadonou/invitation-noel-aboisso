@@ -2,13 +2,13 @@
    Service Worker (PWA & Billet Hors-Ligne)
    Éclairer le Monde — Noël à Aboisso (24 Décembre 2026)
    ========================================================= */
-const CACHE_NAME = "noel-aboisso-v38";
+const CACHE_NAME = "noel-aboisso-v39";
 const CORE_ASSETS = [
   "/",
   "/index.html",
-  "/styles.css?v=38",
-  "/script.js?v=38",
-  "/assets/shared.js?v=38",
+  "/styles.css?v=39",
+  "/script.js?v=39",
+  "/assets/shared.js?v=39",
   "/assets/qrcode-generator.js",
   "/assets/light_the_world.webp",
   "/assets/pattern-light.svg",
@@ -68,9 +68,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* Pages HTML et données publiques (billet QR, vœux) : Network-First avec repli Hors-Ligne */
+  /* Pages HTML et données publiques : toujours frais depuis le réseau (no-store), repli Hors-Ligne */
+  const netReq = request.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".html")
+    ? new Request(request, { cache: "no-store" })
+    : request;
   event.respondWith(
-    fetch(request)
+    fetch(netReq)
       .then((res) => {
         if (res && res.status === 200) {
           const clone = res.clone();

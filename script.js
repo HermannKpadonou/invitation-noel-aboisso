@@ -61,10 +61,18 @@ function isValidIvorianOrIntlPhone(raw) {
   return false;
 }
 
-/* ---------- Service Worker (PWA) ---------- */
+/* ---------- Service Worker (PWA) avec mise à jour immédiate ---------- */
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  let swReloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swReloaded) return;
+    swReloaded = true;
+    location.reload();
+  });
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.register("/sw.js").then((reg) => {
+      reg.update().catch(() => {});
+    }).catch(() => {});
   });
 }
 
@@ -121,7 +129,7 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     if (e.key === "Escape" && burger.getAttribute("aria-expanded") === "true") setOpen(false);
   });
   addEventListener("resize", () => {
-    if (window.innerWidth > 860) setOpen(false);
+    if (window.innerWidth > 1024) setOpen(false);
   });
 })();
 
