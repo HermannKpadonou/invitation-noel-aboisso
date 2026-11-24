@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=37" />
+  <link rel="stylesheet" href="styles.css?v=38" />
 </head>
 <body>
 
@@ -155,7 +155,7 @@
     </div>
   </div>
 
-  <!-- ============ NAVIGATION STICKY ÉPURÉE ============ -->
+  <!-- ============ NAVIGATION STICKY ÉPURÉE + MENU HAMBURGER MOBILE ============ -->
   <header class="navbar" id="topnav">
     <div class="nav-inner">
       <a class="nav-brand" href="#accueil">
@@ -168,24 +168,34 @@
         <a href="#videos-noel">Films</a>
         <a href="#galerie-hd">Galerie</a>
         <a href="#programme">Programme</a>
-        <a href="#mur-photo">Mur photo</a>
+        <a href="#mur-photo">Mur des sourires</a>
       </nav>
       <div class="nav-actions">
         <button class="theme-btn" id="theme-toggle" type="button" aria-label="Changer l'ambiance" title="Mode Jour / Nuit douce">
           <span id="tt-icon" aria-hidden="true">🌙</span>
         </button>
-        <a class="btn btn-primary btn-sm" href="#rsvp">🎟️ S'inscrire</a>
+        <a class="btn btn-primary btn-sm nav-cta-desktop" href="#rsvp">🎟️ S'inscrire</a>
+        <button class="nav-burger" id="nav-burger" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="nav-drawer">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
       </div>
     </div>
-    <nav class="nav-mobile-strip" aria-label="Accès rapide">
-      <a href="#message">Message</a>
-      <a href="#rsvp">Inscription</a>
-      <a href="#videos-noel">Films</a>
-      <a href="#galerie-hd">Galerie</a>
-      <a href="#programme">Programme</a>
-      <a href="#mur-photo">Mur photo</a>
+
+    <!-- Menu Hamburger Mobile -->
+    <nav class="nav-drawer hidden" id="nav-drawer" aria-label="Menu mobile">
+      <a href="#accueil" data-nav-close>🏠 Accueil</a>
+      <a href="#message" data-nav-close>📖 Le Message de Noël</a>
+      <a href="#rsvp" data-nav-close>🎟️ Inscription &amp; Carte</a>
+      <a href="#videos-noel" data-nav-close>🎬 Films de Noël</a>
+      <a href="#galerie-hd" data-nav-close>🖼️ Galerie de la Nativité</a>
+      <a href="#programme" data-nav-close>📅 Programme &amp; Lieu</a>
+      <a href="#mur-photo" data-nav-close>📸 Mur des sourires &amp; Vœux</a>
+      <a class="btn btn-primary btn-wide nav-drawer-cta" href="#rsvp" data-nav-close>🎟️ Confirmer ma présence</a>
     </nav>
   </header>
+  <div class="nav-backdrop hidden" id="nav-backdrop" aria-hidden="true"></div>
 
   <!-- ============ HERO SOFT, ÉDITORIAL & LUMINEUX ============ -->
   <section class="hero" id="accueil">
@@ -937,8 +947,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/shared.js?v=37" defer></script>
+  <script src="assets/shared.js?v=38" defer></script>
   <script src="assets/qrcode-generator.js" defer></script>
-  <script src="script.js?v=37" defer></script>
+  <script src="script.js?v=38" defer></script>
 </body>
 </html>

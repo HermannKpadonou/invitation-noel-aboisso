@@ -358,12 +358,23 @@ function render() {
   if ($("#st-checkedin")) $("#st-checkedin").textContent = checkedRsvps;
   if ($("#st-checkin-bar")) $("#st-checkin-bar").style.width = checkinPct + "%";
   if ($("#st-checkin-label")) $("#st-checkin-label").textContent = `${checkedPeople} pers. en salle sur ${expectedPeople || 0}`;
-  if ($("#c-checkin")) $("#c-checkin").textContent = checkedRsvps;
+  const rsvpTxt = String(rsvps.length);
+  const checkinTxt = String(checkedRsvps);
+  const gbTxt = stats.pendingGuestbook > 0 ? `${guestbook.length} (${stats.pendingGuestbook}⏳)` : String(guestbook.length);
+  const wallTxt = stats.pendingWall > 0 ? `${(STATE.wall ?? []).length} (${stats.pendingWall}⏳)` : String((STATE.wall ?? []).length);
+  const invTxt = String((STATE.invites ?? []).length);
 
-  $("#c-rsvps").textContent = rsvps.length;
-  $("#c-gb").textContent = stats.pendingGuestbook > 0 ? `${guestbook.length} (${stats.pendingGuestbook}⏳)` : guestbook.length;
-  $("#c-wall").textContent = stats.pendingWall > 0 ? `${(STATE.wall ?? []).length} (${stats.pendingWall}⏳)` : (STATE.wall ?? []).length;
-  $("#c-inv").textContent = (STATE.invites ?? []).length;
+  if ($("#c-checkin")) $("#c-checkin").textContent = checkinTxt;
+  $("#c-rsvps").textContent = rsvpTxt;
+  $("#c-gb").textContent = gbTxt;
+  $("#c-wall").textContent = wallTxt;
+  $("#c-inv").textContent = invTxt;
+
+  const mobCounts = { rsvps: rsvpTxt, checkin: checkinTxt, guestbook: gbTxt, wall: wallTxt, invites: invTxt };
+  Object.entries(mobCounts).forEach(([k, val]) => {
+    const el = document.querySelector(`[data-mob-count="${k}"]`);
+    if (el) el.textContent = val;
+  });
 
   /* Récapitulatif par branche */
   const bWrap = $("#branch-summary-wrap");
@@ -754,16 +765,51 @@ autoTimer = setInterval(() => {
 $("#f-search").addEventListener("input", render);
 $("#f-filter").addEventListener("change", render);
 
-/* ---------- Onglets ---------- */
-$("#tabs").addEventListener("click", (e) => {
-  const btn = e.target.closest(".tab");
-  if (!btn) return;
-  currentTab = btn.dataset.tab;
+/* ---------- Onglets & Menu Hamburger Mobile ---------- */
+const adminBurger = $("#admin-burger");
+const adminMobileNav = $("#admin-mobile-nav");
+function setAdminMenuOpen(open) {
+  adminBurger?.setAttribute("aria-expanded", open ? "true" : "false");
+  adminBurger?.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+  adminMobileNav?.classList.toggle("hidden", !open);
+}
+
+function switchTab(tabId) {
+  if (!tabId) return;
+  currentTab = tabId;
   if (currentTab !== "checkin") stopQrScanner();
-  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t === btn));
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.dataset.tab === currentTab));
+  document.querySelectorAll("[data-mob-tab]").forEach((t) => t.classList.toggle("on", t.dataset.mobTab === currentTab));
   ["rsvps", "checkin", "guestbook", "wall", "invites", "outils"].forEach((id) => {
     $(`#panel-${id}`)?.classList.toggle("hidden", id !== currentTab);
   });
+  setAdminMenuOpen(false);
+}
+
+$("#tabs")?.addEventListener("click", (e) => {
+  const btn = e.target.closest(".tab");
+  if (btn) switchTab(btn.dataset.tab);
+});
+
+$("#amn-tabs")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-mob-tab]");
+  if (btn) switchTab(btn.dataset.mobTab);
+});
+
+adminBurger?.addEventListener("click", () => {
+  const isOpen = adminBurger.getAttribute("aria-expanded") === "true";
+  setAdminMenuOpen(!isOpen);
+});
+$("#btn-refresh-mob")?.addEventListener("click", () => {
+  setAdminMenuOpen(false);
+  refresh(false);
+});
+$("#btn-logout-mob")?.addEventListener("click", () => {
+  setAdminMenuOpen(false);
+  logout();
+});
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 760) setAdminMenuOpen(false);
 });
 
 /* ---------- Ouverture du Tiroir Latéral (Drawer) au clic ou au clavier ---------- */

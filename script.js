@@ -94,6 +94,37 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   });
 })();
 
+/* ---------- Menu Hamburger Mobile ---------- */
+(function initMobileMenu() {
+  const burger = $("#nav-burger");
+  const drawer = $("#nav-drawer");
+  const backdrop = $("#nav-backdrop");
+  if (!burger || !drawer) return;
+
+  function setOpen(open) {
+    burger.setAttribute("aria-expanded", open ? "true" : "false");
+    burger.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+    drawer.classList.toggle("hidden", !open);
+    backdrop?.classList.toggle("hidden", !open);
+  }
+
+  burger.addEventListener("click", () => {
+    const isOpen = burger.getAttribute("aria-expanded") === "true";
+    setOpen(!isOpen);
+  });
+
+  backdrop?.addEventListener("click", () => setOpen(false));
+  drawer.querySelectorAll("[data-nav-close]").forEach((el) => {
+    el.addEventListener("click", () => setOpen(false));
+  });
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && burger.getAttribute("aria-expanded") === "true") setOpen(false);
+  });
+  addEventListener("resize", () => {
+    if (window.innerWidth > 860) setOpen(false);
+  });
+})();
+
 /* ---------- Playlist de cantiques de Noël ---------- */
 const PLAYLIST = [
   { src: "Playlists/01-au-loin-dans-letable-accompagnement.mp3", title: "Au loin, dans l'étable (accompagnement)" },
