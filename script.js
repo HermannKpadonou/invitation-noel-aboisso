@@ -148,6 +148,14 @@ function getLastRsvp() {
   const envelope = $("#envelope");
   if (!intro || !envelope) return;
 
+  /* Toujours démarrer tout en haut de la page (sauf lien direct #billet-…) */
+  const hasTicketHash = /^#billet-\d+/i.test(location.hash);
+  if (!hasTicketHash) {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+    document.body.style.overflow = "hidden";
+  }
+
   /* Personnalisation uniquement depuis le lien (?pour=…&de=…) pour ne jamais garder l'ancien nom sur un téléphone partagé */
   const params = new URLSearchParams(location.search);
   const urlPour = (params.get("pour") || params.get("invite") || "").trim();
@@ -202,7 +210,8 @@ function getLastRsvp() {
     if (isReducedMotion()) {
       stageClosed?.classList.add("hidden");
       stageLetter?.classList.remove("hidden");
-      $("#intro-enter-rsvp")?.focus();
+      intro.scrollTop = 0;
+      $("#intro-enter-site")?.focus({ preventScroll: true });
       return;
     }
 
@@ -217,7 +226,8 @@ function getLastRsvp() {
       stageClosed?.classList.add("hidden");
       stageLetter?.classList.remove("hidden");
       intro.scrollTop = 0;
-      $("#intro-enter-rsvp")?.focus();
+      window.scrollTo(0, 0);
+      $("#intro-enter-site")?.focus({ preventScroll: true });
     }, 2400);
   }
 
@@ -231,6 +241,11 @@ function getLastRsvp() {
     document.body.style.overflow = "";
     if (scrollToTarget) {
       document.querySelector(scrollToTarget)?.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      if (location.hash && !hasTicketHash) {
+        try { history.replaceState(null, "", location.pathname + location.search); } catch {}
+      }
     }
     setTimeout(() => intro.remove(), 650);
   }
