@@ -1325,34 +1325,48 @@ html[data-theme="night"] .hero {
 .wc-diamond-r { right: 4.5px; bottom: 26%; }
 
 .wc-head {
-  display: flex; align-items: center; justify-content: center; gap: 0.3rem;
-  margin-top: 0.1rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.06rem; margin-top: 0.05rem; margin-bottom: 0.15rem;
 }
-.wc-star { width: 16px; height: 22px; flex-shrink: 0; }
+.wc-star { width: 17px; height: 22px; flex-shrink: 0; }
 .wc-kicker {
-  font-size: 0.62rem; font-weight: 800; color: #CC092F;
-  letter-spacing: 0.04em; text-transform: uppercase;
+  font-size: 0.54rem; font-weight: 800; color: #CC092F;
+  letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.15;
+}
+.wc-subhead {
+  font-size: 0.82rem; font-weight: 800; color: #CC092F;
+  letter-spacing: -0.015em; line-height: 1.15;
 }
 .wc-ph {
-  width: 100%; border-radius: 8px; overflow: hidden; aspect-ratio: 1;
+  width: 100%; border-radius: 10px; overflow: hidden; aspect-ratio: 1;
   background: var(--surface-2);
-  border: 1.5px solid rgba(204, 9, 47, 0.22);
+  padding: 3px;
+  background-color: #FFFFFF;
+  border: 1.5px solid rgba(204, 9, 47, 0.32);
+  box-shadow: 0 8px 20px rgba(45, 18, 25, 0.10);
 }
-.wall-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wall-card img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 7px; }
 .wall-card .wc-msg {
-  display: block;
+  position: relative; z-index: 3;
+  margin-top: -0.95rem;
+  max-width: 94%;
+  background: #CC092F; color: #FFFFFF;
+  border: 2.5px solid #FFFFFF;
+  border-radius: 999px;
+  padding: 0.28rem 0.78rem;
   font-family: var(--font-sans);
-  font-size: 0.84rem; font-weight: 800; color: #CC092F;
-  line-height: 1.25; margin-top: 0.2rem;
+  font-size: 0.74rem; font-weight: 800; line-height: 1.25;
+  box-shadow: 0 6px 16px rgba(204, 9, 47, 0.25);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .wall-card .wc-name {
   font-weight: 700; font-size: 0.8rem; color: #1F1B1D;
+  margin-top: 0.12rem;
   max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .wc-wordmark {
   display: inline-block;
-  margin-top: 0.2rem;
+  margin-top: 0.18rem;
   margin-bottom: -0.78rem;
   background: #FFFFFF;
   padding: 0.04rem 0.55rem;
@@ -1362,10 +1376,10 @@ html[data-theme="night"] .hero {
 .wc-wordmark span { font-weight: 300; }
 
 .wc-dl, .wc-like {
-  position: absolute; top: 2.35rem; z-index: 4;
-  width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+  position: absolute; top: 3.85rem; z-index: 4;
+  width: 31px; height: 31px; border-radius: 50%; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.82rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+  font-size: 0.8rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
   transition: transform 0.2s;
 }
 .wc-dl:hover, .wc-like:hover { transform: scale(1.08); }
@@ -1665,12 +1679,13 @@ html[data-theme="night"] .hero {
   .wc-diamond { width: 4px; height: 4px; box-shadow: 0 0 0 3px #FFFFFF; }
   .wc-diamond-l { left: 3.5px; }
   .wc-diamond-r { right: 3.5px; }
-  .wc-kicker { font-size: 0.54rem; }
-  .wc-star { width: 13px; height: 18px; }
-  .wall-card .wc-msg { font-size: 0.72rem; }
-  .wall-card .wc-name { font-size: 0.72rem; }
-  .wc-wordmark { font-size: 0.56rem; margin-bottom: -0.68rem; padding: 0.02rem 0.4rem; }
-  .wc-dl, .wc-like { top: 1.95rem; width: 28px; height: 28px; font-size: 0.74rem; }
+  .wc-kicker { font-size: 0.45rem; letter-spacing: 0.08em; }
+  .wc-subhead { font-size: 0.68rem; }
+  .wc-star { width: 13px; height: 17px; }
+  .wall-card .wc-msg { font-size: 0.64rem; padding: 0.22rem 0.55rem; margin-top: -0.78rem; }
+  .wall-card .wc-name { font-size: 0.7rem; }
+  .wc-wordmark { font-size: 0.54rem; margin-bottom: -0.68rem; padding: 0.02rem 0.4rem; }
+  .wc-dl, .wc-like { top: 3.15rem; width: 26px; height: 26px; font-size: 0.7rem; }
   .wc-dl { right: 0.95rem; }
   .wc-like { left: 0.95rem; }
   .wc-report { bottom: 0.55rem; right: 0.5rem; font-size: 0.62rem; }

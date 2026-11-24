@@ -1860,111 +1860,9 @@ async function reportCommunityItem(type, id) {
     });
   });
 
-  /* Carte Photo Souvenir téléchargeable — Design officiel « Éclairer le Monde » (Canvas 2x) */
+  /* Carte Photo Souvenir téléchargeable — Design UX « Éclairer le Monde — Noël à Aboisso » (partagée avec le back-office) */
   async function drawFramedPhoto(e) {
-    if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch {} }
-    toast("📤 Préparation de votre photo encadrée…");
-    const scale = 2;
-    const W = 760, H = 1080;
-    const RED = "#CC092F";
-    const c = document.createElement("canvas");
-    c.width = W * scale; c.height = H * scale;
-    const x = c.getContext("2d");
-    x.scale(scale, scale);
-
-    /* Fond blanc pur + double cadre géométrique rouge Éclairer le Monde */
-    x.fillStyle = "#FFFFFF";
-    x.fillRect(0, 0, W, H);
-    drawElwFrame(x, W, H);
-    drawLightTheWorldStar(x, W / 2, 108, 0.65);
-
-    /* En-tête fidèle à la carte d'invitation */
-    x.textAlign = "center";
-    x.fillStyle = RED;
-    x.font = "600 22px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Célébrez la naissance de", W / 2, 194);
-    x.font = "800 44px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Jésus-Christ", W / 2, 236);
-
-    const pw = 440;
-    const px = (W - pw) / 2;
-    const py = 258;
-    const slogan = String(e.msg || "").trim() || DEFAULT_SLOGAN;
-    const nom = String(e.nom || "").trim();
-
-    const drawFooter = () => {
-      x.textAlign = "center";
-      x.fillStyle = RED;
-      x.font = "800 32px 'Plus Jakarta Sans', sans-serif";
-      const lastY = wrapText(x, `« ${slogan} »`, W / 2, py + pw + 54, W - 180, 40);
-
-      let cursorY = lastY + 40;
-      if (nom) {
-        x.fillStyle = "#1F1B1D";
-        x.font = "700 25px 'Plus Jakarta Sans', sans-serif";
-        x.fillText(nom, W / 2, cursorY);
-        cursorY += 22;
-      }
-
-      /* Fine barre rouge décorative */
-      x.strokeStyle = "#E8B8C2";
-      x.lineWidth = 2;
-      x.beginPath();
-      x.moveTo(W / 2 - 70, cursorY);
-      x.lineTo(W / 2 + 70, cursorY);
-      x.stroke();
-
-      const evY = Math.max(cursorY + 34, 886);
-      x.fillStyle = RED;
-      x.font = "700 20px 'Plus Jakarta Sans', sans-serif";
-      x.fillText("Jeudi 24 décembre 2026 · 10h00 – 15h00", W / 2, evY);
-
-      x.fillStyle = "#2D2326";
-      x.font = "500 18px 'Plus Jakarta Sans', sans-serif";
-      x.fillText("Salle des fêtes de la mairie d'Aboisso · Entrée gratuite", W / 2, evY + 30);
-
-      x.fillStyle = "#5F4B51";
-      x.font = "600 16px 'Plus Jakarta Sans', sans-serif";
-      x.fillText("L'Église de Jésus-Christ des Saints des Derniers Jours", W / 2, evY + 64);
-      x.fillStyle = "#7A6369";
-      x.font = "500 15px 'Plus Jakarta Sans', sans-serif";
-      x.fillText("District d'Aboisso", W / 2, evY + 86);
-    };
-
-    const finish = () => {
-      const a = document.createElement("a");
-      a.download = `noel-aboisso-${(nom || "souvenir").replace(/\s+/g, "-").toLowerCase()}.png`;
-      a.href = c.toDataURL("image/png");
-      a.click();
-      toast("⬇️ Photo encadrée enregistrée ! Partagez-la à vos proches ✨");
-    };
-
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      /* Cadre photo net aux couleurs Éclairer le Monde */
-      x.save();
-      drawRoundRect(x, px, py, pw, pw, 16);
-      x.clip();
-      const side = Math.min(img.width, img.height);
-      x.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, px, py, pw, pw);
-      x.restore();
-
-      x.save();
-      drawRoundRect(x, px, py, pw, pw, 16);
-      x.strokeStyle = RED;
-      x.lineWidth = 3;
-      x.stroke();
-      x.restore();
-
-      drawFooter();
-      finish();
-    };
-    img.onerror = () => {
-      drawFooter();
-      finish();
-    };
-    img.src = e.photo;
+    if (ELW.downloadFramedPhoto) return ELW.downloadFramedPhoto(e);
   }
 
   function render() {
@@ -1996,7 +1894,7 @@ async function reportCommunityItem(type, id) {
 
       const head = document.createElement("div");
       head.className = "wc-head";
-      head.innerHTML = `${WC_STAR_SVG}<span class="wc-kicker">Jésus-Christ · Noël</span>`;
+      head.innerHTML = `${WC_STAR_SVG}<span class="wc-kicker">Éclairer le Monde</span><strong class="wc-subhead">Noël à Aboisso</strong>`;
 
       const ph = document.createElement("div");
       ph.className = "wc-ph";

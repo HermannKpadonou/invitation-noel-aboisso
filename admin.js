@@ -127,8 +127,33 @@ document.querySelectorAll('a[href="/api/admin/export.csv"]').forEach((link) => {
 /* ---------- État + rendu ---------- */
 let STATE = { rsvps: [], guestbook: [], wall: [], invites: [], stats: {} };
 let currentTab = "rsvps";
+let gbFilter = "all";
+let wallFilter = "all";
 let autoTimer = null;
 let currentDrawerId = null;
+
+function openAdminPhotoModal(photoId) {
+  const p = (STATE.wall || []).find((x) => String(x.id) === String(photoId));
+  const modal = $("#admin-photo-modal");
+  if (!p || !modal) return;
+  const slogan = String(p.msg || "").trim() || "J'y serai, et toi ?";
+  const isApproved = p.approved !== false;
+  $("#apm-img").src = p.photo;
+  $("#apm-slogan").textContent = `« ${slogan} »`;
+  $("#apm-name").textContent = p.nom || "Participant";
+  $("#apm-actions").innerHTML = `
+    <button class="btn ${isApproved ? "btn-outline" : "btn-red"} btn-sm" type="button" data-mod-type="photo-wall" data-mod-id="${p.id}" data-mod-val="${isApproved ? "0" : "1"}">
+      ${isApproved ? "🙈 Masquer" : "✅ Approuver"}
+    </button>
+    <button class="btn btn-outline btn-sm" type="button" data-dl-photo="${p.id}">⬇️ Carte encadrée</button>
+    <button class="btn btn-outline btn-sm" type="button" data-del-wall="${p.id}" style="color:var(--crimson)">🗑️ Supprimer</button>
+  `;
+  modal.classList.remove("hidden");
+}
+
+function closeAdminPhotoModal() {
+  $("#admin-photo-modal")?.classList.add("hidden");
+}
 
 function fmtDate(iso) {
   if (!iso) return "—";
@@ -510,10 +535,15 @@ function render() {
   /* Si le tiroir de détails est ouvert, le synchroniser avec les nouvelles données */
   if (currentDrawerId) openGuestDrawer(currentDrawerId);
 
-  /* Livre d'or */
+  /* Vœux de Noël (avec filtres de modération) */
   const grid = $("#gb-grid");
   grid.innerHTML = "";
-  guestbook.slice().reverse().forEach((g, i) => {
+  const filteredGb = guestbook.filter((g) => {
+    if (gbFilter === "pending") return g.approved === false;
+    if (gbFilter === "reported") return !!g.reported;
+    return true;
+  });
+  filteredGb.slice().reverse().forEach((g, i) => {
     const isApproved = g.approved !== false;
     const isReported = !!g.reported;
     const card = document.createElement("article");
@@ -522,13 +552,13 @@ function render() {
     if (isReported || !isApproved) card.style.borderColor = "#D70B33";
     card.innerHTML = `
       <p class="who">
-        ${escapeHTML(g.nom)}
+        <span>${escapeHTML(g.nom)}</span>
         ${isReported ? `<span class="pill absent">🚩 Signalé</span>` : ""}
-        ${!isApproved ? `<span class="pill inactif">⏳ En attente</span>` : ""}
+        ${!isApproved ? `<span class="pill inactif">⏳ En attente</span>` : `<span class="pill present">✅ Publié</span>`}
         <span class="when">${fmtDate(g.at)}</span>
       </p>
       <p class="txt">${escapeHTML(g.msg)}</p>
-      <div style="display:flex;gap:.35rem;align-items:center">
+      <div class="gb-card-actions">
         <button class="btn ${isApproved ? "btn-outline" : "btn-red"} btn-sm" type="button" data-mod-type="guestbook" data-mod-id="${g.id}" data-mod-val="${isApproved ? "0" : "1"}">
           ${isApproved ? "🙈 Masquer" : "✅ Approuver"}
         </button>
@@ -536,38 +566,47 @@ function render() {
       </div>`;
     grid.appendChild(card);
   });
-  $("#empty-gb").classList.toggle("hidden", guestbook.length > 0);
+  $("#empty-gb").classList.toggle("hidden", filteredGb.length > 0);
 
-  /* Mur photo */
+  /* Mur des sourires (avec filtres, slogan, aperçu agrandi & téléchargement de carte encadrée) */
   const wall = STATE.wall ?? [];
   const wallGrid = $("#wall-grid");
   wallGrid.innerHTML = "";
-  wall.slice().reverse().forEach((p) => {
+  const filteredWall = wall.filter((p) => {
+    if (wallFilter === "pending") return p.approved === false;
+    if (wallFilter === "reported") return !!p.reported;
+    return true;
+  });
+  filteredWall.slice().reverse().forEach((p) => {
     const isApproved = p.approved !== false;
     const isReported = !!p.reported;
+    const slogan = String(p.msg || "").trim() || "J'y serai, et toi ?";
     const card = document.createElement("article");
     card.className = "wall-admin-card";
     if (isReported || !isApproved) card.style.borderColor = "#D70B33";
     card.innerHTML = `
-      <img src="${p.photo}" alt="${escapeHTML(p.nom)}" width="84" height="84" loading="lazy" decoding="async" />
-      <div class="wall-admin-info">
-        <strong>
-          ${escapeHTML(p.nom)}
-          ${isReported ? `<span class="pill absent">🚩 Signalé</span>` : ""}
-          ${!isApproved ? `<span class="pill inactif">⏳ En attente</span>` : ""}
-        </strong>
-        ${p.msg ? `<span>${escapeHTML(p.msg)}</span>` : ""}
-        <small>${fmtDate(p.at)}</small>
+      <div class="wall-admin-top">
+        <img class="wall-admin-thumb" src="${p.photo}" alt="${escapeHTML(p.nom)}" width="88" height="88" loading="lazy" decoding="async" data-view-photo="${p.id}" title="Cliquer pour inspecter en grand" />
+        <div class="wall-admin-info">
+          <strong>
+            <span>${escapeHTML(p.nom)}</span>
+            ${isReported ? `<span class="pill absent">🚩 Signalé</span>` : ""}
+            ${!isApproved ? `<span class="pill inactif">⏳ En attente</span>` : `<span class="pill present">✅ Publiée</span>`}
+          </strong>
+          <span class="wall-admin-slogan">« ${escapeHTML(slogan)} »</span>
+          <small>${fmtDate(p.at)}</small>
+        </div>
       </div>
-      <div style="display:flex;gap:.35rem;align-items:center">
+      <div class="wall-admin-actions">
         <button class="btn ${isApproved ? "btn-outline" : "btn-red"} btn-sm" type="button" data-mod-type="photo-wall" data-mod-id="${p.id}" data-mod-val="${isApproved ? "0" : "1"}">
           ${isApproved ? "🙈 Masquer" : "✅ Approuver"}
         </button>
+        <button class="btn btn-outline btn-sm" type="button" data-dl-photo="${p.id}" title="Télécharger la carte encadrée Éclairer le Monde">⬇️ Carte</button>
         <button class="icon-btn" type="button" title="Supprimer" aria-label="Supprimer la photo de ${escapeHTML(p.nom)}" data-del-wall="${p.id}">${ICON.trash}</button>
       </div>`;
     wallGrid.appendChild(card);
   });
-  $("#empty-wall").classList.toggle("hidden", wall.length > 0);
+  $("#empty-wall").classList.toggle("hidden", filteredWall.length > 0);
 
   /* Invitations (Tableau Desktop + Cartes Mobile) */
   const invites = STATE.invites ?? [];
@@ -781,7 +820,48 @@ function fadeOut(el) {
   return new Promise((r) => setTimeout(r, 260));
 }
 
+$("#gb-filter-bar")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-gb-filter]");
+  if (!btn) return;
+  gbFilter = btn.dataset.gbFilter;
+  document.querySelectorAll("[data-gb-filter]").forEach((b) => b.classList.toggle("on", b === btn));
+  render();
+});
+
+$("#wall-filter-bar")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-wall-filter]");
+  if (!btn) return;
+  wallFilter = btn.dataset.wallFilter;
+  document.querySelectorAll("[data-wall-filter]").forEach((b) => b.classList.toggle("on", b === btn));
+  render();
+});
+
+$("#apm-close")?.addEventListener("click", closeAdminPhotoModal);
+$("#admin-photo-modal")?.addEventListener("click", (e) => {
+  if (e.target === $("#admin-photo-modal")) closeAdminPhotoModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeAdminPhotoModal();
+});
+
 document.addEventListener("click", async (e) => {
+  const viewPhoto = e.target.closest("[data-view-photo]");
+  if (viewPhoto) {
+    openAdminPhotoModal(viewPhoto.dataset.viewPhoto);
+    return;
+  }
+  const dlPhoto = e.target.closest("[data-dl-photo]");
+  if (dlPhoto) {
+    const p = (STATE.wall || []).find((x) => String(x.id) === String(dlPhoto.dataset.dlPhoto));
+    if (p && ELW.downloadFramedPhoto) {
+      ELW.downloadFramedPhoto({
+        photo: p.photo,
+        nom: p.nom || "Noël à Aboisso",
+        msg: p.msg || "J'y serai, et toi ?",
+      });
+    }
+    return;
+  }
   const modBtn = e.target.closest("[data-mod-type]");
   if (modBtn) {
     const type = modBtn.dataset.modType;
@@ -792,7 +872,10 @@ document.addEventListener("click", async (e) => {
       body: JSON.stringify({ type, id, approved }),
     });
     await refresh();
-    toast(approved ? "✅ Contenu approuvé et visible" : "🙈 Contenu masqué du site public");
+    if (!$("#admin-photo-modal")?.classList.contains("hidden") && type === "photo-wall") {
+      openAdminPhotoModal(id);
+    }
+    toast(approved ? "✅ Contenu approuvé et visible sur le site" : "🙈 Contenu masqué du site public");
     return;
   }
   const delR = e.target.closest("[data-del-rsvp]");
@@ -817,6 +900,7 @@ document.addEventListener("click", async (e) => {
   }
   if (delW) {
     if (!confirm("Supprimer cette photo du mur ?")) return;
+    closeAdminPhotoModal();
     await fadeOut(delW.closest(".wall-admin-card"));
     await api(`/api/admin/photo-wall?id=${delW.dataset.delWall}`, { method: "DELETE" });
     await refresh();

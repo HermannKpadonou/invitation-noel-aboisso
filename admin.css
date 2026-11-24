@@ -382,16 +382,28 @@ code{background:var(--surface-soft);border-radius:6px;padding:.1rem .4rem;font-s
 .checkin-row strong{color:var(--bordeaux);font-size:.92rem;display:block}
 .checkin-row small{color:var(--ink-soft);font-size:.76rem}
 
-/* ---------- Livre d'or ---------- */
+/* ---------- Barre de filtres rapides de modération ---------- */
+.mod-bar{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:.95rem}
+.mod-chip{
+  font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;
+  background:var(--surface);color:var(--ink);
+  border:1.5px solid var(--line);border-radius:999px;padding:.38rem .85rem;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.mod-chip:hover{border-color:var(--crimson);color:var(--crimson)}
+.mod-chip.on{background:var(--crimson);color:#fff;border-color:var(--crimson)}
+
+/* ---------- Vœux de Noël ---------- */
 .gb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:.9rem}
 .gb-card{
   background:var(--surface);border-radius:16px;padding:1rem 1.2rem;box-shadow:var(--shadow-sm);
-  border:1px solid var(--line);position:relative;animation:cardIn .4s var(--ease-out) backwards;
+  border:1.5px solid var(--line);position:relative;animation:cardIn .4s var(--ease-out) backwards;
+  display:grid;gap:.5rem;
 }
-.gb-card .who{font-weight:600;color:var(--bordeaux)}
-.gb-card .when{font-size:.74rem;color:var(--ink-soft);margin-left:.4rem;font-weight:400}
-.gb-card .txt{font-size:.9rem;margin-top:.35rem;color:var(--ink);line-height:1.55}
-.gb-card .icon-btn{position:absolute;top:.45rem;right:.45rem}
+.gb-card .who{font-weight:600;color:var(--bordeaux);display:flex;flex-wrap:wrap;align-items:center;gap:.35rem}
+.gb-card .when{font-size:.74rem;color:var(--ink-soft);font-weight:400}
+.gb-card .txt{font-size:.9rem;color:var(--ink);line-height:1.55}
+.gb-card-actions{display:flex;gap:.45rem;align-items:center;justify-content:space-between;margin-top:.2rem}
 
 /* ---------- Outils ---------- */
 .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.9rem}
@@ -399,20 +411,61 @@ code{background:var(--surface-soft);border-radius:6px;padding:.1rem .4rem;font-s
 .tool h3{color:var(--bordeaux);margin-bottom:.45rem;font-family:var(--font-display);font-weight:700;font-size:1.25rem}
 .tool p{font-size:.9rem;color:var(--ink);margin-bottom:.9rem;line-height:1.55}
 
-/* ---------- Mur photo (admin) ---------- */
+/* ---------- Mur des sourires (admin) ---------- */
 .panel-hint{font-size:.88rem;color:var(--ink-soft);margin-bottom:.9rem;line-height:1.5}
-.wall-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.9rem}
+.wall-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1rem}
 .wall-admin-card{
   background:var(--surface);border-radius:16px;box-shadow:var(--shadow-sm);
-  border:1px solid var(--line);overflow:hidden;position:relative;
-  display:flex;gap:.8rem;padding:.7rem;align-items:center;
+  border:1.5px solid var(--line);overflow:hidden;
+  display:grid;gap:.75rem;padding:.9rem;
 }
-.wall-admin-card img{width:84px;height:84px;object-fit:cover;border-radius:12px;flex:0 0 auto;background:var(--surface-soft)}
-.wall-admin-info{display:grid;gap:.15rem;min-width:0}
-.wall-admin-info strong{color:var(--bordeaux);font-size:.9rem}
-.wall-admin-info span{font-size:.8rem;color:var(--ink)}
-.wall-admin-info small{font-size:.72rem;color:var(--ink-soft)}
-.wall-admin-card .icon-btn{position:absolute;top:.4rem;right:.4rem}
+.wall-admin-top{display:flex;gap:.85rem;align-items:flex-start}
+.wall-admin-thumb{
+  width:88px;height:88px;object-fit:cover;border-radius:12px;flex:0 0 auto;
+  background:var(--surface-soft);border:1.5px solid rgba(204,9,47,.25);
+  cursor:zoom-in;transition:transform .2s;
+}
+.wall-admin-thumb:hover{transform:scale(1.04)}
+.wall-admin-info{display:grid;gap:.25rem;min-width:0;flex:1}
+.wall-admin-info strong{color:var(--bordeaux);font-size:.94rem;display:flex;flex-wrap:wrap;align-items:center;gap:.3rem}
+.wall-admin-slogan{
+  display:inline-block;align-self:start;
+  background:#FFF2F5;color:#CC092F;border:1px solid rgba(204,9,47,.25);
+  border-radius:999px;padding:.18rem .6rem;font-size:.76rem;font-weight:700;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.wall-admin-info small{font-size:.73rem;color:var(--ink-soft)}
+.wall-admin-actions{
+  display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;
+  padding-top:.55rem;border-top:1px solid var(--line);
+}
+.wall-admin-actions .btn{flex:1 1 auto}
+.wall-admin-actions .icon-btn{margin-left:auto;color:var(--crimson)}
+
+/* ---------- Modale Aperçu Photo (admin) ---------- */
+.admin-photo-modal{
+  position:fixed;inset:0;z-index:210;
+  background:rgba(28,8,14,.82);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:1.1rem;
+}
+.apm-box{
+  position:relative;background:var(--surface);border-radius:20px;
+  padding:1.2rem;max-width:min(440px,94vw);width:100%;
+  text-align:center;display:grid;gap:.55rem;
+  box-shadow:0 28px 70px rgba(0,0,0,.45);
+}
+.apm-close{
+  position:absolute;top:.7rem;right:.7rem;
+  width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(45,18,25,.12);color:var(--bordeaux);font-size:.95rem;font-weight:700;
+}
+.apm-box img{width:100%;max-height:60vh;object-fit:contain;border-radius:14px;background:#F7EFF1}
+.apm-slogan{
+  justify-self:center;background:#CC092F;color:#fff;
+  border-radius:999px;padding:.28rem .85rem;font-size:.86rem;font-weight:700;
+}
+.apm-name{font-size:1rem;color:var(--bordeaux)}
+.apm-actions{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-top:.25rem}
 
 /* ---------- Toast ---------- */
 .toast{
