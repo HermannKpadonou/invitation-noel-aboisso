@@ -949,6 +949,7 @@ async function handleAPI(req, res, url) {
         children: presentList.reduce((s, r) => s + (r.children || 0), 0),
         needTransport: presentList.filter((r) => r.need_transport).length,
         wantMore: rsvps.filter((r) => r.want_more).length,
+        goal: CONFIG.rsvpGoal,
         maxCapacity: CONFIG.rsvpMaxCapacity,
         checkedInRsvps: checkedInList.length,
         checkedInPeople: checkedInList.reduce((s, r) => s + (r.people || 1), 0),

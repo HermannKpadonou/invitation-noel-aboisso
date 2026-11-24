@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=28" />
+  <link rel="stylesheet" href="styles.css?v=29" />
 </head>
 <body>
 
@@ -38,30 +38,61 @@
   <!-- Flocons de lumière subtils -->
   <canvas id="snow" aria-hidden="true"></canvas>
 
-  <!-- ============ ÉCRAN D'OUVERTURE SOFT & AÉRIEN ============ -->
+  <!-- ============ ÉCRAN D'OUVERTURE : ENVELOPPE PUIS CARTE D'INVITATION LISIBLE ============ -->
   <div id="intro" class="intro" role="dialog" aria-modal="true" aria-label="Carte d'invitation">
-    <div class="intro-card">
+    <div class="intro-card" id="intro-card">
       <span class="intro-pill">✦ District d'Aboisso · 24 Décembre 2026</span>
-      <div class="envelope" id="envelope" tabindex="0" role="button" aria-label="Ouvrir mon invitation">
-        <div class="envelope-back"></div>
-        <div class="envelope-letter">
-          <p class="letter-kicker">Un Sauveur est né</p>
-          <p class="letter-title">Il est le Cadeau</p>
-          <p class="letter-verse">« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre… » — Luc 2:14</p>
+
+      <!-- Étape 1 : Enveloppe fermée -->
+      <div class="intro-stage-closed" id="intro-stage-closed">
+        <div class="envelope" id="envelope" tabindex="0" role="button" aria-label="Ouvrir mon invitation">
+          <div class="envelope-back"></div>
+          <div class="envelope-letter">
+            <p class="letter-kicker">Un Sauveur nous est né</p>
+            <p class="letter-title">Il est le Cadeau</p>
+            <p class="letter-verse">« Prince de la paix… » — Ésaïe 9:5</p>
+          </div>
+          <div class="envelope-pocket"></div>
+          <div class="envelope-flap"></div>
+          <div class="envelope-seal"><span>✦</span></div>
+          <div class="envelope-tag hidden" id="envelope-tag"></div>
         </div>
-        <div class="envelope-pocket"></div>
-        <div class="envelope-flap"></div>
-        <div class="envelope-seal"><span>✦</span></div>
-        <div class="envelope-tag hidden" id="envelope-tag"></div>
+
+        <div class="intro-welcome" id="intro-welcome">
+          <p class="iw-greet"><span id="ir-prefix">Cher ami, chère amie</span><strong id="ir-nom"></strong>,</p>
+          <p class="iw-from hidden" id="ir-from"></p>
+          <p class="iw-text">Une invitation toute particulière vous attend pour célébrer la naissance de notre Sauveur Jésus-Christ à Aboisso.</p>
+          <div class="iw-actions">
+            <button class="btn btn-primary" id="intro-open-btn" type="button">✉️ Ouvrir ma carte d'invitation ✨</button>
+            <a class="btn btn-soft" id="intro-skip-rsvp" href="#rsvp">S'inscrire directement →</a>
+          </div>
+        </div>
       </div>
 
-      <div class="intro-welcome" id="intro-welcome">
-        <p class="iw-greet"><span id="ir-prefix">Cher ami, chère amie</span><strong id="ir-nom"></strong>,</p>
-        <p class="iw-from hidden" id="ir-from"></p>
-        <p class="iw-text">Vous êtes cordialement invité à célébrer la naissance de Jésus-Christ le <strong>jeudi 24 décembre 2026</strong> à la Mairie d'Aboisso.</p>
+      <!-- Étape 2 : Carte déployée (reste affichée pour que le visiteur puisse tout lire tranquillement) -->
+      <div class="intro-stage-letter hidden" id="intro-stage-letter" aria-live="polite">
+        <div class="open-letter-card">
+          <span class="olc-star" aria-hidden="true">✦</span>
+          <p class="olc-kicker">Un Sauveur nous est né</p>
+          <h2 class="olc-title">Il est le plus beau Cadeau</h2>
+          <p class="olc-greet" id="olc-greet">Cher ami, chère amie,</p>
+          <p class="olc-body">
+            Dans le silence de Bethléem, Dieu a offert au monde ce qu'Il avait de plus précieux : <strong>Son Fils bien-aimé, Jésus-Christ</strong>.
+            Il est venu essuyer nos larmes, consoler nos cœurs, fortifier nos familles et apporter une paix véritable.
+          </p>
+          <p class="olc-body">
+            Ce Noël, <strong>votre place vous attend parmi nous</strong>. Venez tel que vous êtes, en famille ou avec un proche, pour chanter, partager et rayonner de Sa lumière.
+          </p>
+          <blockquote class="olc-verse">
+            « Car un enfant nous est né, un fils nous est donné… On l'appellera Admirable, Conseiller, Dieu puissant, Père éternel, Prince de la paix. »
+            <cite>— Ésaïe 9:5</cite>
+          </blockquote>
+          <p class="olc-meta">📅 Jeudi 24 décembre 2026 · 10h00 – 15h00 · Mairie d'Aboisso</p>
+        </div>
+
         <div class="iw-actions">
-          <button class="btn btn-primary" id="intro-open-btn" type="button">Ouvrir l'invitation ✨</button>
-          <a class="btn btn-soft" id="intro-skip-rsvp" href="#rsvp">S'inscrire directement →</a>
+          <a class="btn btn-primary" id="intro-enter-rsvp" href="#rsvp">🎟️ Réserver ma place maintenant</a>
+          <button class="btn btn-soft" id="intro-enter-site" type="button">Découvrir le programme ✨</button>
         </div>
       </div>
     </div>
@@ -220,18 +251,10 @@
             <div class="invites-share hidden" id="invites-share"></div>
           </div>
 
-          <!-- Formulaire en 1 seule vue ultra-fluide -->
+          <!-- Formulaire en 1 seule vue ultra-fluide (objectif : 520+ participants !) -->
           <form id="rsvp-form" class="rsvp-form" novalidate>
             <p class="form-error hidden" id="rsvp-error" role="alert"></p>
-
-            <!-- Choix de présence en premier pour masquer immédiatement les invités si absent -->
-            <div class="field">
-              <label for="f-presence-select">Votre participation *</label>
-              <select id="f-presence-select" name="presence">
-                <option value="present" selected>🎄 Je serai présent (seul, en famille ou avec un invité)</option>
-                <option value="absent">💔 Je ne pourrai pas venir</option>
-              </select>
-            </div>
+            <input type="hidden" id="f-presence-select" name="presence" value="present" />
 
             <!-- Bloc 1 : Vos coordonnées -->
             <div class="form-group-card">
@@ -777,8 +800,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/shared.js?v=28" defer></script>
+  <script src="assets/shared.js?v=29" defer></script>
   <script src="assets/qrcode-generator.js" defer></script>
-  <script src="script.js?v=28" defer></script>
+  <script src="script.js?v=29" defer></script>
 </body>
 </html>

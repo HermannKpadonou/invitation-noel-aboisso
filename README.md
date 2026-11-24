@@ -49,7 +49,8 @@ Dans l'onglet **Environment** de votre service Render (`https://invitation-noel-
 |---|---|
 | `ADMIN_PASSWORD` | **(Obligatoire en production)** Choisissez un mot de passe administrateur fort et confidentiel pour protéger `/admin.html`. |
 | `DATABASE_URL` | **(Recommandé)** Chaîne de connexion PostgreSQL **Neon** (`postgresql://...`) pour que les inscriptions, photos et vœux soient conservés de façon permanente à chaque redéploiement. |
-| `RSVP_MAX_CAPACITY` | *(Optionnel)* Capacité maximale de la salle (par défaut `350` personnes). |
+| `RSVP_GOAL` | *(Optionnel)* Objectif de participation affiché dans le back-office (par défaut `520` personnes). |
+| `RSVP_MAX_CAPACITY` | *(Optionnel)* Capacité maximale de la salle (par défaut `650` personnes). |
 | `GOOGLE_SHEETS_WEBHOOK_URL` | *(Optionnel)* URL d'un Google Apps Script / Webhook pour copier chaque inscription en direct dans Google Sheets. |
 
 ---

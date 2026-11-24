@@ -301,10 +301,14 @@ function render() {
   $("#st-invites").textContent = stats.invites ?? 0;
 
   if ($("#st-children-label")) {
+    const goal = stats.goal ?? 520;
+    const people = stats.people ?? 0;
+    const goalPct = goal > 0 ? Math.min(100, Math.round((people / goal) * 100)) : 0;
+    if ($("#st-goal-bar")) $("#st-goal-bar").style.width = goalPct + "%";
     const ch = stats.children ?? 0;
     const tr = stats.needTransport ?? 0;
     const wm = stats.wantMore ?? 0;
-    $("#st-children-label").textContent = `Dont ${ch} enfant${ch > 1 ? "s" : ""} · ${tr} transport${wm > 0 ? ` · ${wm} 📖` : ""}`;
+    $("#st-children-label").textContent = `${people} / ${goal} (${goalPct} %) · ${ch} enf.${tr > 0 ? ` · ${tr} 🚌` : ""}${wm > 0 ? ` · ${wm} 📖` : ""}`;
   }
   if ($("#st-pending-label")) {
     const pGb = stats.pendingGuestbook ?? 0;

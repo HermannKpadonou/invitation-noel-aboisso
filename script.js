@@ -151,9 +151,11 @@ function getLastRsvp() {
   if (recipientName) {
     if ($("#ir-prefix")) $("#ir-prefix").textContent = "Bonjour ";
     if ($("#ir-nom")) $("#ir-nom").textContent = recipientName;
+    if ($("#olc-greet")) $("#olc-greet").textContent = `Cher ${recipientName},`;
   } else {
     if ($("#ir-prefix")) $("#ir-prefix").textContent = "Cher ami, chère amie";
     if ($("#ir-nom")) $("#ir-nom").textContent = "";
+    if ($("#olc-greet")) $("#olc-greet").textContent = "Cher ami, chère amie,";
   }
 
   const envTag = $("#envelope-tag");
@@ -178,35 +180,56 @@ function getLastRsvp() {
     $("#f-nom").value = urlPour;
   }
 
-  let opened = false;
-  function dismissIntro(scrollToTarget = null) {
-    if (opened) return;
-    opened = true;
-    if (!isReducedMotion()) playChime("envelope");
+  const stageClosed = $("#intro-stage-closed");
+  const stageLetter = $("#intro-stage-letter");
+  let letterRevealed = false;
+  let dismissed = false;
 
+  /* Étape 1 → 2 : ouvre doucement l'enveloppe puis déploie la carte lisible (ne ferme PAS l'écran) */
+  function openEnvelopeCard() {
+    if (letterRevealed || dismissed) return;
+    letterRevealed = true;
+    if (!isReducedMotion()) playChime("envelope");
     intro.classList.add("env-open");
-    const delay = isReducedMotion() ? 50 : 620;
+    const delay = isReducedMotion() ? 60 : 950;
     setTimeout(() => {
-      intro.classList.add("opening");
-      document.body.style.overflow = "";
-      if (scrollToTarget) {
-        document.querySelector(scrollToTarget)?.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth" });
-      }
-      setTimeout(() => intro.remove(), 650);
+      if (dismissed) return;
+      stageClosed?.classList.add("hidden");
+      stageLetter?.classList.remove("hidden");
+      $("#intro-enter-rsvp")?.focus();
     }, delay);
   }
 
-  envelope.addEventListener("click", () => dismissIntro());
-  $("#intro-open-btn")?.addEventListener("click", () => dismissIntro());
+  /* Étape 2 → Site : l'utilisateur choisit quand quitter la carte après l'avoir lue */
+  function dismissIntro(scrollToTarget = null) {
+    if (dismissed) return;
+    dismissed = true;
+    if (!letterRevealed && !isReducedMotion()) playChime("envelope");
+    intro.classList.add("opening");
+    document.body.style.overflow = "";
+    if (scrollToTarget) {
+      document.querySelector(scrollToTarget)?.scrollIntoView({ behavior: isReducedMotion() ? "auto" : "smooth" });
+    }
+    setTimeout(() => intro.remove(), 650);
+  }
+
+  envelope.addEventListener("click", openEnvelopeCard);
+  $("#intro-open-btn")?.addEventListener("click", openEnvelopeCard);
   $("#intro-skip-rsvp")?.addEventListener("click", (e) => {
     e.preventDefault();
     dismissIntro("#rsvp");
   });
+  $("#intro-enter-rsvp")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    dismissIntro("#rsvp");
+  });
+  $("#intro-enter-site")?.addEventListener("click", () => dismissIntro());
+
   envelope.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); dismissIntro(); }
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openEnvelopeCard(); }
   });
   addEventListener("keydown", function onEsc(ev) {
-    if (ev.key === "Escape" && !opened) { dismissIntro(); removeEventListener("keydown", onEsc); }
+    if (ev.key === "Escape" && !dismissed) { dismissIntro(); removeEventListener("keydown", onEsc); }
   });
 })();
 
