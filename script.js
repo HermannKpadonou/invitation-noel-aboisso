@@ -1379,7 +1379,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     x.fillText("Président Kpadonou (Président du District) : 05 74 15 29 55", W / 2, 958);
     x.fillStyle = "#52464B";
     x.font = "600 16px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Les missionnaires : 07 15 26 82 82 / 07 15 26 81 81", W / 2, 984);
+    x.fillText("Les missionnaires : 07 15 26 82 82 / 07 15 26 85 85", W / 2, 984);
 
     return new Promise((resolve) => {
       const done = () => resolve(c);
