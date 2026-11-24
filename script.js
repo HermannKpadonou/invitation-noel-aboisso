@@ -1370,13 +1370,16 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     x.font = "500 21px 'Plus Jakarta Sans', sans-serif";
     x.fillText("Salle des fêtes d'Aboisso", W / 2, 728);
 
-    /* Contact */
+    /* Personnes à contacter */
+    x.fillStyle = "#1A1517";
+    x.font = "800 16px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Personnes à contacter :", W / 2, 932);
     x.fillStyle = "#2E272A";
-    x.font = "600 17px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Des questions ? Personne à contacter : Hermann Kpadonou", W / 2, 956);
+    x.font = "600 16px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Président Kpadonou (Président du District) : 05 74 15 29 55", W / 2, 958);
     x.fillStyle = "#52464B";
-    x.font = "500 16px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("07 07 36 88 63  |  kpadonouhermann@gmail.com", W / 2, 984);
+    x.font = "600 16px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Les missionnaires : 07 15 26 82 82 / 07 15 26 81 81", W / 2, 984);
 
     return new Promise((resolve) => {
       const done = () => resolve(c);
@@ -1384,12 +1387,12 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       if (qrData) {
         const img = new Image();
         img.onload = () => {
-          const qy = 754;
+          const qy = 746;
           x.fillStyle = "#FFFFFF";
-          drawRoundRect(x, W / 2 - 80, qy, 160, 160, 14); x.fill();
+          drawRoundRect(x, W / 2 - 78, qy, 156, 156, 14); x.fill();
           x.strokeStyle = "#EAD2D8"; x.lineWidth = 2;
-          drawRoundRect(x, W / 2 - 80, qy, 160, 160, 14); x.stroke();
-          x.drawImage(img, W / 2 - 68, qy + 12, 136, 136);
+          drawRoundRect(x, W / 2 - 78, qy, 156, 156, 14); x.stroke();
+          x.drawImage(img, W / 2 - 66, qy + 12, 132, 132);
           done();
         };
         img.onerror = done;
