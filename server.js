@@ -70,13 +70,13 @@ function writeJSON(file, data) {
   fs.writeFileSync(path.join(CONFIG.dataDir, file), JSON.stringify(data, null, 2));
 }
 
-/* Création des tables + import des anciennes données JSON (1re fois) */
+/* Création des tables + migration num TEXT + remise à zéro unique pour le lancement officiel */
 async function initDB() {
   if (!db) return;
   await db.query(`
     CREATE TABLE IF NOT EXISTS rsvps (
       id SERIAL PRIMARY KEY,
-      num INT NOT NULL,
+      num TEXT NOT NULL,
       nom TEXT NOT NULL,
       presence TEXT NOT NULL DEFAULT 'present',
       tel TEXT DEFAULT '',
@@ -104,7 +104,14 @@ async function initDB() {
       nom TEXT NOT NULL,
       tel TEXT DEFAULT '',
       at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS app_meta (
+      key TEXT PRIMARY KEY,
+      val TEXT DEFAULT ''
     );`);
+
+  /* Migration sécurisée de la colonne num (INT -> TEXT) pour le format PRENOM-4CHIFFRES-001 */
+  await db.query(`ALTER TABLE rsvps ALTER COLUMN num TYPE TEXT USING num::text`);
 
   /* Colonnes RSVP ajoutées avec le formulaire enrichi (statut, branche,
      localite, invités, enfants, transport, découverte, code billet + pointage Jour J) */
@@ -121,30 +128,12 @@ async function initDB() {
   await db.query(`ALTER TABLE photo_wall ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT TRUE`);
   await db.query(`ALTER TABLE photo_wall ADD COLUMN IF NOT EXISTS reported BOOLEAN DEFAULT FALSE`);
 
-  /* Import automatique des données locales si les tables sont vides */
-  const local = {
-    rsvps: readJSON("rsvps.json", []),
-    guestbook: readJSON("guestbook.json", []),
-    "photo-wall": readJSON("photo-wall.json", []),
-  };
-  for (const [table, rows] of Object.entries(local)) {
-    if (!rows.length) continue;
-    const dbTable = table === "photo-wall" ? "photo_wall" : table;
-    const c = await db.query(`SELECT COUNT(*)::int AS n FROM ${dbTable}`);
-    if (c.rows[0].n > 0) continue;
-    for (const r of rows) {
-      if (table === "rsvps") {
-        await db.query(
-          `INSERT INTO rsvps (num, nom, presence, tel, people, note, at) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-          [r.num, r.nom, r.presence === "absent" ? "absent" : "present", r.tel || "", r.people || 1, r.note || "", r.at]
-        );
-      } else if (table === "guestbook") {
-        await db.query(`INSERT INTO guestbook (nom, msg, at) VALUES ($1,$2,$3)`, [r.nom, r.msg, r.at]);
-      } else {
-        await db.query(`INSERT INTO photo_wall (nom, msg, photo, at) VALUES ($1,$2,$3,$4)`, [r.nom, r.msg || "", r.photo, r.at]);
-      }
-    }
-    console.log(`✦ Import local → Neon : ${rows.length} ligne(s) dans ${dbTable}`);
+  /* Remise à zéro UNIQUE pour le lancement officiel (efface les données de test une seule fois) */
+  const resetFlag = await db.query(`SELECT 1 FROM app_meta WHERE key = 'prod_launch_reset_v40' LIMIT 1`);
+  if (!resetFlag.rows.length) {
+    await db.query(`TRUNCATE TABLE invites, rsvps, guestbook, photo_wall RESTART IDENTITY CASCADE`);
+    await db.query(`INSERT INTO app_meta (key, val) VALUES ('prod_launch_reset_v40', NOW()::text)`);
+    console.log("✦ Lancement officiel : toutes les données de test ont été remises à zéro (compteurs réinitialisés).");
   }
 }
 
@@ -327,19 +316,79 @@ function streamStaticFile(req, res, filePath, st) {
 }
 
 /* ---------- API : couche données ---------- */
-async function generateUniqueTicketNum() {
+const HONORIFIC_PREFIXES = new Set([
+  "frere", "soeur", "sr", "fr", "mr", "m", "mme", "mlle", "madame", "monsieur",
+  "president", "presidente", "eveque", "branche", "famille", "les", "la", "le", "dr",
+]);
+
+function extractFirstNameCode(nom) {
+  const words = String(nom || "")
+    .replace(/[œŒ]/g, "oe")
+    .replace(/[æÆ]/g, "ae")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z\s'-]/g, " ")
+    .trim()
+    .split(/[\s']+/)
+    .filter(Boolean);
+  if (!words.length) return "INVITE";
+  let chosen = words[0];
+  if (words.length > 1 && HONORIFIC_PREFIXES.has(chosen.toLowerCase())) {
+    chosen = words[1];
+  }
+  const cleanFirst = chosen.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 12);
+  return cleanFirst || "INVITE";
+}
+
+function extractLast4Phone(tel) {
+  const digits = String(tel || "").replace(/\D/g, "");
+  if (!digits) return "0000";
+  return digits.length >= 4 ? digits.slice(-4) : digits.padStart(4, "0");
+}
+
+function extractTrailingSeq(numVal) {
+  const s = String(numVal || "").trim();
+  const m = s.match(/-(\d+)$/);
+  if (m) return parseInt(m[1], 10) || 0;
+  if (/^\d+$/.test(s)) return parseInt(s, 10) || 0;
+  return 0;
+}
+
+/* Numérotation officielle : PRENOM + 4 derniers chiffres du téléphone + comptage normal (001, 002, …) */
+async function generateUniqueTicketNum(nom, tel) {
   const existing = new Set();
+  let maxSeq = 0;
+  let totalCount = 0;
   if (db) {
     const r = await db.query(`SELECT num FROM rsvps`);
-    r.rows.forEach((row) => existing.add(Number(row.num)));
+    totalCount = r.rows.length;
+    r.rows.forEach((row) => {
+      const key = String(row.num || "").toUpperCase();
+      existing.add(key);
+      const seq = extractTrailingSeq(row.num);
+      if (seq > maxSeq) maxSeq = seq;
+    });
   } else {
-    readJSON("rsvps.json", []).forEach((row) => existing.add(Number(row.num)));
+    const rows = readJSON("rsvps.json", []);
+    totalCount = rows.length;
+    rows.forEach((row) => {
+      const key = String(row.num || "").toUpperCase();
+      existing.add(key);
+      const seq = extractTrailingSeq(row.num);
+      if (seq > maxSeq) maxSeq = seq;
+    });
   }
-  for (let attempt = 0; attempt < 150; attempt++) {
-    const candidate = Math.floor(100 + Math.random() * 900);
-    if (!existing.has(candidate)) return candidate;
+
+  const prenom = extractFirstNameCode(nom);
+  const last4 = extractLast4Phone(tel);
+  let nextSeq = Math.max(maxSeq, totalCount) + 1;
+  while (nextSeq < 100000) {
+    const seqStr = String(nextSeq).padStart(3, "0");
+    const candidate = `${prenom}-${last4}-${seqStr}`;
+    if (!existing.has(candidate.toUpperCase())) return candidate;
+    nextSeq += 1;
   }
-  return 1000 + existing.size + 1;
+  return `${prenom}-${last4}-${Date.now().toString().slice(-4)}`;
 }
 
 async function addRsvp(d) {
@@ -349,7 +398,7 @@ async function addRsvp(d) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
        RETURNING id, num, nom, presence, tel, people, children, need_transport, want_more, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, ticket_code, checked_in, checked_in_at, at`,
       [
-        d.num, d.nom, d.presence, d.tel, d.people, d.children || 0, !!d.need_transport, !!d.want_more,
+        String(d.num), d.nom, d.presence, d.tel, d.people, d.children || 0, !!d.need_transport, !!d.want_more,
         d.note, d.statut || "membre", d.branche || "", d.localite || "",
         d.ami_nom || "", d.ami_tel || "", d.inactif_nom || "", d.inactif_tel || "", d.ticket_code || "",
       ]
@@ -360,6 +409,7 @@ async function addRsvp(d) {
   const entry = {
     id: (all.reduce((m, r) => Math.max(m, r.id || 0), 0) || 0) + 1,
     ...d,
+    num: String(d.num),
     children: d.children || 0,
     need_transport: !!d.need_transport,
     want_more: !!d.want_more,
@@ -383,17 +433,53 @@ async function listRsvps() {
 async function setRsvpCheckin({ id, num, checked_in = true }) {
   const flag = !!checked_in;
   const ts = flag ? new Date().toISOString() : null;
+  const cleanNum = String(num || "").trim().toUpperCase();
+  const digitsOnly = /^\d+$/.test(cleanNum) ? String(parseInt(cleanNum, 10)).padStart(3, "0") : "";
+
   if (db) {
-    const query = id
-      ? `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE id = $3 RETURNING id, num, nom, presence, tel, people, COALESCE(children, 0) AS children, note, statut, branche, localite, checked_in, checked_in_at, at`
-      : `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE num = $3 RETURNING id, num, nom, presence, tel, people, COALESCE(children, 0) AS children, note, statut, branche, localite, checked_in, checked_in_at, at`;
-    const param = id ? parseInt(id, 10) : parseInt(num, 10);
-    if (!param) return null;
-    const r = await db.query(query, [flag, ts, param]);
-    return r.rows[0] || null;
+    if (id) {
+      const r = await db.query(
+        `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE id = $3
+         RETURNING id, num, nom, presence, tel, people, COALESCE(children, 0) AS children, note, statut, branche, localite, checked_in, checked_in_at, at`,
+        [flag, ts, parseInt(id, 10)]
+      );
+      return r.rows[0] || null;
+    }
+    if (!cleanNum) return null;
+    /* 1) Correspondance exacte sur le numéro complet (ex. HERMANN-2955-001) */
+    let r = await db.query(
+      `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE UPPER(num) = $3
+       RETURNING id, num, nom, presence, tel, people, COALESCE(children, 0) AS children, note, statut, branche, localite, checked_in, checked_in_at, at`,
+      [flag, ts, cleanNum]
+    );
+    if (r.rows[0]) return r.rows[0];
+
+    /* 2) Si saisie du seul compteur de fin (ex. 1 ou 001), recherche par suffixe -001 */
+    if (digitsOnly) {
+      const match = await db.query(
+        `SELECT id FROM rsvps WHERE UPPER(num) LIKE $1 ORDER BY id DESC LIMIT 1`,
+        [`%-${digitsOnly}`]
+      );
+      if (match.rows[0]) {
+        r = await db.query(
+          `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE id = $3
+           RETURNING id, num, nom, presence, tel, people, COALESCE(children, 0) AS children, note, statut, branche, localite, checked_in, checked_in_at, at`,
+          [flag, ts, match.rows[0].id]
+        );
+        return r.rows[0] || null;
+      }
+    }
+    return null;
   }
+
   const all = readJSON("rsvps.json", []);
-  const target = all.find((r) => (id ? String(r.id) === String(id) : String(r.num) === String(num)));
+  let target = null;
+  if (id) {
+    target = all.find((r) => String(r.id) === String(id));
+  } else if (cleanNum) {
+    target = all.find((r) => String(r.num || "").toUpperCase() === cleanNum)
+      || (digitsOnly ? all.find((r) => String(r.num || "").toUpperCase().endsWith(`-${digitsOnly}`)) : null);
+  }
   if (!target) return null;
   target.checked_in = flag;
   target.checked_in_at = ts;
@@ -408,22 +494,22 @@ function maskPublicName(fullName) {
 }
 
 async function findTicketByNum(num, code = "") {
-  const n = parseInt(num, 10);
-  if (!n) return null;
+  const cleanNum = String(num || "").trim().toUpperCase();
+  if (!cleanNum) return null;
   let found = null;
   if (db) {
     const r = await db.query(
-      `SELECT num, nom, presence, people, COALESCE(children, 0) AS children, statut, branche, ticket_code, checked_in, at FROM rsvps WHERE num = $1 ORDER BY id DESC LIMIT 1`,
-      [n]
+      `SELECT num, nom, presence, people, COALESCE(children, 0) AS children, statut, branche, ticket_code, checked_in, at FROM rsvps WHERE UPPER(num) = $1 ORDER BY id DESC LIMIT 1`,
+      [cleanNum]
     );
     found = r.rows[0] || null;
   } else {
     const all = readJSON("rsvps.json", []);
-    found = all.filter((r) => Number(r.num) === n).pop() || null;
+    found = all.filter((r) => String(r.num || "").toUpperCase() === cleanNum).pop() || null;
   }
   if (!found) return null;
 
-  /* Protection anti-énumération : si le billet a un code de sécurité, il doit correspondre */
+  /* Protection anti-énumération : si la carte a un code de sécurité, il doit correspondre */
   const cleanCode = String(code || "").trim();
   const hasCode = Boolean(found.ticket_code);
   if (hasCode && cleanCode !== found.ticket_code) {
@@ -450,23 +536,16 @@ function hasBadWords(text) {
   return BAD_WORDS_RE.test(String(text || ""));
 }
 
-const DEFAULT_GUESTBOOK_SEEDS = [
-  { id: 101, nom: "Présidence du District d'Aboisso", msg: "Soyez les bienvenus avec vos proches et vos invités pour célébrer la naissance de notre Sauveur Jésus-Christ ce jeudi 24 décembre !", approved: true, reported: false, at: "2026-11-15T10:00:00.000Z" },
-  { id: 102, nom: "Famille Kouamé (Aboisso 1)", msg: "Quelle joie de proclamer ensemble : « Un Sauveur est né, Il est le cadeau ! » Nous viendrons avec nos voisins.", approved: true, reported: false, at: "2026-11-16T14:30:00.000Z" },
-  { id: 103, nom: "Sœur Adjoua (Branche d'Ayamé)", msg: "Hâte de partager les cantiques, le théâtre de la Nativité et le repas fraternel avec tous nos amis invités !", approved: true, reported: false, at: "2026-11-18T17:15:00.000Z" },
-];
-
 async function listGuestbook(includeUnapproved = false) {
   if (db) {
     const where = includeUnapproved ? "" : "WHERE COALESCE(approved, TRUE) = TRUE";
     const r = await db.query(
       `SELECT id, nom, msg, COALESCE(approved, TRUE) AS approved, COALESCE(reported, FALSE) AS reported, at FROM (SELECT id, nom, msg, approved, reported, at FROM guestbook ${where} ORDER BY id DESC LIMIT 80) t ORDER BY id ASC`
     );
-    return r.rows.length ? r.rows : (includeUnapproved ? [] : DEFAULT_GUESTBOOK_SEEDS);
+    return r.rows;
   }
   const raw = readJSON("guestbook.json", []);
-  const source = raw.length ? raw : DEFAULT_GUESTBOOK_SEEDS;
-  const filtered = includeUnapproved ? source : source.filter((g) => g.approved !== false);
+  const filtered = includeUnapproved ? raw : raw.filter((g) => g.approved !== false);
   return filtered.slice(-80);
 }
 
@@ -486,18 +565,11 @@ async function addGuestbook(entry) {
   return item;
 }
 
-const DEFAULT_WALL_SEEDS = [
-  { id: "seed-1", nom: "Présidence du District", msg: "J'y serai, et toi ?", approved: true, reported: false, photo: "assets/photo-event.jpg", at: "2026-11-14T09:00:00.000Z" },
-  { id: "seed-2", nom: "Chorales & Jeunes d'Aboisso", msg: "Ne rate pas cet événement !", approved: true, reported: false, photo: "assets/nativite-famille.jpg", at: "2026-11-15T11:30:00.000Z" },
-  { id: "seed-3", nom: "Missionnaires & Accueil", msg: "Ne te laisse pas raconter cette belle fête !", approved: true, reported: false, photo: "assets/sapin-noel.jpg", at: "2026-11-17T16:00:00.000Z" },
-];
-
-/* Liste légère des métadonnées du Mur Photo (sans renvoyer les Mo de Base64 à chaque poll) */
+/* Liste légère des métadonnées du Mur des sourires (aucun exemple factice : 100 % vraies publications) */
 async function listWallMeta(includeUnapproved = false) {
   if (db) {
     const where = includeUnapproved ? "" : "WHERE COALESCE(approved, TRUE) = TRUE";
     const r = await db.query(`SELECT id, nom, msg, COALESCE(approved, TRUE) AS approved, COALESCE(reported, FALSE) AS reported, at FROM photo_wall ${where} ORDER BY id ASC`);
-    if (!r.rows.length && !includeUnapproved) return DEFAULT_WALL_SEEDS;
     return r.rows.map((row) => ({
       id: row.id,
       nom: row.nom,
@@ -509,7 +581,6 @@ async function listWallMeta(includeUnapproved = false) {
     }));
   }
   const all = readJSON("photo-wall.json", []);
-  if (!all.length && !includeUnapproved) return DEFAULT_WALL_SEEDS;
   const filtered = includeUnapproved ? all : all.filter((row) => row.approved !== false);
   return filtered.map((row) => ({
     id: row.id,
@@ -520,6 +591,17 @@ async function listWallMeta(includeUnapproved = false) {
     photo: row.id ? `/api/photo-wall/img?id=${encodeURIComponent(row.id)}` : row.photo,
     at: row.at,
   }));
+}
+
+/* Remise à zéro complète (inscriptions, invités, vœux, mur des sourires + compteurs à 0) */
+async function resetAllData() {
+  if (db) {
+    await db.query(`TRUNCATE TABLE invites, rsvps, guestbook, photo_wall RESTART IDENTITY CASCADE`);
+    return;
+  }
+  for (const file of ["rsvps.json", "invites.json", "guestbook.json", "photo-wall.json"]) {
+    writeJSON(file, []);
+  }
 }
 
 async function getWallPhotoData(id) {
@@ -781,7 +863,7 @@ async function handleAPI(req, res, url) {
       }
     }
 
-    const num = await generateUniqueTicketNum();
+    const num = await generateUniqueTicketNum(nom, tel);
     const ticket_code = crypto.randomBytes(4).toString("hex");
     const entry = await addRsvp({
       num,
@@ -1055,6 +1137,11 @@ async function handleAPI(req, res, url) {
 
     if (pathname === "/api/admin/invite" && req.method === "DELETE") {
       await deleteRow("invite", searchParams.get("id"));
+      return send(req, res, 200, { ok: true });
+    }
+
+    if (pathname === "/api/admin/reset-all" && req.method === "POST") {
+      await resetAllData();
       return send(req, res, 200, { ok: true });
     }
     return send(req, res, 404, { ok: false, error: "Route inconnue" });

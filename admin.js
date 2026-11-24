@@ -676,7 +676,7 @@ function render() {
 $("#checkin-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const input = $("#checkin-num");
-  const num = parseInt(input.value.trim(), 10);
+  const num = input.value.trim();
   if (!num) return;
   await toggleCheckin({ num, checked_in: true, showBanner: true });
   input.value = "";
@@ -693,6 +693,21 @@ async function stopQrScanner() {
     qrStream = null;
   }
   $("#qr-scanner")?.classList.add("hidden");
+}
+
+function extractTicketNumFromQr(raw) {
+  const txt = decodeURIComponent(String(raw || "").trim());
+  const hashMatch = txt.match(/#billet-([^\s#]+)/i);
+  if (hashMatch) {
+    const body = hashMatch[1];
+    if (body.includes("--")) return body.slice(0, body.lastIndexOf("--"));
+    const legacy = body.match(/^(\d+)(?:-[a-f0-9]+)?$/i);
+    return legacy ? legacy[1] : body;
+  }
+  const codeMatch = txt.match(/([A-Z]{2,}-\d{4}-\d{1,5})/i);
+  if (codeMatch) return codeMatch[1].toUpperCase();
+  const numMatch = txt.match(/(\d{1,5})/);
+  return numMatch ? numMatch[1] : "";
 }
 
 async function startQrScanner() {
@@ -716,11 +731,10 @@ async function startQrScanner() {
         try {
           const codes = await detector.detect(video);
           if (codes && codes.length > 0) {
-            const raw = codes[0].rawValue || "";
-            const m = raw.match(/#billet-(\d+)/) || raw.match(/(\d{3,4})/);
-            if (m) {
+            const ticketNum = extractTicketNumFromQr(codes[0].rawValue || "");
+            if (ticketNum) {
               await stopQrScanner();
-              await toggleCheckin({ num: parseInt(m[1], 10), checked_in: true, showBanner: true });
+              await toggleCheckin({ num: ticketNum, checked_in: true, showBanner: true });
               return;
             }
           }
@@ -729,11 +743,11 @@ async function startQrScanner() {
       };
       requestAnimationFrame(scanLoop);
     } else {
-      toast("📱 Saisissez le N° à 3 chiffres inscrit sous le QR code du billet.");
+      toast("📱 Saisissez le numéro inscrit sur la carte d'invitation (ex. HERMANN-2955-001 ou 001).");
     }
   } catch {
     await stopQrScanner();
-    toast("📷 Caméra indisponible — tapez le N° de billet dans le champ ci-dessus.");
+    toast("📷 Caméra indisponible — tapez le numéro de carte dans le champ ci-dessus.");
     $("#checkin-num")?.focus();
   }
 }
@@ -971,5 +985,24 @@ $("#btn-copy-phones").addEventListener("click", async () => {
     toast(`📋 ${phones.length} numéro(s) copié(s) !`);
   } catch {
     toast("Impossible de copier 😕");
+  }
+});
+
+$("#btn-reset-all")?.addEventListener("click", async () => {
+  const ok1 = confirm("⚠️ Attention : cette action va effacer TOUTES les inscriptions, invitations, vœux de Noël et photos du mur, et remettre le comptage des cartes à 001.\n\nVoulez-vous vraiment continuer ?");
+  if (!ok1) return;
+  const typed = prompt("Pour confirmer la remise à zéro complète, tapez ZERO en majuscules :");
+  if ((typed || "").trim().toUpperCase() !== "ZERO") {
+    toast("Remise à zéro annulée.");
+    return;
+  }
+  try {
+    await api("/api/admin/reset-all", { method: "POST" });
+    closeGuestDrawer();
+    closeAdminPhotoModal();
+    await refresh();
+    toast("🧹 Toutes les données ont été effacées et remises à zéro !");
+  } catch (e) {
+    toast(`⚠️ ${e.message || "Erreur lors de la remise à zéro"}`);
   }
 });

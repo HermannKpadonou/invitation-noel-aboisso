@@ -236,9 +236,9 @@
         <div class="checkin-grid">
           <article class="checkin-card">
             <h3>📲 Pointage des arrivées — Jeudi 24 décembre 2026</h3>
-            <p class="panel-hint">Scannez le QR code du billet avec la caméra de votre téléphone ou saisissez directement le numéro de billet à 3 chiffres (Ticket d'entrée : Participant·e + Invité·e).</p>
+            <p class="panel-hint">Scannez le code sur la carte d'invitation ou saisissez le numéro complet (ex. <strong>HERMANN-2955-001</strong>) ou simplement les derniers chiffres (ex. <strong>001</strong>).</p>
             <form class="checkin-form" id="checkin-form">
-              <input type="number" id="checkin-num" min="100" max="9999" placeholder="N° billet (ex. 482)" aria-label="Numéro de billet" required />
+              <input type="text" id="checkin-num" placeholder="N° carte (ex. HERMANN-2955-001 ou 001)" aria-label="Numéro de carte d'invitation" autocomplete="off" required />
               <button class="btn btn-red" type="submit">✅ Pointer l'arrivée</button>
               <button class="btn btn-outline" id="btn-scan-qr" type="button">📷 Scanner un QR Code</button>
             </form>
@@ -323,6 +323,11 @@
             <h3>Les données</h3>
             <p>Sur Render, elles sont enregistrées dans la base <strong>Neon PostgreSQL</strong> (variable <code>DATABASE_URL</code>) et survivent aux redéploiements. En local, elles restent dans le dossier <code>data/</code>.</p>
           </article>
+          <article class="tool" style="border-color:rgba(215,11,51,.35)">
+            <h3>🧹 Remise à zéro (données de test)</h3>
+            <p>Efface définitivement toutes les inscriptions, invitations, vœux de Noël et photos du mur, et remet le comptage des cartes d'invitation à <strong>001</strong>. À n'utiliser qu'avant le lancement officiel.</p>
+            <button class="btn btn-outline btn-sm" id="btn-reset-all" type="button" style="color:var(--crimson);border-color:rgba(215,11,51,.4)">🧹 Tout effacer et remettre à zéro</button>
+          </article>
         </div>
       </section>
     </main>
@@ -333,7 +338,7 @@
   <aside class="guest-drawer hidden" id="guest-drawer" role="dialog" aria-modal="true" aria-labelledby="dr-name">
     <header class="dr-head">
       <div>
-        <small id="dr-num" class="t-num">Billet N°---</small>
+        <small id="dr-num" class="t-num">Carte N°---</small>
         <h2 id="dr-name">—</h2>
       </div>
       <button class="icon-btn" id="dr-close" type="button" aria-label="Fermer le panneau de détails">✕</button>
@@ -354,7 +359,7 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="assets/shared.js?v=39" defer></script>
-  <script src="admin.js?v=12" defer></script>
+  <script src="assets/shared.js?v=40" defer></script>
+  <script src="admin.js?v=13" defer></script>
 </body>
 </html>

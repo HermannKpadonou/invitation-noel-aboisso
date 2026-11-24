@@ -76,6 +76,19 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   });
 }
 
+/* ---------- Nettoyage unique du cache local de pré-lancement (v40) ---------- */
+(function resetTestLocalStorageOnce() {
+  const FLAG = "noel-aboisso-launch-v40";
+  try {
+    if (!localStorage.getItem(FLAG)) {
+      ["noel-aboisso-rsvp", "noel-aboisso-rsvps", "noel-aboisso-guestbook", "noel-aboisso-wall", "noel-aboisso-likes"].forEach((k) => {
+        localStorage.removeItem(k);
+      });
+      localStorage.setItem(FLAG, "1");
+    }
+  } catch {}
+})();
+
 /* ---------- Bascule Mode Jour Soft / Nuit Douce ---------- */
 (function initTheme() {
   const THEME_KEY = "noel-aboisso-theme";
@@ -188,7 +201,7 @@ function getLastRsvp() {
   if (!intro || !envelope) return;
 
   /* Toujours démarrer tout en haut de la page (sauf lien direct #billet-…) */
-  const hasTicketHash = /^#billet-\d+/i.test(location.hash);
+  const hasTicketHash = /^#billet-[A-Z0-9-]+/i.test(location.hash);
   if (!hasTicketHash) {
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     window.scrollTo(0, 0);
@@ -1032,7 +1045,8 @@ function drawElwFrame(x, W, H) {
   }
 
   function inviteLink(d) {
-    const suffix = d.ticket_code ? `${d.num}-${d.ticket_code}` : `${d.num}`;
+    const cleanNum = encodeURIComponent(String(d.num || "").trim());
+    const suffix = d.ticket_code ? `${cleanNum}--${d.ticket_code}` : `${cleanNum}`;
     if (location.protocol.startsWith("http")) return location.origin + location.pathname + "#billet-" + suffix;
     return "https://invitation-noel-aboisso.onrender.com/#billet-" + suffix;
   }
@@ -1071,7 +1085,7 @@ function drawElwFrame(x, W, H) {
     if (!d) return;
     currentInvite = d;
     const isAbsent = d.presence === "absent";
-    if (ltNum) ltNum.textContent = `Billet N°${d.num}`;
+    if (ltNum) ltNum.textContent = `Carte N° ${d.num}`;
     if (ltName) ltName.textContent = d.nom || "Invité";
     ltCompanionRow?.classList.toggle("hidden", isAbsent);
     if (ltCompanion && !isAbsent) ltCompanion.textContent = getCompanionText(d);
@@ -1380,9 +1394,12 @@ function drawElwFrame(x, W, H) {
     drawRoundRect(x, 108, 412, W - 216, 126, 16);
     x.stroke();
 
+    const ticketHeader = `CARTE N° ${d.num} · ${d.people || 1} PERS.`;
     x.fillStyle = "#745B62";
-    x.font = "700 15px 'Plus Jakarta Sans', sans-serif";
-    x.fillText(`BILLET PERSONNEL · N°${d.num} (${d.people || 1} PERS.)`, W / 2, 444);
+    x.font = ticketHeader.length > 34
+      ? "700 13px 'Plus Jakarta Sans', sans-serif"
+      : "700 15px 'Plus Jakarta Sans', sans-serif";
+    x.fillText(ticketHeader, W / 2, 444);
 
     const rawName = String(d.nom || "Invité").trim();
     const fontSize = rawName.length > 26 ? 26 : rawName.length > 18 ? 30 : 34;
@@ -1487,13 +1504,28 @@ function drawElwFrame(x, W, H) {
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
   });
 
-  /* Lecture directe #billet-NUM ou #billet-NUM-CODE (scan QR Code) */
+  /* Lecture directe #billet-NUM--CODE ou #billet-NUM (scan QR Code) */
   async function checkTicketHash() {
-    const mHash = location.hash.match(/^#billet-(\d+)(?:-([a-f0-9]+))?$/i);
-    if (!mHash) return;
-    const ticketNum = mHash[1];
-    const ticketCode = mHash[2] || "";
-    let found = Object.values(getRsvps()).find((r) => String(r.num) === ticketNum);
+    const rawHash = decodeURIComponent(location.hash || "");
+    if (!/^#billet-/i.test(rawHash)) return;
+    const body = rawHash.replace(/^#billet-/i, "");
+    let ticketNum = body;
+    let ticketCode = "";
+    if (body.includes("--")) {
+      const idx = body.lastIndexOf("--");
+      ticketNum = body.slice(0, idx);
+      ticketCode = body.slice(idx + 2);
+    } else {
+      const legacy = body.match(/^(\d+)(?:-([a-f0-9]+))?$/i);
+      if (legacy) {
+        ticketNum = legacy[1];
+        ticketCode = legacy[2] || "";
+      }
+    }
+    ticketNum = String(ticketNum || "").trim();
+    if (!ticketNum) return;
+
+    let found = Object.values(getRsvps()).find((r) => String(r.num || "").toUpperCase() === ticketNum.toUpperCase());
     if (!found) {
       try {
         const qs = new URLSearchParams({ num: ticketNum });
@@ -1536,7 +1568,7 @@ async function reportCommunityItem(type, id) {
 }
 
 /* =========================================================
-   LIVRE D'OR (AVEC PRÉ-MODÉRATION, CONSENTEMENT & SIGNALEMENT)
+   VŒUX DE NOËL (AVEC PRÉ-MODÉRATION, CONSENTEMENT & SIGNALEMENT)
    ========================================================= */
 (function initGuestbook() {
   const KEY = "noel-aboisso-guestbook";
@@ -1547,17 +1579,11 @@ async function reportCommunityItem(type, id) {
   const consent = $("#g-consent");
   if (!form || !list || !msg || !count) return;
 
-  const DEFAULT_SEEDS = [
-    { id: 101, nom: "Présidence du District d'Aboisso", msg: "Soyez les bienvenus avec vos proches et vos invités pour célébrer la naissance de notre Sauveur Jésus-Christ ce jeudi 24 décembre !", at: "2026-11-15T10:00:00.000Z" },
-    { id: 102, nom: "Famille Kouamé (Aboisso 1)", msg: "Quelle joie de proclamer ensemble : « Un Sauveur est né, Il est le cadeau ! » Nous viendrons avec nos voisins.", at: "2026-11-16T14:30:00.000Z" },
-    { id: 103, nom: "Sœur Adjoua (Branche d'Ayamé)", msg: "Hâte de partager les cantiques, le théâtre de la Nativité et le repas fraternel avec tous nos amis invités !", at: "2026-11-18T17:15:00.000Z" },
-  ];
-
   const load = () => {
     try {
       const parsed = JSON.parse(localStorage.getItem(KEY) || "[]");
-      return parsed.length ? parsed : DEFAULT_SEEDS;
-    } catch { return DEFAULT_SEEDS; }
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
   };
   const save = (arr) => { try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch {} };
 
@@ -1687,12 +1713,6 @@ async function reportCommunityItem(type, id) {
   const camCanvas = $("#cam-canvas");
   if (!form || !grid || !drop || !fileInput) return;
 
-  const DEFAULT_WALL_SEEDS = [
-    { id: "seed-1", nom: "Présidence du District", msg: "J'y serai, et toi ?", photo: "assets/photo-event.jpg", at: "2026-11-14T09:00:00.000Z" },
-    { id: "seed-2", nom: "Chorales & Jeunes d'Aboisso", msg: "Ne rate pas cet événement !", photo: "assets/nativite-famille.jpg", at: "2026-11-15T11:30:00.000Z" },
-    { id: "seed-3", nom: "Missionnaires & Accueil", msg: "Ne te laisse pas raconter cette belle fête !", photo: "assets/sapin-noel.jpg", at: "2026-11-17T16:00:00.000Z" },
-  ];
-
   const WC_FRAME_HTML = `
     <div class="wc-frame" aria-hidden="true">
       <div class="wc-frame-inner"></div>
@@ -1747,8 +1767,8 @@ async function reportCommunityItem(type, id) {
   const load = () => {
     try {
       const parsed = JSON.parse(localStorage.getItem(KEY) || "[]");
-      return parsed.length ? parsed : DEFAULT_WALL_SEEDS;
-    } catch { return DEFAULT_WALL_SEEDS; }
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
   };
   const entries = () => serverEntries ?? load();
 
