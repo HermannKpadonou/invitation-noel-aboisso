@@ -2,13 +2,13 @@
    Service Worker (PWA & Billet Hors-Ligne)
    Éclairer le Monde — Noël à Aboisso (24 Décembre 2026)
    ========================================================= */
-const CACHE_NAME = "noel-aboisso-v27";
+const CACHE_NAME = "noel-aboisso-v28";
 const CORE_ASSETS = [
   "/",
   "/index.html",
-  "/styles.css?v=27",
-  "/script.js?v=27",
-  "/assets/shared.js?v=27",
+  "/styles.css?v=28",
+  "/script.js?v=28",
+  "/assets/shared.js?v=28",
   "/assets/qrcode-generator.js",
   "/assets/light_the_world.webp",
   "/assets/pattern-light.svg",

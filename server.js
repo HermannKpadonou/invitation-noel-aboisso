@@ -104,19 +104,16 @@ async function initDB() {
       nom TEXT NOT NULL,
       tel TEXT DEFAULT '',
       at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-    CREATE TABLE IF NOT EXISTS lights (
-      id SERIAL PRIMARY KEY,
-      nom TEXT DEFAULT '',
-      inspiration TEXT DEFAULT '',
-      at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );`);
 
   /* Colonnes RSVP ajoutées avec le formulaire enrichi (statut, branche,
-     localite, invités : ami + membre inactif + pointage Jour J) — sans casser l'existant */
-  for (const col of ["statut", "branche", "localite", "ami_nom", "ami_tel", "inactif_nom", "inactif_tel"]) {
+     localite, invités, enfants, transport, découverte, code billet + pointage Jour J) */
+  for (const col of ["statut", "branche", "localite", "ami_nom", "ami_tel", "inactif_nom", "inactif_tel", "ticket_code"]) {
     await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS ${col} TEXT DEFAULT ''`);
   }
+  await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS children INT DEFAULT 0`);
+  await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS need_transport BOOLEAN DEFAULT FALSE`);
+  await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS want_more BOOLEAN DEFAULT FALSE`);
   await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS checked_in BOOLEAN DEFAULT FALSE`);
   await db.query(`ALTER TABLE rsvps ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ`);
   await db.query(`ALTER TABLE guestbook ADD COLUMN IF NOT EXISTS approved BOOLEAN DEFAULT TRUE`);
@@ -151,15 +148,34 @@ async function initDB() {
   }
 }
 
-/* ---------- SESSIONS ADMIN & SÉCURITÉ ---------- */
-const tokens = new Set(); // tokens valides (perdus au redémarrage : il suffit de se reconnecter)
+/* ---------- SESSIONS ADMIN (TOKENS HMAC SANS ÉTAT — SURVIT AUX REDÉMARRAGES RENDER) ---------- */
+const TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
+function getTokenSecret() {
+  return crypto.createHash("sha256").update(`elw-aboisso-2026:${CONFIG.adminPassword}`).digest();
+}
 
-function isAuth(req, searchParams = null) {
+function createAdminToken() {
+  const exp = String(Date.now() + TOKEN_TTL_MS);
+  const nonce = crypto.randomBytes(12).toString("hex");
+  const payload = `${exp}.${nonce}`;
+  const sig = crypto.createHmac("sha256", getTokenSecret()).update(payload).digest("hex");
+  return `${payload}.${sig}`;
+}
+
+function isAuth(req) {
   const h = req.headers.authorization || "";
-  const headerToken = h.startsWith("Bearer ") ? h.slice(7).trim() : "";
-  const queryToken = searchParams ? (searchParams.get("token") || "").trim() : "";
-  const token = headerToken || queryToken;
-  return !!token && tokens.has(token);
+  const token = h.startsWith("Bearer ") ? h.slice(7).trim() : "";
+  if (!token) return false;
+  const parts = token.split(".");
+  if (parts.length !== 3) return false;
+  const [expStr, nonce, sig] = parts;
+  const exp = parseInt(expStr, 10);
+  if (!exp || Date.now() > exp || !nonce || !sig) return false;
+  const expectedSig = crypto.createHmac("sha256", getTokenSecret()).update(`${expStr}.${nonce}`).digest("hex");
+  const a = Buffer.from(sig, "utf8");
+  const b = Buffer.from(expectedSig, "utf8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
 }
 
 /* Comparaison à temps constant pour éviter les attaques temporelles */
@@ -329,11 +345,14 @@ async function generateUniqueTicketNum() {
 async function addRsvp(d) {
   if (db) {
     const r = await db.query(
-      `INSERT INTO rsvps (num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-       RETURNING id, num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, checked_in, checked_in_at, at`,
-      [d.num, d.nom, d.presence, d.tel, d.people, d.note, d.statut || "membre", d.branche || "", d.localite || "",
-       d.ami_nom || "", d.ami_tel || "", d.inactif_nom || "", d.inactif_tel || ""]
+      `INSERT INTO rsvps (num, nom, presence, tel, people, children, need_transport, want_more, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, ticket_code)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+       RETURNING id, num, nom, presence, tel, people, children, need_transport, want_more, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, ticket_code, checked_in, checked_in_at, at`,
+      [
+        d.num, d.nom, d.presence, d.tel, d.people, d.children || 0, !!d.need_transport, !!d.want_more,
+        d.note, d.statut || "membre", d.branche || "", d.localite || "",
+        d.ami_nom || "", d.ami_tel || "", d.inactif_nom || "", d.inactif_tel || "", d.ticket_code || "",
+      ]
     );
     return r.rows[0];
   }
@@ -341,6 +360,10 @@ async function addRsvp(d) {
   const entry = {
     id: (all.reduce((m, r) => Math.max(m, r.id || 0), 0) || 0) + 1,
     ...d,
+    children: d.children || 0,
+    need_transport: !!d.need_transport,
+    want_more: !!d.want_more,
+    ticket_code: d.ticket_code || "",
     checked_in: false,
     checked_in_at: null,
     at: new Date().toISOString(),
@@ -352,7 +375,7 @@ async function addRsvp(d) {
 
 async function listRsvps() {
   if (db) return (await db.query(
-    `SELECT id, num, nom, presence, tel, people, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, checked_in, checked_in_at, at FROM rsvps ORDER BY id ASC`
+    `SELECT id, num, nom, presence, tel, people, COALESCE(children, 0) AS children, COALESCE(need_transport, FALSE) AS need_transport, COALESCE(want_more, FALSE) AS want_more, note, statut, branche, localite, ami_nom, ami_tel, inactif_nom, inactif_tel, ticket_code, checked_in, checked_in_at, at FROM rsvps ORDER BY id ASC`
   )).rows;
   return readJSON("rsvps.json", []);
 }
@@ -362,8 +385,8 @@ async function setRsvpCheckin({ id, num, checked_in = true }) {
   const ts = flag ? new Date().toISOString() : null;
   if (db) {
     const query = id
-      ? `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE id = $3 RETURNING id, num, nom, presence, tel, people, note, statut, branche, localite, checked_in, checked_in_at, at`
-      : `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE num = $3 RETURNING id, num, nom, presence, tel, people, note, statut, branche, localite, checked_in, checked_in_at, at`;
+      ? `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE id = $3 RETURNING id, num, nom, presence, tel, people, COALESCE(children, 0) AS children, note, statut, branche, localite, checked_in, checked_in_at, at`
+      : `UPDATE rsvps SET checked_in = $1, checked_in_at = $2 WHERE num = $3 RETURNING id, num, nom, presence, tel, people, COALESCE(children, 0) AS children, note, statut, branche, localite, checked_in, checked_in_at, at`;
     const param = id ? parseInt(id, 10) : parseInt(num, 10);
     if (!param) return null;
     const r = await db.query(query, [flag, ts, param]);
@@ -378,26 +401,44 @@ async function setRsvpCheckin({ id, num, checked_in = true }) {
   return target;
 }
 
-async function findTicketByNum(num) {
+function maskPublicName(fullName) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return parts[0] || "Participant";
+  return `${parts[0]} ${parts[1][0].toUpperCase()}.`;
+}
+
+async function findTicketByNum(num, code = "") {
   const n = parseInt(num, 10);
   if (!n) return null;
+  let found = null;
   if (db) {
     const r = await db.query(
-      `SELECT num, nom, presence, people, statut, branche, checked_in, at FROM rsvps WHERE num = $1 ORDER BY id DESC LIMIT 1`,
+      `SELECT num, nom, presence, people, COALESCE(children, 0) AS children, statut, branche, ticket_code, checked_in, at FROM rsvps WHERE num = $1 ORDER BY id DESC LIMIT 1`,
       [n]
     );
-    return r.rows[0] || null;
+    found = r.rows[0] || null;
+  } else {
+    const all = readJSON("rsvps.json", []);
+    found = all.filter((r) => Number(r.num) === n).pop() || null;
   }
-  const all = readJSON("rsvps.json", []);
-  const found = all.filter((r) => Number(r.num) === n).pop();
   if (!found) return null;
+
+  /* Protection anti-énumération : si le billet a un code de sécurité, il doit correspondre */
+  const cleanCode = String(code || "").trim();
+  const hasCode = Boolean(found.ticket_code);
+  if (hasCode && cleanCode !== found.ticket_code) {
+    return null;
+  }
+
   return {
     num: found.num,
-    nom: found.nom,
+    nom: hasCode ? found.nom : maskPublicName(found.nom),
     presence: found.presence,
     people: found.people,
+    children: found.children || 0,
     statut: found.statut || "membre",
     branche: found.branche || "",
+    ticket_code: found.ticket_code || "",
     checked_in: !!found.checked_in,
     at: found.at,
   };
@@ -430,7 +471,7 @@ async function listGuestbook(includeUnapproved = false) {
 }
 
 async function addGuestbook(entry) {
-  const approved = entry.approved !== undefined ? !!entry.approved : true;
+  const approved = entry.approved !== undefined ? !!entry.approved : false;
   if (db) {
     const r = await db.query(
       `INSERT INTO guestbook (nom, msg, approved, reported) VALUES ($1,$2,$3,FALSE) RETURNING id, nom, msg, approved, reported, at`,
@@ -443,31 +484,6 @@ async function addGuestbook(entry) {
   all.push(item);
   writeJSON("guestbook.json", all);
   return item;
-}
-
-/* ---------- Constellation d'Aboisso (Bougies allumées — Défi Éclairer le Monde) ---------- */
-const BASE_LIGHTS_COUNT = 25; // 25 lumières initiales symbolisant les 25 jours de décembre
-async function getLightsSummary() {
-  if (db) {
-    const [c, recent] = await Promise.all([
-      db.query(`SELECT COUNT(*)::int AS n FROM lights`),
-      db.query(`SELECT id, nom, inspiration, at FROM lights ORDER BY id DESC LIMIT 12`),
-    ]);
-    return { count: BASE_LIGHTS_COUNT + (c.rows[0]?.n || 0), recent: recent.rows };
-  }
-  const all = readJSON("lights.json", []);
-  return { count: BASE_LIGHTS_COUNT + all.length, recent: all.slice(-12).reverse() };
-}
-
-async function addLight({ nom, inspiration }) {
-  if (db) {
-    await db.query(`INSERT INTO lights (nom, inspiration) VALUES ($1, $2)`, [nom, inspiration]);
-    return getLightsSummary();
-  }
-  const all = readJSON("lights.json", []);
-  all.push({ id: Date.now(), nom, inspiration, at: new Date().toISOString() });
-  writeJSON("lights.json", all);
-  return getLightsSummary();
 }
 
 const DEFAULT_WALL_SEEDS = [
@@ -690,28 +706,30 @@ async function handleAPI(req, res, url) {
     return send(req, res, 200, { ok: true, status: "awake", ts: new Date().toISOString() });
   }
 
-  /* --- Connexion admin (avec protection anti-bruteforce) --- */
+  /* --- Connexion admin (avec protection anti-bruteforce et token HMAC sans état) --- */
   if (pathname === "/api/login" && req.method === "POST") {
     if (!checkRateLimit(req, "login", 10, 60_000)) {
       return send(req, res, 429, { ok: false, error: "Trop de tentatives. Réessayez dans une minute." });
     }
     const body = await readBody(req);
     if (verifyPassword(clean(body.password), CONFIG.adminPassword)) {
-      const token = crypto.randomBytes(24).toString("hex");
-      tokens.add(token);
+      const token = createAdminToken();
       return send(req, res, 200, { ok: true, token });
     }
     return send(req, res, 401, { ok: false, error: "Mot de passe incorrect" });
   }
 
-  /* --- Consultation publique d'un billet par numéro (pour le scan du QR Code sur tout appareil) --- */
+  /* --- Consultation publique d'un billet par numéro + code (anti-énumération) --- */
   if (pathname === "/api/ticket" && req.method === "GET") {
-    const entry = await findTicketByNum(searchParams.get("num"));
+    if (!checkRateLimit(req, "ticket", 30, 60_000)) {
+      return send(req, res, 429, { ok: false, error: "Trop de requêtes. Veuillez patienter." });
+    }
+    const entry = await findTicketByNum(searchParams.get("num"), searchParams.get("code") || "");
     if (!entry) return send(req, res, 404, { ok: false, error: "Billet introuvable" });
     return send(req, res, 200, { ok: true, entry });
   }
 
-  /* --- RSVP (public : envoi — Entrée gratuite, venir avec au moins 1 invité si présent) --- */
+  /* --- RSVP (public : envoi — Entrée gratuite et ouverte à tous, invité encouragé mais facultatif) --- */
   if (pathname === "/api/rsvp" && req.method === "POST") {
     if (!checkRateLimit(req, "rsvp", 20, 60_000)) {
       return send(req, res, 429, { ok: false, error: "Trop de requêtes. Veuillez patienter un instant." });
@@ -729,9 +747,6 @@ async function handleAPI(req, res, url) {
     }
 
     const rawInvites = Array.isArray(body.invites) ? body.invites.filter((i) => i && clean(i.nom, 80)) : [];
-    if (presence === "present" && rawInvites.length < 1 && !clean(body.ami_nom, 80)) {
-      return send(req, res, 400, { ok: false, error: "Ajoutez au moins une personne que vous invitez pour venir avec vous." });
-    }
 
     /* Détection de doublon : si la personne s'est déjà inscrite (même téléphone ou même nom + branche), on lui renvoie son billet existant */
     const existing = await findExistingRsvp(nom, tel, branche);
@@ -740,10 +755,16 @@ async function handleAPI(req, res, url) {
     }
 
     /* Vérification de la capacité maximale de la salle */
-    const minPeople = presence === "present" ? 2 : 1;
+    const minPeople = 1;
     const requestedPeople = presence === "present"
-      ? Math.min(Math.max(parseInt(body.people, 10) || minPeople, minPeople), 30)
+      ? Math.min(Math.max(parseInt(body.people, 10) || Math.max(1, 1 + rawInvites.length), minPeople), 30)
       : 1;
+    const requestedChildren = presence === "present"
+      ? Math.min(Math.max(parseInt(body.children, 10) || 0, 0), requestedPeople)
+      : 0;
+    const needTransport = presence === "present" && !!body.need_transport;
+    const wantMore = !!body.want_more;
+
     if (presence === "present" && CONFIG.rsvpMaxCapacity > 0) {
       const currentPeople = await getCurrentExpectedPeople();
       if (currentPeople >= CONFIG.rsvpMaxCapacity) {
@@ -756,13 +777,18 @@ async function handleAPI(req, res, url) {
     }
 
     const num = await generateUniqueTicketNum();
+    const ticket_code = crypto.randomBytes(4).toString("hex");
     const entry = await addRsvp({
       num,
+      ticket_code,
       nom,
       presence,
       statut,
       tel,
       people: requestedPeople,
+      children: requestedChildren,
+      need_transport: needTransport,
+      want_more: wantMore,
       branche,
       localite: clean(body.localite, 80),
       ami_nom: clean(body.ami_nom || rawInvites[0]?.nom, 80),
@@ -802,7 +828,7 @@ async function handleAPI(req, res, url) {
     return send(req, res, 200, { ok: true, dup: !!dup, info });
   }
 
-  /* --- Livre d'or (public : lire / écrire) --- */
+  /* --- Livre d'or (public : lire / écrire avec pré-modération) --- */
   if (pathname === "/api/guestbook" && req.method === "GET") {
     return send(req, res, 200, await listGuestbook(false));
   }
@@ -817,8 +843,8 @@ async function handleAPI(req, res, url) {
     if (hasBadWords(nom) || hasBadWords(msg)) {
       return send(req, res, 400, { ok: false, error: "Merci d'utiliser un langage respectueux et bienveillant." });
     }
-    const entry = await addGuestbook({ id: Date.now(), nom, msg, approved: true, at: new Date().toISOString() });
-    return send(req, res, 200, { ok: true, entry });
+    const entry = await addGuestbook({ id: Date.now(), nom, msg, approved: false, at: new Date().toISOString() });
+    return send(req, res, 200, { ok: true, pending: true, entry });
   }
 
   /* --- Signalement public d'une photo ou d'un vœu --- */
@@ -832,7 +858,7 @@ async function handleAPI(req, res, url) {
     return send(req, res, 200, { ok: true });
   }
 
-  /* --- Mur photo « Je serai là ! » (public : lire métadonnées / servir image binaire / ajouter) --- */
+  /* --- Mur photo « Je serai là ! » (public : lire métadonnées / servir image binaire / ajouter avec pré-modération) --- */
   if (pathname === "/api/photo-wall" && req.method === "GET") {
     return send(req, res, 200, await listWallMeta(false));
   }
@@ -874,13 +900,13 @@ async function handleAPI(req, res, url) {
     }
     if (!photo.startsWith("data:image/")) return send(req, res, 400, { ok: false, error: "Photo requise (formats JPG, PNG ou WebP)" });
     if (photo.length > 45e4) return send(req, res, 413, { ok: false, error: "Photo trop lourde — choisissez-en une plus petite" });
-    const entry = await addWall({ id: Date.now(), nom, msg, photo, approved: true, at: new Date().toISOString() });
-    return send(req, res, 200, { ok: true, entry });
+    const entry = await addWall({ id: Date.now(), nom, msg, photo, approved: false, at: new Date().toISOString() });
+    return send(req, res, 200, { ok: true, pending: true, entry });
   }
 
-  /* --- Back office (protégé) --- */
+  /* --- Back office (protégé par header Authorization: Bearer uniquement) --- */
   if (pathname.startsWith("/api/admin/")) {
-    if (!isAuth(req, searchParams)) return send(req, res, 401, { ok: false, error: "Non autorisé" });
+    if (!isAuth(req)) return send(req, res, 401, { ok: false, error: "Non autorisé" });
 
     if (pathname === "/api/admin/summary" && req.method === "GET") {
       const [rsvps, guestbook, wall, invites] = await Promise.all([
@@ -889,19 +915,49 @@ async function handleAPI(req, res, url) {
         listWallMeta(true),
         listInvitesRaw(),
       ]);
+      const presentList = rsvps.filter((r) => r.presence === "present");
       const checkedInList = rsvps.filter((r) => r.checked_in);
+
+      /* Récapitulatif par branche pour la Présidence du District */
+      const branchMap = new Map();
+      for (const r of rsvps) {
+        const label = r.statut === "ami"
+          ? "Amis / Visiteurs invités"
+          : (r.branche || "Branche non précisée");
+        if (!branchMap.has(label)) {
+          branchMap.set(label, { branche: label, rsvps: 0, presents: 0, people: 0, children: 0, checkedInPeople: 0, transport: 0 });
+        }
+        const b = branchMap.get(label);
+        b.rsvps += 1;
+        if (r.presence === "present") {
+          b.presents += 1;
+          b.people += (r.people || 1);
+          b.children += (r.children || 0);
+          if (r.need_transport) b.transport += 1;
+        }
+        if (r.checked_in) {
+          b.checkedInPeople += (r.people || 1);
+        }
+      }
+      const branchStats = [...branchMap.values()].sort((a, b) => b.people - a.people);
+
       const stats = {
         total: rsvps.length,
-        presents: rsvps.filter((r) => r.presence === "present").length,
+        presents: presentList.length,
         absents: rsvps.filter((r) => r.presence === "absent").length,
-        people: rsvps.filter((r) => r.presence === "present").reduce((s, r) => s + (r.people || 1), 0),
+        people: presentList.reduce((s, r) => s + (r.people || 1), 0),
+        children: presentList.reduce((s, r) => s + (r.children || 0), 0),
+        needTransport: presentList.filter((r) => r.need_transport).length,
+        wantMore: rsvps.filter((r) => r.want_more).length,
         maxCapacity: CONFIG.rsvpMaxCapacity,
         checkedInRsvps: checkedInList.length,
         checkedInPeople: checkedInList.reduce((s, r) => s + (r.people || 1), 0),
         messages: guestbook.length,
+        pendingGuestbook: guestbook.filter((g) => g.approved === false).length,
+        pendingWall: wall.filter((w) => w.approved === false).length,
         invites: invites.length,
       };
-      return send(req, res, 200, { ok: true, rsvps, guestbook, wall, invites, stats });
+      return send(req, res, 200, { ok: true, rsvps, guestbook, wall, invites, stats, branchStats });
     }
 
     /* Modération admin (approuver / masquer une photo ou un vœu) */
@@ -935,16 +991,17 @@ async function handleAPI(req, res, url) {
       }
       const lines = [
         [
-          "N° billet", "Nom", "Statut", "Présence", "Pointage Jour J", "Personnes", "Téléphone", "Branche", "Localité",
-          "Personnes invitées (toutes)", "Ami invité (1er)", "Contact ami", "Membre inactif invité (1er)", "Contact membre", "Note", "Date",
+          "N° billet", "Nom", "Statut", "Présence", "Pointage Jour J", "Personnes", "Dont enfants",
+          "Besoin transport", "Découverte / Livre de Mormon", "Téléphone", "Branche", "Localité",
+          "Personnes invitées (toutes)", "Ami invité (1er)", "Contact ami", "Membre moins actif invité (1er)", "Contact membre", "Note", "Date",
         ].join(";"),
         ...rsvps.map((r) => {
           const linked = invitesByRsvp.get(r.id) || [];
           const allInvText = linked.length
-            ? linked.map((i) => `${i.type === "inactif" ? "[Inactif]" : "[Ami]"} ${i.nom}${i.tel ? ` (${i.tel})` : ""}`).join(" | ")
+            ? linked.map((i) => `${i.type === "inactif" ? "[Moins actif]" : "[Ami]"} ${i.nom}${i.tel ? ` (${i.tel})` : ""}`).join(" | ")
             : [
                 r.ami_nom ? `[Ami] ${r.ami_nom}${r.ami_tel ? ` (${r.ami_tel})` : ""}` : "",
-                r.inactif_nom ? `[Inactif] ${r.inactif_nom}${r.inactif_tel ? ` (${r.inactif_tel})` : ""}` : "",
+                r.inactif_nom ? `[Moins actif] ${r.inactif_nom}${r.inactif_tel ? ` (${r.inactif_tel})` : ""}` : "",
               ].filter(Boolean).join(" | ");
           return [
             r.num,
@@ -953,6 +1010,9 @@ async function handleAPI(req, res, url) {
             r.presence === "present" ? "Présent(e)" : "Absent(e)",
             r.checked_in ? "Arrivé(e)" : "En attente",
             r.people,
+            r.children || 0,
+            r.need_transport ? "Oui" : "Non",
+            r.want_more ? "Oui" : "Non",
             escCSV(r.tel),
             escCSV(r.branche || ""),
             escCSV(r.localite || ""),

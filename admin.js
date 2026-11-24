@@ -215,7 +215,9 @@ function openGuestDrawer(rsvpId) {
     <div class="rsvp-card-pills">
       <span class="pill ${r.statut === "ami" ? "ami" : "membre"}">${r.statut === "ami" ? "Ami·e / visiteur·se" : "Membre"}</span>
       <span class="pill ${r.presence === "present" ? "present" : "absent"}">${r.presence === "present" ? "Présent·e" : "Absent·e"}</span>
-      <span class="pill inactif">${r.people} personne${r.people > 1 ? "s" : ""}</span>
+      <span class="pill inactif">${r.people} personne${r.people > 1 ? "s" : ""}${r.children > 0 ? ` (dont ${r.children} enf.)` : ""}</span>
+      ${r.need_transport ? `<span class="pill inactif">🚌 Transport</span>` : ""}
+      ${r.want_more ? `<span class="pill present">📖 Livre de Mormon / Infos</span>` : ""}
       ${r.checked_in ? `<span class="pill checkedin">✅ Arrivé·e (${fmtDate(r.checked_in_at)})</span>` : ""}
     </div>
     <div class="d-item">
@@ -245,7 +247,7 @@ function openGuestDrawer(rsvpId) {
               return `<div class="dr-invite-row">
                 <div>
                   <strong>${g.icon} ${escapeHTML(g.nom)}</strong>
-                  <small style="display:block">${g.type === "inactif" ? "Membre inactif·ve" : "Ami·e"}${g.tel ? ` · ${escapeHTML(g.tel)}` : ""}</small>
+                  <small style="display:block">${g.type === "inactif" ? "Membre moins actif" : "Ami·e"}${g.tel ? ` · ${escapeHTML(g.tel)}` : ""}</small>
                 </div>
                 ${gTel ? `<a class="btn btn-outline btn-sm" href="https://wa.me/${gTel}?text=${gWaMsg}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ""}
               </div>`;
@@ -289,7 +291,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 function render() {
-  const { rsvps, guestbook, stats } = STATE;
+  const { rsvps, guestbook, stats, branchStats = [] } = STATE;
 
   /* Statistiques */
   $("#st-total").textContent = stats.total ?? 0;
@@ -297,6 +299,21 @@ function render() {
   $("#st-people").textContent = stats.people ?? 0;
   $("#st-messages").textContent = stats.messages ?? 0;
   $("#st-invites").textContent = stats.invites ?? 0;
+
+  if ($("#st-children-label")) {
+    const ch = stats.children ?? 0;
+    const tr = stats.needTransport ?? 0;
+    const wm = stats.wantMore ?? 0;
+    $("#st-children-label").textContent = `Dont ${ch} enfant${ch > 1 ? "s" : ""} · ${tr} transport${wm > 0 ? ` · ${wm} 📖` : ""}`;
+  }
+  if ($("#st-pending-label")) {
+    const pGb = stats.pendingGuestbook ?? 0;
+    const pWall = stats.pendingWall ?? 0;
+    const totalPending = pGb + pWall;
+    $("#st-pending-label").textContent = totalPending > 0
+      ? `⏳ ${totalPending} à valider (${pGb} vœu${pGb > 1 ? "x" : ""}, ${pWall} photo${pWall > 1 ? "s" : ""})`
+      : "✅ Modération à jour";
+  }
 
   /* Barre de progression « Présents annoncés » */
   const total = stats.total ?? 0, pres = stats.presents ?? 0;
@@ -315,9 +332,30 @@ function render() {
   if ($("#c-checkin")) $("#c-checkin").textContent = checkedRsvps;
 
   $("#c-rsvps").textContent = rsvps.length;
-  $("#c-gb").textContent = guestbook.length;
-  $("#c-wall").textContent = (STATE.wall ?? []).length;
+  $("#c-gb").textContent = stats.pendingGuestbook > 0 ? `${guestbook.length} (${stats.pendingGuestbook}⏳)` : guestbook.length;
+  $("#c-wall").textContent = stats.pendingWall > 0 ? `${(STATE.wall ?? []).length} (${stats.pendingWall}⏳)` : (STATE.wall ?? []).length;
   $("#c-inv").textContent = (STATE.invites ?? []).length;
+
+  /* Récapitulatif par branche */
+  const bWrap = $("#branch-summary-wrap");
+  const bBody = $("#branch-summary-body");
+  if (bWrap && bBody) {
+    if (branchStats.length > 0) {
+      bBody.innerHTML = branchStats.map((b) => `
+        <tr>
+          <td><strong>${escapeHTML(b.branche)}</strong></td>
+          <td>${b.presents} / ${b.rsvps}</td>
+          <td><strong>${b.people}</strong></td>
+          <td>${b.children}</td>
+          <td>${b.transport > 0 ? `🚌 ${b.transport}` : "—"}</td>
+          <td>${b.checkedInPeople > 0 ? `✅ ${b.checkedInPeople}` : "0"}</td>
+        </tr>
+      `).join("");
+      bWrap.classList.remove("hidden");
+    } else {
+      bWrap.classList.add("hidden");
+    }
+  }
 
   /* Table des inscriptions (avec filtres) */
   const q = $("#f-search").value.trim().toLowerCase();
@@ -328,6 +366,8 @@ function render() {
     if (filter === "present" || filter === "absent") return r.presence === filter;
     if (filter === "membre") return (r.statut || "membre") === "membre";
     if (filter === "ami") return r.statut === "ami";
+    if (filter === "transport") return !!r.need_transport;
+    if (filter === "wantmore") return !!r.want_more;
     return true;
   };
   const matchesSearch = (r) => {
@@ -384,9 +424,10 @@ function render() {
           <span class="pill ${r.statut === "ami" ? "ami" : "membre"}">${r.statut === "ami" ? "Ami·e" : "Membre"}</span>
           <span class="pill ${r.presence === "present" ? "present" : "absent"}">${r.presence === "present" ? "Présent·e" : "Absent·e"}</span>
           ${r.checked_in ? `<span class="pill checkedin">✅ En salle</span>` : ""}
+          ${r.want_more ? `<span class="pill present">📖</span>` : ""}
         </div>
       </td>
-      <td><strong>${r.people}</strong></td>
+      <td><strong>${r.people}</strong>${r.children > 0 ? `<span class="t-sub">${r.children} enf.</span>` : ""}</td>
       <td>
         <div class="t-contact">
           ${r.tel ? `<a href="tel:${tel}">${escapeHTML(r.tel)}</a>` : `<span style="color:var(--ink-soft)">—</span>`}
@@ -416,7 +457,9 @@ function render() {
       <div class="rsvp-card-pills">
         <span class="pill ${r.statut === "ami" ? "ami" : "membre"}">${r.statut === "ami" ? "Ami·e" : "Membre"}</span>
         <span class="pill ${r.presence === "present" ? "present" : "absent"}">${r.presence === "present" ? "Présent·e" : "Absent·e"}</span>
-        <span class="pill inactif">${r.people} personne${r.people > 1 ? "s" : ""}</span>
+        <span class="pill inactif">${r.people} pers.${r.children > 0 ? ` (${r.children} enf.)` : ""}</span>
+        ${r.need_transport ? `<span class="pill inactif">🚌</span>` : ""}
+        ${r.want_more ? `<span class="pill present">📖</span>` : ""}
         ${r.checked_in ? `<span class="pill checkedin">✅ En salle</span>` : ""}
       </div>
       <div class="rsvp-card-meta">
@@ -472,17 +515,17 @@ function render() {
     const card = document.createElement("article");
     card.className = "gb-card";
     card.style.animationDelay = `${Math.min(i * 60, 400)}ms`;
-    if (isReported) card.style.borderColor = "#D70B33";
+    if (isReported || !isApproved) card.style.borderColor = "#D70B33";
     card.innerHTML = `
       <p class="who">
         ${escapeHTML(g.nom)}
         ${isReported ? `<span class="pill absent">🚩 Signalé</span>` : ""}
-        ${!isApproved ? `<span class="pill inactif">Masqué</span>` : ""}
+        ${!isApproved ? `<span class="pill inactif">⏳ En attente</span>` : ""}
         <span class="when">${fmtDate(g.at)}</span>
       </p>
       <p class="txt">${escapeHTML(g.msg)}</p>
       <div style="display:flex;gap:.35rem;align-items:center">
-        <button class="btn btn-outline btn-sm" type="button" data-mod-type="guestbook" data-mod-id="${g.id}" data-mod-val="${isApproved ? "0" : "1"}">
+        <button class="btn ${isApproved ? "btn-outline" : "btn-red"} btn-sm" type="button" data-mod-type="guestbook" data-mod-id="${g.id}" data-mod-val="${isApproved ? "0" : "1"}">
           ${isApproved ? "🙈 Masquer" : "✅ Approuver"}
         </button>
         <button class="icon-btn" type="button" title="Supprimer" aria-label="Supprimer le vœu de ${escapeHTML(g.nom)}" data-del-gb="${g.id}">${ICON.trash}</button>
@@ -500,20 +543,20 @@ function render() {
     const isReported = !!p.reported;
     const card = document.createElement("article");
     card.className = "wall-admin-card";
-    if (isReported) card.style.borderColor = "#D70B33";
+    if (isReported || !isApproved) card.style.borderColor = "#D70B33";
     card.innerHTML = `
       <img src="${p.photo}" alt="${escapeHTML(p.nom)}" width="84" height="84" loading="lazy" decoding="async" />
       <div class="wall-admin-info">
         <strong>
           ${escapeHTML(p.nom)}
           ${isReported ? `<span class="pill absent">🚩 Signalé</span>` : ""}
-          ${!isApproved ? `<span class="pill inactif">Masqué</span>` : ""}
+          ${!isApproved ? `<span class="pill inactif">⏳ En attente</span>` : ""}
         </strong>
         ${p.msg ? `<span>${escapeHTML(p.msg)}</span>` : ""}
         <small>${fmtDate(p.at)}</small>
       </div>
       <div style="display:flex;gap:.35rem;align-items:center">
-        <button class="btn btn-outline btn-sm" type="button" data-mod-type="photo-wall" data-mod-id="${p.id}" data-mod-val="${isApproved ? "0" : "1"}">
+        <button class="btn ${isApproved ? "btn-outline" : "btn-red"} btn-sm" type="button" data-mod-type="photo-wall" data-mod-id="${p.id}" data-mod-val="${isApproved ? "0" : "1"}">
           ${isApproved ? "🙈 Masquer" : "✅ Approuver"}
         </button>
         <button class="icon-btn" type="button" title="Supprimer" aria-label="Supprimer la photo de ${escapeHTML(p.nom)}" data-del-wall="${p.id}">${ICON.trash}</button>
@@ -538,7 +581,7 @@ function render() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><span class="t-name">${escapeHTML(i.nom)}</span></td>
-      <td><span class="pill ${i.type === "inactif" ? "inactif" : "ami"}">${i.type === "inactif" ? "Membre inactif·ve" : "Ami·e"}</span></td>
+      <td><span class="pill ${i.type === "inactif" ? "inactif" : "ami"}">${i.type === "inactif" ? "Membre moins actif" : "Ami·e"}</span></td>
       <td>${i.tel ? `<a href="tel:${tel}" style="color:var(--crimson);text-decoration:underline;text-underline-offset:2px">${escapeHTML(i.tel)}</a>` : "—"}</td>
       <td>${i.par ? escapeHTML(i.par) : "—"}</td>
       <td>${fmtDate(i.at)}</td>
@@ -558,7 +601,7 @@ function render() {
       card.innerHTML = `
         <div class="rsvp-card-top">
           <strong>${escapeHTML(i.nom)}</strong>
-          <span class="pill ${i.type === "inactif" ? "inactif" : "ami"}">${i.type === "inactif" ? "Membre inactif·ve" : "Ami·e"}</span>
+          <span class="pill ${i.type === "inactif" ? "inactif" : "ami"}">${i.type === "inactif" ? "Membre moins actif" : "Ami·e"}</span>
         </div>
         <div class="rsvp-card-meta">
           <p><small>Contact</small><span>${i.tel ? `<a href="tel:${tel}">${escapeHTML(i.tel)}</a>` : "—"}</span></p>

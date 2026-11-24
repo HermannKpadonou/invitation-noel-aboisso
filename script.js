@@ -607,7 +607,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 });
 
 (function initShare() {
-  const text = "✦ Un Sauveur est né · Il est le Cadeau ✦\nVous êtes cordialement invité au Grand Noël des Enfants & Familles 🎄\n« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre » (Luc 2:14)\n📅 Jeudi 24 décembre 2026, 10h00–15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n🤝 Entrée gratuite — venez avec au moins une personne que vous invitez !";
+  const text = "✦ Un Sauveur est né · Il est le Cadeau ✦\nVous êtes cordialement invité au Grand Noël des Enfants & Familles 🎄\n« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre » (Luc 2:14)\n📅 Jeudi 24 décembre 2026, 10h00–15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n🤝 Entrée gratuite et ouverte à tous — venez seul, en famille ou avec un proche invité !";
   const url = location.href;
   document.querySelectorAll("[data-share-wa]").forEach((a) => {
     a.href = `https://wa.me/?text=${encodeURIComponent(text + "\n👉 " + url)}`;
@@ -630,6 +630,9 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   const membreFields = $("#membre-fields");
   const inviteBlock = $("#invite-block");
   const accompInput = $("#f-accomp");
+  const childrenInput = $("#f-children");
+  const transportCheck = $("#f-transport");
+  const wantMoreCheck = $("#f-want-more");
   const invList = $("#inv-amis");
   const submitBtn = $("#rsvp-submit-btn");
 
@@ -680,7 +683,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     if (descEl) {
       descEl.innerHTML = presence === "absent"
         ? "Nous avons bien noté que vous ne pourrez pas être présent le jeudi 24 décembre 2026. Joyeux Noël à vous et à votre famille !"
-        : "Votre inscription et celle de votre invité sont bien enregistrées pour le <strong>jeudi 24 décembre 2026 (10h00 – 15h00)</strong>.";
+        : "Votre inscription est bien enregistrée pour le <strong>jeudi 24 décembre 2026 (10h00 – 15h00)</strong>.";
     }
   }
 
@@ -693,7 +696,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     }
     btn.classList.remove("hidden");
     const link = inviteLink(d);
-    const msg = `🔔 *Rappel — Noël à Aboisso (Billet N°${d.num})*\n📅 Jeudi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n👤 Participant : ${d.nom}\n🤝 Invité(s) : ${getCompanionText(d)}\n🎟️ Lien de mon billet QR : ${link}`;
+    const msg = `🔔 *Rappel — Noël à Aboisso (Billet N°${d.num})*\n📅 Jeudi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n👤 Participant : ${d.nom}\n🤝 Accompagnement : ${getCompanionText(d)}\n🎟️ Lien de mon billet QR : ${link}`;
     const num = telKey(d.tel) ? normalizePhone(d.tel) : "";
     btn.href = num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
@@ -706,7 +709,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     row.className = "inv-row";
     row.innerHTML = `
       <div class="field">
-        <label for="${idNom}">${invCounter === 1 ? "Nom et prénom de votre invité *" : "Autre invité"}</label>
+        <label for="${idNom}">${invCounter === 1 ? "Nom et prénom de votre invité (facultatif)" : "Autre invité"}</label>
         <input id="${idNom}" class="inv-nom" type="text" maxlength="80" placeholder="Ex. Koffi Yao" />
       </div>
       <div class="field">
@@ -784,8 +787,8 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     if (!isPresent) setFieldError(errInvites, "");
     if (!isMembre) setFieldError(errBranche, "");
     if (accompInput) {
-      accompInput.min = isPresent ? "2" : "1";
-      if (isPresent && parseInt(accompInput.value, 10) < 2) accompInput.value = "2";
+      accompInput.min = "1";
+      if (parseInt(accompInput.value, 10) < 1) accompInput.value = "1";
     }
     if (submitBtn && !submitBtn.disabled) {
       submitBtn.textContent = isPresent
@@ -813,12 +816,13 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       if (d?.inactif_nom) names.push(d.inactif_nom);
     }
     if (names.length) return names.join(", ");
-    return "1 invité accompagnant";
+    return (d?.people || 1) > 1 ? `${d.people} personnes (famille / proches)` : "Participation personnelle";
   }
 
   function inviteLink(d) {
-    if (location.protocol.startsWith("http")) return location.origin + location.pathname + "#billet-" + d.num;
-    return "https://invitation-noel-aboisso.onrender.com/#billet-" + d.num;
+    const suffix = d.ticket_code ? `${d.num}-${d.ticket_code}` : `${d.num}`;
+    if (location.protocol.startsWith("http")) return location.origin + location.pathname + "#billet-" + suffix;
+    return "https://invitation-noel-aboisso.onrender.com/#billet-" + suffix;
   }
 
   function makeQR(text) {
@@ -841,7 +845,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       if (ltCompanion) {
         ltCompanion.textContent = typedInvites.length
           ? typedInvites.join(", ")
-          : "Le nom de votre invité apparaîtra ici";
+          : "Seul(e) ou avec un proche invité";
       }
       if (isPresent && accompInput && typedInvites.length >= 1) {
         const minP = 1 + typedInvites.length;
@@ -860,9 +864,12 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     ltCompanionRow?.classList.toggle("hidden", isAbsent);
     if (ltCompanion && !isAbsent) ltCompanion.textContent = getCompanionText(d);
     if (ltStatus) {
+      const pCount = d.people || 1;
+      const cCount = d.children || 0;
+      const cText = cCount > 0 ? `, dont ${cCount} enfant${cCount > 1 ? "s" : ""}` : "";
       ltStatus.textContent = isAbsent
         ? `📩 Réponse enregistrée (N°${d.num})`
-        : `✅ Billet N°${d.num} validé (${d.people || 2} personnes)`;
+        : `✅ Billet N°${d.num} validé (${pCount} pers.${cText})`;
     }
 
     const qrData = makeQR(inviteLink(d));
@@ -967,27 +974,28 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       return;
     }
 
-    /* 4. Validation de l'invité (uniquement si la personne a choisi "Je serai présent") */
+    /* 4. Invités (facultatifs : si un invité est saisi, on l'enregistre) */
     const invites = presence === "present" ? collectInvites() : [];
     const namedInvites = invites.filter((i) => i.nom && i.nom.length >= 2);
 
-    if (presence === "present" && namedInvites.length < 1) {
-      const firstInvInput = invList.querySelector(".inv-nom");
-      setFieldError(errInvites, "Ajoutez le nom d'au moins une personne que vous invitez pour venir avec vous.");
-      firstInvInput?.focus();
-      return;
-    }
-
-    const minPeople = presence === "present" ? Math.max(2, 1 + namedInvites.length) : 1;
+    const minPeople = presence === "present" ? Math.max(1, 1 + namedInvites.length) : 1;
     const rawPeople = parseInt(accompInput?.value || String(minPeople), 10) || minPeople;
+    const peopleCount = presence === "present" ? Math.min(Math.max(rawPeople, minPeople), 30) : 1;
+    const childrenCount = presence === "present"
+      ? Math.min(Math.max(parseInt(childrenInput?.value || "0", 10) || 0, 0), peopleCount)
+      : 0;
 
     const data = {
-      num: Math.floor(100 + Math.random() * 900),
+      num: null,
+      ticket_code: "",
       nom,
       presence,
       statut,
       tel,
-      people: presence === "present" ? Math.min(Math.max(rawPeople, minPeople), 30) : 1,
+      people: peopleCount,
+      children: childrenCount,
+      need_transport: presence === "present" && !!transportCheck?.checked,
+      want_more: !!wantMoreCheck?.checked,
       branche: statut === "membre" ? branche : "",
       localite: ($("#f-localite")?.value || "").trim(),
       note: ($("#f-note")?.value || "").trim(),
@@ -1013,30 +1021,25 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
         body: JSON.stringify(data),
       });
       const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      if (!res.ok || !j.ok) {
         showFormError(j.error || "Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalBtnText;
-        }
         return;
       }
       if (j.entry && j.entry.num) data.num = j.entry.num;
+      if (j.entry && j.entry.ticket_code) data.ticket_code = j.entry.ticket_code;
       if (j.duplicate) {
         toast(`ℹ️ Vous étiez déjà inscrit : voici votre billet N°${data.num}`);
       } else {
         toast(presence === "present" ? "🎟️ Votre billet est prêt !" : "📩 Votre réponse a bien été enregistrée.");
       }
     } catch {
-      /* Pas de connexion ou erreur réseau : message clair sans perdre la saisie */
-      if (!navigator.onLine) {
-        showFormError("Pas de connexion Internet. Vérifiez votre réseau et réessayez (vos informations saisies sont conservées).");
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = originalBtnText;
-        }
-        return;
-      }
+      /* Toujours bloquer en cas d'échec réseau afin de ne jamais créer un billet fictif absent du serveur */
+      showFormError(
+        navigator.onLine
+          ? "Le serveur met un instant à répondre. Patientez quelques secondes puis appuyez de nouveau sur « Valider » (vos informations saisies sont conservées)."
+          : "Pas de connexion Internet. Vérifiez votre réseau et réessayez (vos informations saisies sont conservées)."
+      );
+      return;
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -1218,15 +1221,18 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     window.open(`https://wa.me/${wa}?text=${encodeURIComponent(msg)}`, "_blank");
   });
 
-  /* Lecture directe #billet-NUM (scan QR Code) */
+  /* Lecture directe #billet-NUM ou #billet-NUM-CODE (scan QR Code) */
   async function checkTicketHash() {
-    const mHash = location.hash.match(/^#billet-(\d+)$/);
+    const mHash = location.hash.match(/^#billet-(\d+)(?:-([a-f0-9]+))?$/i);
     if (!mHash) return;
     const ticketNum = mHash[1];
+    const ticketCode = mHash[2] || "";
     let found = Object.values(getRsvps()).find((r) => String(r.num) === ticketNum);
     if (!found) {
       try {
-        const res = await fetch(`/api/ticket?num=${encodeURIComponent(ticketNum)}`);
+        const qs = new URLSearchParams({ num: ticketNum });
+        if (ticketCode) qs.set("code", ticketCode);
+        const res = await fetch(`/api/ticket?${qs.toString()}`);
         if (res.ok) {
           const j = await res.json();
           if (j.ok && j.entry) found = j.entry;
@@ -1264,7 +1270,7 @@ async function reportCommunityItem(type, id) {
 }
 
 /* =========================================================
-   LIVRE D'OR (AVEC PRÉ-REMPLISSAGE, CONSENTEMENT & SIGNALEMENT)
+   LIVRE D'OR (AVEC PRÉ-MODÉRATION, CONSENTEMENT & SIGNALEMENT)
    ========================================================= */
 (function initGuestbook() {
   const KEY = "noel-aboisso-guestbook";
@@ -1351,6 +1357,7 @@ async function reportCommunityItem(type, id) {
     if (submitBtn) submitBtn.disabled = true;
 
     const payload = { nom, msg: texte, at: new Date().toISOString() };
+    let isPending = false;
     try {
       const res = await fetch("/api/guestbook", {
         method: "POST",
@@ -1360,21 +1367,27 @@ async function reportCommunityItem(type, id) {
       const j = await res.json().catch(() => ({}));
       if (!res.ok) {
         toast(j.error || "Envoi impossible.");
-        if (submitBtn) submitBtn.disabled = false;
         return;
       }
-      if (j.entry) {
+      isPending = !!j.pending;
+      if (j.entry && !isPending) {
         serverEntries = [...(serverEntries ?? []), j.entry];
       }
     } catch {
-      const arr = load(); arr.push(payload); save(arr);
+      toast("Impossible d'envoyer votre message. Vérifiez votre connexion Internet.");
+      return;
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
     form.reset();
     count.textContent = "0/200";
     render();
-    toast("💌 Merci pour vos vœux de Noël !");
+    toast(
+      isPending
+        ? "💌 Merci ! Vos vœux seront affichés après validation par l'équipe du district."
+        : "💌 Merci pour vos vœux de Noël !",
+      4500
+    );
   });
 
   render();
@@ -1663,6 +1676,7 @@ async function reportCommunityItem(type, id) {
     if (submitBtn) submitBtn.disabled = true;
 
     const payload = { nom, msg: $("#w-msg").value.trim(), photo: photoData, at: new Date().toISOString() };
+    let isPending = false;
     try {
       const res = await fetch("/api/photo-wall", {
         method: "POST",
@@ -1672,12 +1686,15 @@ async function reportCommunityItem(type, id) {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         toast(json.error || "Envoi impossible 😕");
-        if (submitBtn) submitBtn.disabled = false;
         return;
       }
-      serverEntries = [...(serverEntries ?? []), json.entry];
+      isPending = !!json.pending;
+      if (json.entry && !isPending) {
+        serverEntries = [...(serverEntries ?? []), json.entry];
+      }
     } catch {
-      const arr = load(); arr.push(payload); save(arr);
+      toast("Impossible d'envoyer votre photo. Vérifiez votre connexion Internet.");
+      return;
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
@@ -1688,7 +1705,12 @@ async function reportCommunityItem(type, id) {
     preview.classList.add("hidden");
     placeholder.classList.remove("hidden");
     render();
-    toast("📸 Votre photo est publiée sur le mur !");
+    toast(
+      isPending
+        ? "📸 Merci ! Votre photo sera publiée sur le mur après validation par l'équipe du district."
+        : "📸 Votre photo est publiée sur le mur !",
+      4500
+    );
   });
 
   render();

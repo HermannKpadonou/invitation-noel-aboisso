@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=8" />
+  <link rel="stylesheet" href="admin.css?v=9" />
 </head>
 <body>
 
@@ -90,6 +90,7 @@
           </span>
           <strong id="st-people">0</strong>
           <small>Personnes attendues</small>
+          <em class="s-progress-label" id="st-children-label">Dont 0 enfant · 0 transport</em>
         </article>
         <article class="stat gold">
           <span class="s-icon">
@@ -97,6 +98,7 @@
           </span>
           <strong id="st-messages">0</strong>
           <small>Vœux reçus</small>
+          <em class="s-progress-label" id="st-pending-label">Modération à jour</em>
         </article>
         <article class="stat gold">
           <span class="s-icon">
@@ -137,6 +139,23 @@
 
       <!-- Onglet Inscriptions -->
       <section class="panel" id="panel-rsvps">
+        <!-- Récapitulatif par branche pour la Présidence du District -->
+        <div class="table-wrap hidden" id="branch-summary-wrap" style="margin-bottom:1rem">
+          <table class="table" id="tbl-branches">
+            <thead>
+              <tr>
+                <th>Récapitulatif par branche</th>
+                <th>Présents</th>
+                <th>Personnes</th>
+                <th>Dont enfants</th>
+                <th>Transport</th>
+                <th>Arrivés (Jour J)</th>
+              </tr>
+            </thead>
+            <tbody id="branch-summary-body"></tbody>
+          </table>
+        </div>
+
         <div class="toolbar">
           <label class="tb-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -150,6 +169,8 @@
               <option value="absent">Absent·es seulement</option>
               <option value="membre">Membres seulement</option>
               <option value="ami">Ami·es / visiteur·ses</option>
+              <option value="transport">🚌 Besoin de transport</option>
+              <option value="wantmore">📖 Souhaitent Livre de Mormon / infos</option>
             </select>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
           </div>
@@ -234,7 +255,7 @@
 
       <!-- Onglet Invitations -->
       <section class="panel hidden" id="panel-invites">
-        <p class="panel-hint">Amis et membres inactifs invités par les membres — contactez-les par WhatsApp 💬. Les doublons (même nom ou même numéro) sont filtrés automatiquement.</p>
+        <p class="panel-hint">Amis et membres moins actifs invités par les membres — contactez-les par WhatsApp 💬. Les doublons (même nom ou même numéro) sont filtrés automatiquement.</p>
         <div class="table-wrap" id="invites-table-wrap">
           <table class="table" id="tbl-invites">
             <thead>
@@ -287,7 +308,7 @@
   </aside>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="assets/shared.js?v=8" defer></script>
-  <script src="admin.js?v=8" defer></script>
+  <script src="assets/shared.js?v=28" defer></script>
+  <script src="admin.js?v=9" defer></script>
 </body>
 </html>
