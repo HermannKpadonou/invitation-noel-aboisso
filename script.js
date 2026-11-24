@@ -125,28 +125,34 @@ function getRsvps() {
   catch { return {}; }
 }
 
-function getLastRsvp() {
-  const list = Object.values(getRsvps());
-  if (!list.length) return null;
-  return list
+function getRsvpList() {
+  return Object.values(getRsvps())
     .slice()
-    .sort((a, b) => new Date(a.at || 0).getTime() - new Date(b.at || 0).getTime())
-    .pop();
+    .sort((a, b) => new Date(b.at || 0).getTime() - new Date(a.at || 0).getTime());
+}
+
+function clearSavedRsvps() {
+  try { localStorage.removeItem(RSVP_KEY); } catch {}
+}
+
+function getLastRsvp() {
+  const list = getRsvpList();
+  return list.length ? list[0] : null;
 }
 
 /* =========================================================
-   ÉCRAN D'OUVERTURE SOFT & FLUIDE (SANS CHARGEMENT AUDIO FORCÉ)
+   ÉCRAN D'OUVERTURE LENT & SOLENNEL + PLAYLIST AUTO
    ========================================================= */
 (function initIntro() {
   const intro = $("#intro");
   const envelope = $("#envelope");
   if (!intro || !envelope) return;
 
+  /* Personnalisation uniquement depuis le lien (?pour=…&de=…) pour ne jamais garder l'ancien nom sur un téléphone partagé */
   const params = new URLSearchParams(location.search);
   const urlPour = (params.get("pour") || params.get("invite") || "").trim();
   const urlDe = (params.get("de") || params.get("par") || "").trim();
-  const lastR = getLastRsvp();
-  const recipientName = urlPour || (lastR && lastR.nom ? lastR.nom.trim().split(/\s+/)[0] : "");
+  const recipientName = urlPour;
 
   if (recipientName) {
     if ($("#ir-prefix")) $("#ir-prefix").textContent = "Bonjour ";
@@ -185,19 +191,34 @@ function getLastRsvp() {
   let letterRevealed = false;
   let dismissed = false;
 
-  /* Étape 1 → 2 : ouvre doucement l'enveloppe puis déploie la carte lisible (ne ferme PAS l'écran) */
+  /* Étape 1 → 2 : ouverture lente de l'enveloppe, sortie du carton, puis fondu vers la carte complète */
   function openEnvelopeCard() {
     if (letterRevealed || dismissed) return;
     letterRevealed = true;
     if (!isReducedMotion()) playChime("envelope");
+    window.__startMusic?.(true); // Lance la playlist de cantiques automatiquement en fondu doux
+
     intro.classList.add("env-open");
-    const delay = isReducedMotion() ? 60 : 950;
+    if (isReducedMotion()) {
+      stageClosed?.classList.add("hidden");
+      stageLetter?.classList.remove("hidden");
+      $("#intro-enter-rsvp")?.focus();
+      return;
+    }
+
+    /* Laisse le rabat s'ouvrir (1.15s) et le carton monter doucement hors de l'enveloppe (~1.85s) */
+    setTimeout(() => {
+      if (dismissed) return;
+      stageClosed?.classList.add("fading-out");
+    }, 1850);
+
     setTimeout(() => {
       if (dismissed) return;
       stageClosed?.classList.add("hidden");
       stageLetter?.classList.remove("hidden");
+      intro.scrollTop = 0;
       $("#intro-enter-rsvp")?.focus();
-    }, delay);
+    }, 2400);
   }
 
   /* Étape 2 → Site : l'utilisateur choisit quand quitter la carte après l'avoir lue */
@@ -205,6 +226,7 @@ function getLastRsvp() {
     if (dismissed) return;
     dismissed = true;
     if (!letterRevealed && !isReducedMotion()) playChime("envelope");
+    window.__startMusic?.(true);
     intro.classList.add("opening");
     document.body.style.overflow = "";
     if (scrollToTarget) {
@@ -930,20 +952,73 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     box.classList.remove("hidden");
   }
 
-  /* État initial si un billet existe déjà sur l'appareil */
-  let last = getLastRsvp();
-  if (last) {
-    setDoneHeading(last.nom, last.presence);
-    updateSelfReminderLink(last);
-    form.classList.add("hidden");
-    done.classList.remove("hidden");
-    showInvite(last);
-    if (Array.isArray(last.invites) && last.invites.length) {
-      renderInvitesShare(last.invites, last.nom);
+  /* Réinitialisation complète de la carte d'aperçu pour inscrire une nouvelle personne */
+  function resetLiveTicketPreview() {
+    currentInvite = null;
+    if (ltNum) ltNum.textContent = "N° ---";
+    if (ltName) ltName.textContent = "Votre nom apparaîtra ici";
+    ltCompanionRow?.classList.remove("hidden");
+    if (ltCompanion) ltCompanion.textContent = "Seul(e) ou avec un proche invité";
+    if (ltStatus) ltStatus.textContent = "Remplissez le formulaire pour activer votre billet QR";
+    if (ltQrImg) {
+      ltQrImg.removeAttribute("src");
+      ltQrImg.classList.add("hidden");
     }
-  } else {
-    syncFormUI();
+    ltActions?.classList.add("hidden");
+    document.querySelectorAll(".stb-chip.active").forEach((c) => c.classList.remove("active"));
   }
+
+  /* Portefeuille des billets enregistrés sur cet appareil (permet d'inscrire plusieurs personnes sans perdre leurs billets) */
+  function renderSavedTicketsBar(activeNum = null) {
+    const bar = $("#saved-tickets-bar");
+    const listBox = $("#stb-list");
+    const titleEl = $("#stb-title");
+    if (!bar || !listBox) return;
+    const savedList = getRsvpList();
+    if (!savedList.length) {
+      bar.classList.add("hidden");
+      listBox.innerHTML = "";
+      return;
+    }
+    if (titleEl) {
+      titleEl.textContent = savedList.length > 1
+        ? `🎟️ ${savedList.length} billets enregistrés sur ce téléphone`
+        : "🎟️ 1 billet enregistré sur ce téléphone";
+    }
+    listBox.innerHTML = "";
+    savedList.forEach((item) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "stb-chip" + (String(activeNum) === String(item.num) ? " active" : "");
+      const shortName = String(item.nom || "Invité").trim().split(/\s+/).slice(0, 2).join(" ");
+      chip.innerHTML = `<b>N°${escapeHTML(item.num)}</b> ${escapeHTML(shortName)}`;
+      chip.addEventListener("click", () => {
+        last = item;
+        showInvite(item);
+        renderSavedTicketsBar(item.num);
+        toast(`🎟️ Billet N°${item.num} de ${item.nom} affiché`);
+      });
+      listBox.appendChild(chip);
+    });
+    bar.classList.remove("hidden");
+  }
+
+  $("#stb-clear")?.addEventListener("click", () => {
+    if (!confirm("Effacer l'historique des billets de ce téléphone ? (Les inscriptions restent bien enregistrées sur le serveur.)")) return;
+    clearSavedRsvps();
+    last = null;
+    done.classList.add("hidden");
+    form.classList.remove("hidden");
+    resetLiveTicketPreview();
+    renderSavedTicketsBar();
+    toast("🧹 Historique effacé sur ce téléphone — prêt pour une nouvelle inscription.");
+  });
+
+  /* État initial : le formulaire reste toujours vierge et prêt pour inscrire une nouvelle personne,
+     tandis que les billets déjà enregistrés sur ce téléphone restent accessibles en 1 clic dans la barre ci-dessus */
+  let last = getLastRsvp();
+  renderSavedTicketsBar();
+  syncFormUI();
 
   $("#view-invite")?.addEventListener("click", () => {
     if (last) showInvite(last);
@@ -952,9 +1027,14 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   $("#new-rsvp-btn")?.addEventListener("click", () => {
     done.classList.add("hidden");
     form.classList.remove("hidden");
+    form.reset();
+    invList.innerHTML = "";
+    invCounter = 0;
+    addInviteRow();
     clearAllFieldErrors();
+    resetLiveTicketPreview();
+    syncFormUI();
     nomInput?.focus();
-    updateLiveTicketPreview();
   });
 
   function showFormError(msg, focusEl = null) {
@@ -978,7 +1058,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
     /* 1. Validation du nom (au moins 2 caractères) */
     if (nom.length < 2) {
-      setFieldError(errNom, "Veuillez indiquer votre nom et prénom (au moins 2 caractères).");
+      setFieldError(errNom, "Veuillez indiquer le nom et prénom (au moins 2 caractères).");
       nomInput?.focus();
       return;
     }
@@ -992,7 +1072,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
     /* 3. Validation de la branche (obligatoire pour les membres) */
     if (statut === "membre" && !branche) {
-      setFieldError(errBranche, "Veuillez choisir votre branche dans la liste.");
+      setFieldError(errBranche, "Veuillez choisir la branche dans la liste.");
       brancheSelect?.focus();
       return;
     }
@@ -1051,9 +1131,9 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       if (j.entry && j.entry.num) data.num = j.entry.num;
       if (j.entry && j.entry.ticket_code) data.ticket_code = j.entry.ticket_code;
       if (j.duplicate) {
-        toast(`ℹ️ Vous étiez déjà inscrit : voici votre billet N°${data.num}`);
+        toast(`ℹ️ Cette personne était déjà inscrite : voici son billet N°${data.num}`);
       } else {
-        toast(presence === "present" ? "🎟️ Votre billet est prêt !" : "📩 Votre réponse a bien été enregistrée.");
+        toast("🎟️ Billet validé et enregistré !");
       }
     } catch {
       /* Toujours bloquer en cas d'échec réseau afin de ne jamais créer un billet fictif absent du serveur */
@@ -1074,21 +1154,22 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     currentInvite = data;
     last = data;
 
-    showInvite(data);
     form.reset();
     invList.innerHTML = "";
     invCounter = 0;
     addInviteRow();
+    form.classList.add("hidden");
     syncFormUI();
 
-    form.classList.add("hidden");
+    renderSavedTicketsBar(data.num);
     setDoneHeading(nom, presence);
     updateSelfReminderLink(data);
     done.classList.remove("hidden");
     renderInvitesShare(namedInvites, nom);
+    showInvite(data);
   });
 
-  /* ---------- Génération de la Carte Billet en Image HD (Canvas 2x) ---------- */
+  /* ---------- Génération de la Carte d'Invitation HD (Design Éclairer le Monde — Canvas 2x) ---------- */
   function wrapText(x, text, cx, y, maxW, lineH) {
     const words = String(text || "").split(" ");
     let line = "", yy = y;
@@ -1103,23 +1184,100 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     return yy;
   }
 
-  function drawStar(x, cx, cy, R, r, n = 5) {
-    x.beginPath();
-    for (let i = 0; i < n * 2; i++) {
-      const rad = i % 2 === 0 ? R : r;
-      const a = (Math.PI * i) / n - Math.PI / 2;
-      x[i ? "lineTo" : "moveTo"](cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+  /* Étoile géométrique Éclairer le Monde */
+  function drawLightTheWorldStar(x, cx, cy, scale = 1) {
+    x.save();
+    x.translate(cx, cy);
+    x.scale(scale, scale);
+    x.strokeStyle = "#CC092F";
+    x.lineWidth = 4.2;
+    x.lineCap = "butt";
+    const segs = [
+      [0, -44, 0, 62],
+      [0, 71, 0, 80],
+      [-34, 0, 26, 0],
+      [33, 0, 41, 0],
+      [0, 0, -18, -18],
+      [-23, -23, -31, -31],
+      [0, 0, 24, -24],
+      [0, 0, -16, 16],
+      [0, 0, 26, 26],
+    ];
+    for (const [x1, y1, x2, y2] of segs) {
+      x.beginPath();
+      x.moveTo(x1, y1);
+      x.lineTo(x2, y2);
+      x.stroke();
     }
-    x.closePath(); x.fill();
+    x.restore();
   }
 
-  function archPath(x, cx, top, w, h) {
+  /* Double cadre géométrique rouge Éclairer le Monde (2 tracés entrelacés exacts) */
+  function drawElwFrame(x, W, H) {
+    const RED = "#CC092F";
+    const r = 46;
+    x.save();
+    x.strokeStyle = RED;
+    x.lineWidth = 2.2;
+
+    /* Tracé A : coin concave haut-gauche, angles droits ailleurs */
+    const ax1 = 44, ay1 = 30, ax2 = W - 62, ay2 = H - 48;
     x.beginPath();
-    x.moveTo(cx - w / 2, top + h);
-    x.lineTo(cx - w / 2, top + w / 2);
-    x.arc(cx, top + w / 2, w / 2, Math.PI, 0);
-    x.lineTo(cx + w / 2, top + h);
+    x.moveTo(ax1 + r, ay1);
+    x.lineTo(ax2, ay1);
+    x.lineTo(ax2, ay2);
+    x.lineTo(ax1, ay2);
+    x.lineTo(ax1, ay1 + r);
+    x.arc(ax1, ay1, r, Math.PI / 2, 0, true);
+    x.stroke();
+
+    /* Tracé B : coin concave bas-droite, angles droits ailleurs */
+    const bx1 = 62, by1 = 48, bx2 = W - 44, by2 = H - 30;
+    x.beginPath();
+    x.moveTo(bx1, by1);
+    x.lineTo(bx2, by1);
+    x.lineTo(bx2, by2 - r);
+    x.arc(bx2, by2, r, -Math.PI / 2, Math.PI, true);
+    x.lineTo(bx1, by2);
     x.closePath();
+    x.stroke();
+
+    /* Losanges rouges interrompant les lignes verticales gauche et droite */
+    const drawDiamond = (dx, dy) => {
+      x.save();
+      x.translate(dx, dy);
+      x.fillStyle = "#FFFFFF";
+      x.fillRect(-10, -22, 20, 44);
+      x.rotate(Math.PI / 4);
+      x.fillStyle = RED;
+      x.fillRect(-6, -6, 12, 12);
+      x.restore();
+    };
+    drawDiamond(ax1, 252);
+    drawDiamond(bx2, H - 236);
+
+    /* Signature ÉclairerLeMonde.org incrustée sur les bordures inférieures */
+    x.fillStyle = "#FFFFFF";
+    x.fillRect(W / 2 - 150, H - 62, 300, 44);
+    x.textAlign = "left";
+    x.fillStyle = RED;
+    const parts = [
+      { txt: "Éclairer", font: "800 28px 'Plus Jakarta Sans', sans-serif" },
+      { txt: "Le", font: "300 28px 'Plus Jakarta Sans', sans-serif" },
+      { txt: "Monde.org", font: "800 28px 'Plus Jakarta Sans', sans-serif" },
+    ];
+    let totalW = 0;
+    for (const p of parts) {
+      x.font = p.font;
+      totalW += x.measureText(p.txt).width;
+    }
+    let px = (W - totalW) / 2;
+    for (const p of parts) {
+      x.font = p.font;
+      x.fillText(p.txt, px, H - 30);
+      px += x.measureText(p.txt).width;
+    }
+    x.restore();
   }
 
   async function buildInviteCanvas(d) {
@@ -1127,60 +1285,83 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       try { await document.fonts.ready; } catch {}
     }
     const scale = 2;
-    const W = 760, H = 1030;
+    const W = 760, H = 1080;
     const c = document.createElement("canvas");
     c.width = W * scale; c.height = H * scale;
     const x = c.getContext("2d");
     x.scale(scale, scale);
 
-    /* Fond Ivoire Doux */
-    x.fillStyle = "#FDFBF9"; x.fillRect(0, 0, W, H);
+    /* Fond blanc pur */
+    x.fillStyle = "#FFFFFF";
+    x.fillRect(0, 0, W, H);
 
-    /* Arche Carmin & Rose */
-    const AG = x.createLinearGradient(0, 50, 0, H - 300);
-    AG.addColorStop(0, "#E5738A"); AG.addColorStop(0.5, "#C8102E"); AG.addColorStop(1, "#9E0B22");
-    archPath(x, W / 2, 50, W - 90, H - 300);
-    x.fillStyle = AG; x.fill();
+    /* Double cadre géométrique rouge + losanges + signature ÉclairerLeMonde.org */
+    drawElwFrame(x, W, H);
 
-    x.strokeStyle = "rgba(246, 213, 220, 0.85)"; x.lineWidth = 3;
-    archPath(x, W / 2, 66, W - 122, H - 326); x.stroke();
-
-    x.fillStyle = "#F6D5DC";
-    drawStar(x, W / 2, 195, 36, 14);
+    /* Étoile Éclairer le Monde en haut */
+    drawLightTheWorldStar(x, W / 2, 148, 1.08);
 
     x.textAlign = "center";
-    x.fillStyle = "#FCECEF";
-    x.font = "italic 600 32px 'Playfair Display', Georgia, serif";
-    x.fillText("Un Sauveur est né · Il est le Cadeau", W / 2, 275);
 
-    x.fillStyle = "#FFFFFF";
-    x.font = "700 38px 'Plus Jakarta Sans', sans-serif";
-    let y = wrapText(x, "Célébrez la naissance de Jésus-Christ avec nous", W / 2, 328, W - 240, 48);
+    /* Titre principal fidèle à la carte */
+    x.fillStyle = "#CC092F";
+    x.font = "600 28px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Célébrez la naissance de", W / 2, 286);
 
-    x.fillStyle = "#F6D5DC";
-    drawRoundRect(x, W / 2 - 205, y + 24, 410, 46, 23); x.fill();
-    x.fillStyle = "#2D1219";
-    x.font = "800 21px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("JEUDI 24 DÉCEMBRE 2026", W / 2, y + 55);
+    x.font = "800 60px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Jésus-Christ", W / 2, 348);
 
-    x.fillStyle = "#FCECEF";
-    x.font = "500 22px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Billet personnel de", W / 2, y + 104);
+    x.font = "600 28px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("avec nous", W / 2, 386);
+
+    /* Bloc nominatif discret et élégant */
+    x.fillStyle = "#FDF7F8";
+    drawRoundRect(x, 108, 412, W - 216, 126, 16);
+    x.fill();
+    x.strokeStyle = "#F0D6DC";
+    x.lineWidth = 1.5;
+    drawRoundRect(x, 108, 412, W - 216, 126, 16);
+    x.stroke();
+
+    x.fillStyle = "#745B62";
+    x.font = "700 15px 'Plus Jakarta Sans', sans-serif";
+    x.fillText(`BILLET PERSONNEL · N°${d.num} (${d.people || 1} PERS.)`, W / 2, 444);
 
     const rawName = String(d.nom || "Invité").trim();
-    const fontSize = rawName.length > 26 ? 32 : rawName.length > 18 ? 38 : 42;
-    x.fillStyle = "#FFFFFF";
+    const fontSize = rawName.length > 26 ? 26 : rawName.length > 18 ? 30 : 34;
+    x.fillStyle = "#1A1517";
     x.font = `800 ${fontSize}px 'Plus Jakarta Sans', sans-serif`;
-    x.fillText(rawName.length > 36 ? rawName.slice(0, 35) + "…" : rawName, W / 2, y + 150);
+    x.fillText(rawName.length > 36 ? rawName.slice(0, 35) + "…" : rawName, W / 2, 486);
 
-    const comp = `🤝 Accompagné de : ${getCompanionText(d)}`;
-    x.fillStyle = "#FFE09E";
-    x.font = "700 21px 'Plus Jakarta Sans', sans-serif";
-    x.fillText(comp.length > 44 ? comp.slice(0, 43) + "…" : comp, W / 2, y + 188);
+    const comp = `Accompagnement : ${getCompanionText(d)}`;
+    x.fillStyle = "#CC092F";
+    x.font = "600 18px 'Plus Jakarta Sans', sans-serif";
+    x.fillText(comp.length > 48 ? comp.slice(0, 47) + "…" : comp, W / 2, 520);
 
-    x.fillStyle = "#FFFFFF";
-    x.font = "600 24px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("10h00 – 15h00 · Salle des fêtes de la mairie d'ABOISSO", W / 2, y + 234);
+    /* Petit trait séparateur rouge */
+    x.fillStyle = "#CC092F";
+    x.fillRect(W / 2 - 24, 566, 48, 3);
+
+    /* Date, Église & Lieu */
+    x.fillStyle = "#1A1517";
+    x.font = "800 22px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("DATE  |  Jeudi 24/12/2026 · 10h–15h", W / 2, 616);
+
+    x.font = "800 21px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("L'Église de Jésus-Christ", W / 2, 658);
+    x.fillText("des Saints des Derniers Jours", W / 2, 686);
+
+    x.fillStyle = "#362F32";
+    x.font = "500 21px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Salle des fêtes d'Aboisso", W / 2, 728);
+
+    /* Contact */
+    x.fillStyle = "#2E272A";
+    x.font = "600 17px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Des questions ? Personne à contacter : Hermann Kpadonou", W / 2, 956);
+    x.fillStyle = "#52464B";
+    x.font = "500 16px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("07 07 36 88 63  |  kpadonouhermann@gmail.com", W / 2, 984);
 
     return new Promise((resolve) => {
       const done = () => resolve(c);
@@ -1188,18 +1369,12 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       if (qrData) {
         const img = new Image();
         img.onload = () => {
-          const qy = H - 260;
+          const qy = 754;
           x.fillStyle = "#FFFFFF";
-          drawRoundRect(x, W / 2 - 80, qy, 160, 160, 18); x.fill();
-          x.strokeStyle = "rgba(200, 16, 46, 0.25)"; x.lineWidth = 2;
-          drawRoundRect(x, W / 2 - 80, qy, 160, 160, 18); x.stroke();
+          drawRoundRect(x, W / 2 - 80, qy, 160, 160, 14); x.fill();
+          x.strokeStyle = "#EAD2D8"; x.lineWidth = 2;
+          drawRoundRect(x, W / 2 - 80, qy, 160, 160, 14); x.stroke();
           x.drawImage(img, W / 2 - 68, qy + 12, 136, 136);
-          x.fillStyle = "#4A3339";
-          x.font = "600 19px 'Plus Jakarta Sans', sans-serif";
-          x.fillText("Église de Jésus-Christ des Saints des Derniers Jours", W / 2, H - 72);
-          x.fillStyle = "#654E55";
-          x.font = "500 16px 'Plus Jakarta Sans', sans-serif";
-          x.fillText(`Billet N°${d.num} (${d.people || 2} pers.) · Entrée gratuite`, W / 2, H - 42);
           done();
         };
         img.onerror = done;
@@ -1821,12 +1996,20 @@ async function reportCommunityItem(type, id) {
     fab.classList.toggle("paused", !playing);
   }
 
+  let userPaused = false;
+
   els.play.addEventListener("click", () => {
-    if (!started) return playRandom(false);
-    audio.paused ? audio.play() : audio.pause();
+    if (!started) { userPaused = false; return playRandom(false); }
+    if (audio.paused) {
+      userPaused = false;
+      audio.play().catch(() => {});
+    } else {
+      userPaused = true;
+      audio.pause();
+    }
   });
-  els.next.addEventListener("click", () => (shuffle ? playRandom(false) : playIndex(idx + 1, false)));
-  els.prev.addEventListener("click", () => (shuffle ? playRandom(false) : playIndex(idx - 1, false)));
+  els.next.addEventListener("click", () => { userPaused = false; shuffle ? playRandom(false) : playIndex(idx + 1, false); });
+  els.prev.addEventListener("click", () => { userPaused = false; shuffle ? playRandom(false) : playIndex(idx - 1, false); });
   audio.addEventListener("ended", () => (shuffle ? playRandom(false) : playIndex(idx + 1, false)));
   audio.addEventListener("pause", updatePlayState);
   audio.addEventListener("play", updatePlayState);
@@ -1859,13 +2042,23 @@ async function reportCommunityItem(type, id) {
 
   let panelOpen = false;
   fab.addEventListener("click", () => {
-    if (!started) { playRandom(true); panelOpen = true; panel.classList.remove("hidden"); return; }
+    if (!started) { userPaused = false; playRandom(true); panelOpen = true; panel.classList.remove("hidden"); return; }
     panelOpen = !panelOpen;
     panel.classList.toggle("hidden", !panelOpen);
   });
   els.close.addEventListener("click", () => { panelOpen = false; panel.classList.add("hidden"); });
 
   window.__startMusic = (withFade = true) => {
-    if (!started) playRandom(withFade);
+    if (!started && !userPaused) playRandom(withFade);
   };
+
+  /* Sécurité : si l'écran d'ouverture a été sauté (lien direct #billet-…), lance la playlist au 1er clic/toucher */
+  const autoStartOnce = () => {
+    if (!started && !userPaused) {
+      const vid = $("#main-video");
+      if (!vid || vid.paused) playRandom(true);
+    }
+    removeEventListener("pointerdown", autoStartOnce);
+  };
+  addEventListener("pointerdown", autoStartOnce, { passive: true });
 })();

@@ -653,13 +653,18 @@ async function setCommunityModeration(type, id, { approved, reported }) {
   return target;
 }
 
-/* Détection de doublon d'inscription (même téléphone ou même nom + même branche) */
+/* Détection de doublon d'inscription : même personne (même nom + même téléphone, ou même nom + même branche).
+   Un même numéro de téléphone peut ainsi servir à inscrire plusieurs membres d'une famille sans blocage. */
 async function findExistingRsvp(nom, tel, branche) {
   const nk = normName(nom), tk = normTel(tel), bk = normName(branche);
+  if (!nk) return null;
   const all = await listRsvps();
   for (const r of all) {
-    if (tk && tk.length >= 8 && normTel(r.tel) === tk) return r;
-    if (nk && normName(r.nom) === nk && (!bk || !normName(r.branche) || normName(r.branche) === bk)) return r;
+    if (normName(r.nom) !== nk) continue;
+    const rTel = normTel(r.tel);
+    const rBr = normName(r.branche);
+    if (tk && rTel && tk === rTel) return r;
+    if (!bk || !rBr || rBr === bk) return r;
   }
   return null;
 }

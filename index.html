@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=29" />
+  <link rel="stylesheet" href="styles.css?v=31" />
 </head>
 <body>
 
@@ -38,7 +38,7 @@
   <!-- Flocons de lumière subtils -->
   <canvas id="snow" aria-hidden="true"></canvas>
 
-  <!-- ============ ÉCRAN D'OUVERTURE : ENVELOPPE PUIS CARTE D'INVITATION LISIBLE ============ -->
+  <!-- ============ ÉCRAN D'OUVERTURE : ENVELOPPE PUIS CARTE D'INVITATION ÉCLAIRER LE MONDE ============ -->
   <div id="intro" class="intro" role="dialog" aria-modal="true" aria-label="Carte d'invitation">
     <div class="intro-card" id="intro-card">
       <span class="intro-pill">✦ District d'Aboisso · 24 Décembre 2026</span>
@@ -48,9 +48,22 @@
         <div class="envelope" id="envelope" tabindex="0" role="button" aria-label="Ouvrir mon invitation">
           <div class="envelope-back"></div>
           <div class="envelope-letter">
-            <p class="letter-kicker">Un Sauveur nous est né</p>
-            <p class="letter-title">Il est le Cadeau</p>
-            <p class="letter-verse">« Prince de la paix… » — Ésaïe 9:5</p>
+            <svg class="elw-star-mini" viewBox="0 0 100 130" aria-hidden="true">
+              <g stroke="#CC092F" stroke-width="4.2" stroke-linecap="butt" fill="none">
+                <line x1="50" y1="8" x2="50" y2="108" />
+                <line x1="50" y1="116" x2="50" y2="124" />
+                <line x1="20" y1="44" x2="74" y2="44" />
+                <line x1="80" y1="44" x2="87" y2="44" />
+                <line x1="50" y1="44" x2="34" y2="28" />
+                <line x1="29" y1="23" x2="22" y2="16" />
+                <line x1="50" y1="44" x2="72" y2="22" />
+                <line x1="50" y1="44" x2="36" y2="58" />
+                <line x1="50" y1="44" x2="74" y2="68" />
+              </g>
+            </svg>
+            <p class="letter-kicker">Célébrez la naissance de</p>
+            <p class="letter-title">Jésus-Christ</p>
+            <p class="letter-verse">avec nous · 24/12/2026</p>
           </div>
           <div class="envelope-pocket"></div>
           <div class="envelope-flap"></div>
@@ -61,7 +74,7 @@
         <div class="intro-welcome" id="intro-welcome">
           <p class="iw-greet"><span id="ir-prefix">Cher ami, chère amie</span><strong id="ir-nom"></strong>,</p>
           <p class="iw-from hidden" id="ir-from"></p>
-          <p class="iw-text">Une invitation toute particulière vous attend pour célébrer la naissance de notre Sauveur Jésus-Christ à Aboisso.</p>
+          <p class="iw-text">Une carte d'invitation vous attend pour célébrer ensemble la naissance de notre Sauveur Jésus-Christ à Aboisso.</p>
           <div class="iw-actions">
             <button class="btn btn-primary" id="intro-open-btn" type="button">✉️ Ouvrir ma carte d'invitation ✨</button>
             <a class="btn btn-soft" id="intro-skip-rsvp" href="#rsvp">S'inscrire directement →</a>
@@ -69,25 +82,66 @@
         </div>
       </div>
 
-      <!-- Étape 2 : Carte déployée (reste affichée pour que le visiteur puisse tout lire tranquillement) -->
+      <!-- Étape 2 : Carte déployée (design Éclairer le Monde — blanc pur & double cadre rouge carmin) -->
       <div class="intro-stage-letter hidden" id="intro-stage-letter" aria-live="polite">
-        <div class="open-letter-card">
-          <span class="olc-star" aria-hidden="true">✦</span>
-          <p class="olc-kicker">Un Sauveur nous est né</p>
-          <h2 class="olc-title">Il est le plus beau Cadeau</h2>
+        <div class="open-letter-card elw-card">
+          <!-- Double cadre géométrique rouge Éclairer le Monde -->
+          <div class="elw-frame" aria-hidden="true">
+            <span class="elw-frame-inner"></span>
+            <span class="elw-frame-outer"></span>
+            <svg class="elw-corner elw-corner-tl" viewBox="0 0 36 36">
+              <path d="M-2 -2 H36 V1 A34 34 0 0 1 1 36 H-2 Z" fill="#FFFFFF"/>
+              <path d="M1 35 A34 34 0 0 0 35 1" fill="none" stroke="#CC092F" stroke-width="1.6"/>
+              <path d="M10 36 V10 H36" fill="none" stroke="#CC092F" stroke-width="1.6"/>
+            </svg>
+            <svg class="elw-corner elw-corner-br" viewBox="0 0 36 36">
+              <path d="M38 38 H0 V35 A34 34 0 0 1 35 0 H38 Z" fill="#FFFFFF"/>
+              <path d="M35 1 A34 34 0 0 0 1 35" fill="none" stroke="#CC092F" stroke-width="1.6"/>
+              <path d="M26 0 V26 H0" fill="none" stroke="#CC092F" stroke-width="1.6"/>
+            </svg>
+            <span class="elw-diamond elw-diamond-l"></span>
+            <span class="elw-diamond elw-diamond-r"></span>
+          </div>
+
+          <svg class="elw-star" viewBox="0 0 100 130" aria-hidden="true">
+            <g stroke="#CC092F" stroke-width="3.6" stroke-linecap="butt" fill="none">
+              <line x1="50" y1="8" x2="50" y2="108" />
+              <line x1="50" y1="116" x2="50" y2="124" />
+              <line x1="20" y1="44" x2="74" y2="44" />
+              <line x1="80" y1="44" x2="87" y2="44" />
+              <line x1="50" y1="44" x2="34" y2="28" />
+              <line x1="29" y1="23" x2="22" y2="16" />
+              <line x1="50" y1="44" x2="72" y2="22" />
+              <line x1="50" y1="44" x2="36" y2="58" />
+              <line x1="50" y1="44" x2="74" y2="68" />
+            </g>
+          </svg>
+
+          <p class="elw-head-sub">Célébrez la naissance de</p>
+          <h2 class="elw-head-main">Jésus-Christ</h2>
+          <p class="elw-head-sub elw-head-sub-bottom">avec nous</p>
+
           <p class="olc-greet" id="olc-greet">Cher ami, chère amie,</p>
-          <p class="olc-body">
-            Dans le silence de Bethléem, Dieu a offert au monde ce qu'Il avait de plus précieux : <strong>Son Fils bien-aimé, Jésus-Christ</strong>.
-            Il est venu essuyer nos larmes, consoler nos cœurs, fortifier nos familles et apporter une paix véritable.
+          <p class="elw-body">
+            En cette période de Noël, Dieu a offert au monde ce qu'Il avait de plus précieux : <strong>Son Fils bien-aimé</strong>.
+            Joignez-vous à nous, en famille ou avec un proche, pour une célébration remplie de paix, de chants et de Sa lumière.
           </p>
-          <p class="olc-body">
-            Ce Noël, <strong>votre place vous attend parmi nous</strong>. Venez tel que vous êtes, en famille ou avec un proche, pour chanter, partager et rayonner de Sa lumière.
-          </p>
-          <blockquote class="olc-verse">
-            « Car un enfant nous est né, un fils nous est donné… On l'appellera Admirable, Conseiller, Dieu puissant, Père éternel, Prince de la paix. »
-            <cite>— Ésaïe 9:5</cite>
-          </blockquote>
-          <p class="olc-meta">📅 Jeudi 24 décembre 2026 · 10h00 – 15h00 · Mairie d'Aboisso</p>
+          <p class="elw-verse-line">« Un enfant nous est né, un fils nous est donné… Prince de la paix. » — Ésaïe 9:5</p>
+
+          <span class="elw-dash" aria-hidden="true"></span>
+
+          <p class="elw-date-line"><strong>DATE |</strong> Jeudi 24/12/2026 · 10h–15h</p>
+          <p class="elw-church-name">L'Église de Jésus-Christ<br />des Saints des Derniers Jours</p>
+          <p class="elw-place-line">Salle des fêtes d'Aboisso</p>
+
+          <div class="elw-contact-block">
+            <p><strong>Des questions ?</strong> Personne à contacter : Hermann Kpadonou</p>
+            <p>07 07 36 88 63 &nbsp;|&nbsp; kpadonouhermann@gmail.com</p>
+          </div>
+
+          <div class="elw-wordmark" aria-label="ÉclairerLeMonde.org">
+            <span>Éclairer</span><em>Le</em><span>Monde.org</span>
+          </div>
         </div>
 
         <div class="iw-actions">
@@ -120,6 +174,14 @@
         <a class="btn btn-primary btn-sm" href="#rsvp">🎟️ S'inscrire</a>
       </div>
     </div>
+    <nav class="nav-mobile-strip" aria-label="Accès rapide">
+      <a href="#message">Message</a>
+      <a href="#rsvp">Inscription</a>
+      <a href="#videos-noel">Films</a>
+      <a href="#galerie-hd">Galerie</a>
+      <a href="#programme">Programme</a>
+      <a href="#mur-photo">Mur photo</a>
+    </nav>
   </header>
 
   <!-- ============ HERO SOFT, ÉDITORIAL & LUMINEUX ============ -->
@@ -238,42 +300,51 @@
       <div class="rsvp-layout">
         <!-- Colonne gauche : Formulaire unique tout-en-un -->
         <div class="rsvp-box reveal">
-          <!-- État : Déjà inscrit -->
+          <!-- Portefeuille multi-billets sur cet appareil (permet d'inscrire plusieurs personnes sans perdre les billets précédents) -->
+          <div id="saved-tickets-bar" class="saved-tickets-bar hidden" aria-live="polite">
+            <div class="stb-head">
+              <strong id="stb-title">🎟️ Billets enregistrés sur cet appareil</strong>
+              <button class="stb-clear" id="stb-clear" type="button" title="Effacer la liste sur ce téléphone uniquement">Effacer de ce téléphone</button>
+            </div>
+            <div class="stb-list" id="stb-list"></div>
+          </div>
+
+          <!-- État : Juste après une inscription -->
           <div id="rsvp-done" class="rsvp-done hidden" aria-live="polite">
             <div class="done-icon">🎟️</div>
             <h3 id="done-title">Votre billet est prêt !</h3>
             <p id="done-desc">Votre inscription est bien enregistrée pour le <strong>jeudi 24 décembre 2026</strong>.</p>
             <div class="done-actions">
-              <button class="btn btn-primary" id="view-invite" type="button">👁️ Afficher &amp; Télécharger mon billet</button>
-              <a class="btn btn-green" id="wa-self-reminder" target="_blank" rel="noopener">🔔 Enregistrer mon rappel WhatsApp</a>
-              <button class="btn btn-soft" id="new-rsvp-btn" type="button">Inscrire une autre personne</button>
+              <button class="btn btn-primary" id="new-rsvp-btn" type="button">➕ Inscrire une autre personne</button>
+              <a class="btn btn-green" id="wa-self-reminder" target="_blank" rel="noopener">🔔 Rappel WhatsApp</a>
+              <button class="btn btn-soft" id="view-invite" type="button">👁️ Voir le billet QR</button>
             </div>
             <div class="invites-share hidden" id="invites-share"></div>
           </div>
 
           <!-- Formulaire en 1 seule vue ultra-fluide (objectif : 520+ participants !) -->
-          <form id="rsvp-form" class="rsvp-form" novalidate>
+          <form id="rsvp-form" class="rsvp-form" autocomplete="off" novalidate>
             <p class="form-error hidden" id="rsvp-error" role="alert"></p>
             <input type="hidden" id="f-presence-select" name="presence" value="present" />
 
             <!-- Bloc 1 : Vos coordonnées -->
             <div class="form-group-card">
-              <div class="fg-title"><span>1</span> Vos informations</div>
+              <div class="fg-title"><span>1</span> Informations du participant</div>
 
               <div class="field">
-                <label for="f-nom">Votre nom et prénom *</label>
-                <input id="f-nom" name="nom" type="text" required minlength="2" placeholder="Ex. Kouassi Aya Élodie" autocomplete="name" />
+                <label for="f-nom">Nom et prénom *</label>
+                <input id="f-nom" name="nom" type="text" required minlength="2" placeholder="Ex. Kouassi Aya Élodie" autocomplete="off" />
                 <small class="field-err hidden" id="err-nom" role="alert"></small>
               </div>
 
               <div class="field-row">
                 <div class="field">
-                  <label for="f-tel">Votre WhatsApp / Téléphone (facultatif)</label>
-                  <input id="f-tel" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="07 00 00 00 00 ou +225…" />
+                  <label for="f-tel">WhatsApp / Téléphone (facultatif)</label>
+                  <input id="f-tel" name="tel" type="tel" inputmode="tel" autocomplete="off" placeholder="07 00 00 00 00 ou +225…" />
                   <small class="field-err hidden" id="err-tel" role="alert"></small>
                 </div>
                 <div class="field">
-                  <label for="f-statut-select">Vous êtes</label>
+                  <label for="f-statut-select">Statut</label>
                   <select id="f-statut-select" name="statut">
                     <option value="membre" selected>⛪ Membre de l'Église</option>
                     <option value="ami">🤝 Ami / Visiteur invité</option>
@@ -362,18 +433,48 @@
           </form>
         </div>
 
-        <!-- Colonne droite : Aperçu en direct du Billet & Carte générée -->
+        <!-- Colonne droite : Aperçu en direct du Billet & Carte générée (Design Éclairer le Monde) -->
         <div class="ticket-preview-col reveal">
-          <div class="live-ticket" id="live-ticket">
+          <div class="live-ticket elw-card elw-ticket-card" id="live-ticket">
+            <div class="elw-frame" aria-hidden="true">
+              <span class="elw-frame-inner"></span>
+              <span class="elw-frame-outer"></span>
+              <svg class="elw-corner elw-corner-tl" viewBox="0 0 36 36">
+                <path d="M-2 -2 H36 V1 A34 34 0 0 1 1 36 H-2 Z" fill="#FFFFFF"/>
+                <path d="M1 35 A34 34 0 0 0 35 1" fill="none" stroke="#CC092F" stroke-width="1.6"/>
+                <path d="M10 36 V10 H36" fill="none" stroke="#CC092F" stroke-width="1.6"/>
+              </svg>
+              <svg class="elw-corner elw-corner-br" viewBox="0 0 36 36">
+                <path d="M38 38 H0 V35 A34 34 0 0 1 35 0 H38 Z" fill="#FFFFFF"/>
+                <path d="M35 1 A34 34 0 0 0 1 35" fill="none" stroke="#CC092F" stroke-width="1.6"/>
+                <path d="M26 0 V26 H0" fill="none" stroke="#CC092F" stroke-width="1.6"/>
+              </svg>
+              <span class="elw-diamond elw-diamond-l"></span>
+              <span class="elw-diamond elw-diamond-r"></span>
+            </div>
+
             <div class="lt-top">
-              <span class="lt-badge">✦ Billet Personnel</span>
+              <span class="lt-badge">✦ Billet d'invitation</span>
               <span class="lt-num" id="lt-num">N° ---</span>
             </div>
-            <h3 class="lt-event">Il est le Cadeau · Noël à Aboisso</h3>
-            <p class="lt-date">📅 Jeudi 24 Décembre 2026 · 10h00 – 15h00</p>
-            <p class="lt-place">📍 Salle des fêtes de la mairie d'Aboisso</p>
 
-            <div class="lt-divider"></div>
+            <svg class="elw-star elw-star-sm" viewBox="0 0 100 130" aria-hidden="true">
+              <g stroke="#CC092F" stroke-width="3.6" stroke-linecap="butt" fill="none">
+                <line x1="50" y1="8" x2="50" y2="108" />
+                <line x1="50" y1="116" x2="50" y2="124" />
+                <line x1="20" y1="44" x2="74" y2="44" />
+                <line x1="80" y1="44" x2="87" y2="44" />
+                <line x1="50" y1="44" x2="34" y2="28" />
+                <line x1="29" y1="23" x2="22" y2="16" />
+                <line x1="50" y1="44" x2="72" y2="22" />
+                <line x1="50" y1="44" x2="36" y2="58" />
+                <line x1="50" y1="44" x2="74" y2="68" />
+              </g>
+            </svg>
+
+            <p class="elw-head-sub">Célébrez la naissance de</p>
+            <h3 class="elw-head-main elw-head-main-sm">Jésus-Christ</h3>
+            <p class="elw-head-sub elw-head-sub-bottom">avec nous</p>
 
             <div class="lt-guests">
               <div class="lt-row">
@@ -386,6 +487,12 @@
               </div>
             </div>
 
+            <span class="elw-dash" aria-hidden="true"></span>
+
+            <p class="elw-date-line"><strong>DATE |</strong> Jeudi 24/12/2026 · 10h–15h</p>
+            <p class="elw-church-name">L'Église de Jésus-Christ des Saints des Derniers Jours</p>
+            <p class="elw-place-line">Salle des fêtes d'Aboisso</p>
+
             <div class="lt-qr-box" id="lt-qr-box">
               <img id="i-qr" alt="Code QR de vérification de votre billet" width="76" height="76" class="hidden" />
               <div class="lt-qr-text">
@@ -397,6 +504,14 @@
             <div class="lt-actions hidden" id="lt-actions">
               <button class="btn btn-primary btn-sm" id="dl-invite" type="button">⬇️ Télécharger (PNG)</button>
               <button class="btn btn-green btn-sm" id="wa-invite-img" type="button">📤 Partager sur WhatsApp</button>
+            </div>
+
+            <div class="elw-contact-block elw-contact-compact">
+              <p><strong>Des questions ?</strong> Hermann Kpadonou · 07 07 36 88 63</p>
+            </div>
+
+            <div class="elw-wordmark" aria-label="ÉclairerLeMonde.org">
+              <span>Éclairer</span><em>Le</em><span>Monde.org</span>
             </div>
           </div>
         </div>
@@ -800,8 +915,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/shared.js?v=29" defer></script>
+  <script src="assets/shared.js?v=31" defer></script>
   <script src="assets/qrcode-generator.js" defer></script>
-  <script src="script.js?v=29" defer></script>
+  <script src="script.js?v=31" defer></script>
 </body>
 </html>

@@ -194,15 +194,20 @@ button, input, select, textarea { font-family: inherit; }
 .intro-stage-letter {
   width: 100%;
   display: flex; flex-direction: column; align-items: center; gap: 1.05rem;
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+}
+.intro-stage-closed.fading-out {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.97);
 }
 
 /* Enveloppe Soft Ivoire & Rose Poudré */
 .envelope {
   position: relative; width: min(290px, 78vw); aspect-ratio: 300 / 190;
-  margin: 0.4rem auto; cursor: pointer; perspective: 1000px;
+  margin: 0.45rem auto; cursor: pointer; perspective: 1100px;
   border-radius: 16px;
   box-shadow: 0 18px 38px rgba(45, 18, 25, 0.12);
-  transition: transform 0.55s var(--ease);
+  transition: transform 0.6s var(--ease);
 }
 .envelope:hover { transform: translateY(-4px) scale(1.02); }
 .envelope-back {
@@ -215,11 +220,11 @@ button, input, select, textarea { font-family: inherit; }
   border: 1px solid rgba(200, 16, 46, 0.15);
   padding: 0.85rem 0.9rem;
   display: flex; flex-direction: column; justify-content: center; gap: 0.25rem;
-  box-shadow: 0 8px 20px rgba(45, 18, 25, 0.08);
+  box-shadow: 0 10px 24px rgba(45, 18, 25, 0.10);
   z-index: 2;
-  transition: transform 0.95s var(--ease);
+  transition: transform 1.25s var(--ease) 0.45s;
 }
-.env-open .envelope-letter { transform: translateY(-58%) scale(1.05); }
+.env-open .envelope-letter { transform: translateY(-64%) scale(1.06); }
 .letter-kicker { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--primary); font-weight: 700; }
 .letter-title { font-family: var(--font-serif); font-style: italic; font-size: 1.35rem; color: #2D1219; font-weight: 600; }
 .letter-verse { font-size: 0.65rem; color: #6E545B; line-height: 1.4; }
@@ -236,7 +241,7 @@ button, input, select, textarea { font-family: inherit; }
   background: linear-gradient(180deg, #F4D8E0 0%, #E8C0CC 100%);
   clip-path: polygon(0 0, 100% 0, 50% 54%);
   transform-origin: 50% 0;
-  transition: transform 0.9s var(--ease);
+  transition: transform 1.15s var(--ease);
 }
 .env-open .envelope-flap { transform: rotateX(-172deg); z-index: 1; }
 .envelope-seal {
@@ -247,9 +252,9 @@ button, input, select, textarea { font-family: inherit; }
   color: #FFFFFF; font-size: 1.25rem;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 6px 16px rgba(200, 16, 46, 0.32), 0 0 0 3px #FFFFFF;
-  transition: opacity 0.45s, transform 0.45s;
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
-.env-open .envelope-seal { opacity: 0; transform: translate(-50%, -50%) scale(1.4); }
+.env-open .envelope-seal { opacity: 0; transform: translate(-50%, -50%) scale(1.45); }
 .envelope-tag {
   position: absolute; z-index: 6; left: 50%; bottom: 10%;
   transform: translateX(-50%);
@@ -261,59 +266,180 @@ button, input, select, textarea { font-family: inherit; }
 }
 .envelope-tag strong { color: var(--primary); }
 
-/* Carte d'invitation déployée (Étape 2 — parfaitement lisible) */
-.open-letter-card {
+.elw-star-mini {
+  width: 26px; height: 34px; margin: 0 auto 0.1rem; display: block;
+}
+
+/* =========================================================
+   DESIGN OFFICIEL DES CARTES D'INVITATION « ÉCLAIRER LE MONDE »
+   (Fond blanc pur, double cadre géométrique rouge #CC092F,
+    coins courbés haut-gauche & bas-droite, losanges & étoile)
+   ========================================================= */
+.elw-card {
+  position: relative;
   width: 100%;
-  background: linear-gradient(180deg, var(--bg) 0%, var(--surface-2) 100%);
-  border: 1.5px solid var(--border-strong);
-  border-radius: 24px;
-  padding: 1.5rem 1.45rem 1.35rem;
-  box-shadow: inset 0 0 0 6px var(--surface), 0 14px 36px rgba(45, 18, 25, 0.08);
-  display: flex; flex-direction: column; align-items: center; gap: 0.65rem;
-  animation: unfoldLetter 0.75s var(--ease);
+  background: #FFFFFF;
+  color: #1F1B1D;
+  border-radius: 14px;
+  padding: 2.3rem 2.1rem 1.95rem;
+  box-shadow: 0 18px 48px rgba(45, 18, 25, 0.12), 0 1px 4px rgba(45, 18, 25, 0.06);
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  overflow: hidden;
 }
-@keyframes unfoldLetter {
-  from { opacity: 0; transform: translateY(24px) scale(0.95); }
-  to { opacity: 1; transform: none; }
+.elw-card > *:not(.elw-frame) {
+  position: relative; z-index: 2;
 }
-.olc-star {
-  color: var(--primary); font-size: 1.25rem; line-height: 1;
+
+/* Double cadre géométrique rouge carmin (2 rectangles entrelacés avec coins courbés concaves) */
+.elw-frame {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
 }
-.olc-kicker {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--primary);
+.elw-frame-inner {
+  position: absolute;
+  top: 12px; right: 22px; bottom: 22px; left: 12px;
+  border: 1.5px solid #CC092F;
 }
-.olc-title {
-  font-family: var(--font-serif); font-style: italic; font-weight: 700;
-  font-size: clamp(1.55rem, 4.5vw, 2rem); color: var(--ink); line-height: 1.18;
+.elw-frame-outer {
+  position: absolute;
+  top: 22px; right: 12px; bottom: 12px; left: 22px;
+  border: 1.5px solid #CC092F;
+}
+.elw-corner {
+  position: absolute; width: 32px; height: 32px;
+  background: transparent;
+  z-index: 2;
+}
+.elw-corner-tl {
+  top: 12px; left: 12px;
+}
+.elw-corner-br {
+  bottom: 12px; right: 12px;
+}
+.elw-diamond {
+  position: absolute; width: 8px; height: 8px;
+  background: #CC092F;
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 6px #FFFFFF;
+  z-index: 3;
+}
+.elw-diamond-l { left: 8.5px; top: 24%; }
+.elw-diamond-r { right: 8.5px; bottom: 22%; }
+
+/* Étoile géométrique Éclairer le Monde */
+.elw-star {
+  width: 58px; height: 74px;
+  margin-bottom: 0.15rem;
+  flex-shrink: 0;
+}
+.elw-star-sm {
+  width: 46px; height: 60px;
+  margin-bottom: 0.05rem;
+}
+
+/* Typographie fidèle à la carte officielle */
+.elw-head-sub {
+  font-family: var(--font-sans);
+  font-size: clamp(0.95rem, 2.8vw, 1.12rem);
+  font-weight: 600;
+  color: #CC092F;
+  line-height: 1.25;
+}
+.elw-head-sub-bottom {
+  margin-bottom: 0.55rem;
+}
+.elw-head-main {
+  font-family: var(--font-sans);
+  font-size: clamp(1.9rem, 5.5vw, 2.55rem);
+  font-weight: 800;
+  color: #CC092F;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+}
+.elw-head-main-sm {
+  font-size: clamp(1.65rem, 4vw, 2.05rem);
 }
 .olc-greet {
-  font-family: var(--font-serif); font-style: italic; font-size: 1.05rem;
-  color: var(--primary); font-weight: 600; margin-top: 0.15rem;
+  font-family: var(--font-serif); font-style: italic; font-size: 1rem;
+  color: #CC092F; font-weight: 600; margin-bottom: 0.1rem;
 }
-.olc-body {
-  font-size: 0.93rem; color: var(--ink-body); line-height: 1.68;
-  max-width: 44ch;
+.elw-body {
+  font-size: 0.92rem; color: #241F21; line-height: 1.62;
+  max-width: 38ch;
 }
-.olc-body strong { color: var(--ink); }
-.olc-verse {
-  margin-top: 0.25rem;
-  padding: 0.75rem 1rem;
-  border-radius: 14px;
-  background: var(--primary-soft);
-  border-left: 3px solid var(--primary);
-  font-family: var(--font-serif); font-style: italic; font-size: 0.92rem;
-  color: var(--ink); line-height: 1.55; text-align: left;
-  width: 100%;
+.elw-body strong { color: #161213; font-weight: 700; }
+.elw-verse-line {
+  font-family: var(--font-serif); font-style: italic;
+  font-size: 0.84rem; color: #5E4A50; line-height: 1.45;
+  max-width: 38ch; margin-top: 0.15rem;
 }
-.olc-verse cite {
-  display: block; margin-top: 0.3rem; font-style: normal;
-  font-family: var(--font-sans); font-size: 0.76rem; font-weight: 700;
-  color: var(--primary); letter-spacing: 0.04em;
+.elw-dash {
+  display: block; width: 34px; height: 2px;
+  background: #CC092F; margin: 0.6rem auto;
 }
-.olc-meta {
-  font-size: 0.82rem; font-weight: 700; color: var(--ink-muted);
-  margin-top: 0.15rem;
+.elw-date-line {
+  font-size: 0.9rem; font-weight: 700; color: #1A1517;
+  letter-spacing: 0.01em;
+}
+.elw-date-line strong { font-weight: 800; }
+.elw-church-name {
+  font-size: 0.88rem; font-weight: 800; color: #1A1517;
+  line-height: 1.32; margin-top: 0.25rem;
+}
+.elw-place-line {
+  font-size: 0.88rem; color: #362F32; margin-top: 0.15rem;
+}
+.elw-contact-block {
+  margin-top: 0.5rem;
+  font-size: 0.78rem; color: #3A3235; line-height: 1.5;
+}
+.elw-contact-block strong { color: #161213; font-weight: 800; }
+.elw-contact-compact { margin-top: 0.55rem; font-size: 0.74rem; }
+
+/* Signature ÉclairerLeMonde.org incrustée sur la bordure inférieure */
+.elw-wordmark {
+  margin-top: 0.85rem;
+  margin-bottom: -1.45rem;
+  background: #FFFFFF;
+  padding: 0.1rem 0.95rem;
+  font-family: var(--font-sans);
+  font-size: clamp(1rem, 3.2vw, 1.25rem);
+  color: #CC092F;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  z-index: 4 !important;
+}
+.elw-wordmark span { font-weight: 800; }
+.elw-wordmark em { font-style: normal; font-weight: 300; }
+
+/* Animation lente et solennelle de la carte d'ouverture */
+.open-letter-card {
+  animation: unfoldLetter 1.05s var(--ease) both;
+}
+@keyframes unfoldLetter {
+  from { opacity: 0; transform: translateY(32px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+.open-letter-card > *:not(.elw-frame) {
+  animation: letterLineIn 0.8s var(--ease) both;
+}
+.open-letter-card > :nth-child(2) { animation-delay: 0.12s; }
+.open-letter-card > :nth-child(3) { animation-delay: 0.22s; }
+.open-letter-card > :nth-child(4) { animation-delay: 0.30s; }
+.open-letter-card > :nth-child(5) { animation-delay: 0.38s; }
+.open-letter-card > :nth-child(6) { animation-delay: 0.48s; }
+.open-letter-card > :nth-child(7) { animation-delay: 0.58s; }
+.open-letter-card > :nth-child(8) { animation-delay: 0.68s; }
+.open-letter-card > :nth-child(9) { animation-delay: 0.76s; }
+.open-letter-card > :nth-child(10) { animation-delay: 0.84s; }
+.open-letter-card > :nth-child(11) { animation-delay: 0.92s; }
+.open-letter-card > :nth-child(12) { animation-delay: 1.00s; }
+.open-letter-card > :nth-child(13) { animation-delay: 1.08s; }
+.open-letter-card > :nth-child(14) { animation-delay: 1.16s; }
+@keyframes letterLineIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
 }
 
 .intro-welcome { display: grid; gap: 0.55rem; }
@@ -321,29 +447,30 @@ button, input, select, textarea { font-family: inherit; }
 .iw-greet strong { color: var(--primary); }
 .iw-from { font-size: 0.8rem; font-weight: 600; color: var(--primary); background: var(--primary-soft); padding: 0.2rem 0.75rem; border-radius: 999px; justify-self: center; }
 .iw-text { font-size: 0.92rem; color: var(--ink-body); line-height: 1.6; }
-.iw-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin-top: 0.35rem; }
+.iw-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; margin-top: 0.35rem; width: 100%; }
 
 /* =========================================================
-   NAVBAR STICKY ÉPURÉE
+   NAVBAR STICKY ÉPURÉE & BARRE RAPIDE MOBILE
    ========================================================= */
 .navbar {
   position: sticky; top: 0; z-index: 120;
-  background: rgba(253, 251, 249, 0.86);
+  background: rgba(253, 251, 249, 0.9);
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   transition: background 0.3s;
 }
-html[data-theme="night"] .navbar { background: rgba(21, 6, 11, 0.86); }
+html[data-theme="night"] .navbar { background: rgba(21, 6, 11, 0.9); }
 .nav-inner {
   max-width: 1180px; margin: 0 auto;
-  padding: 0.7rem 1.25rem;
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.65rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
 }
 .nav-brand {
-  display: inline-flex; align-items: center; gap: 0.6rem;
-  font-family: var(--font-serif); font-weight: 700; font-size: 1.1rem; color: var(--ink);
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  font-family: var(--font-serif); font-weight: 700; font-size: 1.08rem; color: var(--ink);
+  white-space: nowrap;
 }
-.nav-brand img { width: 34px; height: 34px; border-radius: 9px; }
+.nav-brand img { width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; }
 .nav-links { display: flex; align-items: center; gap: 0.35rem; }
 .nav-links a {
   font-size: 0.88rem; font-weight: 600; color: var(--ink-body);
@@ -351,7 +478,7 @@ html[data-theme="night"] .navbar { background: rgba(21, 6, 11, 0.86); }
   transition: background 0.2s, color 0.2s;
 }
 .nav-links a:hover { background: var(--primary-soft); color: var(--primary); }
-.nav-actions { display: flex; align-items: center; gap: 0.55rem; }
+.nav-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
 .theme-btn {
   width: 38px; height: 38px; border-radius: 50%;
   border: 1px solid var(--border-strong); background: var(--surface);
@@ -359,7 +486,34 @@ html[data-theme="night"] .navbar { background: rgba(21, 6, 11, 0.86); }
   font-size: 1rem; transition: transform 0.2s, border-color 0.2s;
 }
 .theme-btn:hover { transform: scale(1.07); border-color: var(--primary); }
-@media (max-width: 780px) { .nav-links { display: none; } }
+
+/* Barre d'accès rapide tactile (visible uniquement sur mobile/tablette ≤ 780px) */
+.nav-mobile-strip {
+  display: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.38rem 0.9rem 0.55rem;
+  gap: 0.45rem;
+  border-top: 1px solid var(--border);
+}
+.nav-mobile-strip::-webkit-scrollbar { display: none; }
+.nav-mobile-strip a {
+  flex: 0 0 auto;
+  font-size: 0.78rem; font-weight: 700; color: var(--ink-body);
+  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 0.32rem 0.78rem; border-radius: 999px;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.nav-mobile-strip a:active,
+.nav-mobile-strip a:hover {
+  background: var(--primary-soft); color: var(--primary); border-color: var(--rose);
+}
+@media (max-width: 780px) {
+  .nav-links { display: none; }
+  .nav-mobile-strip { display: flex; }
+}
 
 /* =========================================================
    HERO ÉDITORIAL SOFT & LUMINEUX
@@ -737,73 +891,65 @@ html[data-theme="night"] .hero {
 }
 .invites-share .is-title { width: 100%; font-size: 0.85rem; font-weight: 700; color: var(--ink); margin-bottom: 0.2rem; }
 
-/* Billet d'Entrée Interactif en Direct (Colonne droite) */
+/* Billet d'Entrée Interactif en Direct (Colonne droite — Design Éclairer le Monde) */
 .ticket-preview-col { position: sticky; top: 5.2rem; }
-.live-ticket {
-  background: var(--surface);
-  border: 1.5px solid var(--border-strong);
-  border-radius: var(--radius-xl);
-  padding: 1.7rem 1.6rem;
-  box-shadow: var(--shadow-soft);
-  position: relative; overflow: hidden;
+.live-ticket.elw-ticket-card {
+  background: #FFFFFF;
+  color: #1F1B1D;
+  padding: 2rem 1.85rem 1.85rem;
+  border-radius: 16px;
 }
-.live-ticket::before {
-  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-  background: linear-gradient(90deg, var(--rose), var(--primary), var(--rose));
-}
-.lt-top {
+.live-ticket .lt-top {
+  width: 100%;
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 0.8rem;
-}
-.lt-badge {
-  font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em;
-  color: var(--primary); background: var(--primary-soft);
-  padding: 0.25rem 0.75rem; border-radius: 999px;
-}
-.lt-num {
-  font-weight: 800; font-size: 0.88rem; color: var(--ink-muted);
-  font-variant-numeric: tabular-nums;
-}
-.lt-event {
-  font-family: var(--font-serif); font-size: 1.4rem; color: var(--ink);
   margin-bottom: 0.35rem;
 }
-.lt-date, .lt-place { font-size: 0.85rem; color: var(--ink-body); margin-bottom: 0.15rem; }
+.lt-badge {
+  font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+  color: #CC092F; background: #FCECEF;
+  padding: 0.22rem 0.65rem; border-radius: 999px;
+}
+.lt-num {
+  font-weight: 800; font-size: 0.85rem; color: #5E4A50;
+  font-variant-numeric: tabular-nums;
+}
 
-.lt-divider {
-  margin: 1.1rem 0; border-top: 1.5px dashed var(--border-strong);
-  position: relative;
+.live-ticket .lt-guests {
+  width: 100%; display: grid; gap: 0.55rem; margin: 0.25rem 0 0.2rem;
+  text-align: left;
 }
-.lt-guests { display: grid; gap: 0.75rem; margin-bottom: 1.1rem; }
-.lt-row {
-  background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 0.7rem 0.9rem;
+.live-ticket .lt-row {
+  background: #FDF7F8; border: 1px solid #F0DCE1;
+  border-radius: 10px; padding: 0.58rem 0.85rem;
 }
-.lt-row small {
-  display: block; font-size: 0.7rem; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--ink-muted); font-weight: 700;
+.live-ticket .lt-row small {
+  display: block; font-size: 0.66rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #745B62; font-weight: 700;
 }
-.lt-row strong { font-size: 1rem; color: var(--ink); }
-.lt-row strong.lt-highlight { color: var(--primary); }
+.live-ticket .lt-row strong { font-size: 0.94rem; color: #1F1B1D; }
+.live-ticket .lt-row strong.lt-highlight { color: #CC092F; }
 
-.lt-qr-box {
-  display: flex; align-items: center; gap: 0.85rem;
-  background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: var(--radius-md); padding: 0.8rem;
+.live-ticket .lt-qr-box {
+  width: 100%; margin-top: 0.65rem;
+  display: flex; align-items: center; gap: 0.8rem;
+  background: #FDF7F8; border: 1px solid #F0DCE1;
+  border-radius: 12px; padding: 0.7rem 0.8rem;
+  text-align: left;
 }
-.lt-qr-box img {
-  width: 76px; height: 76px; border-radius: 10px;
-  background: #FFFFFF; padding: 4px; border: 1px solid var(--border);
+.live-ticket .lt-qr-box img {
+  width: 72px; height: 72px; border-radius: 8px;
+  background: #FFFFFF; padding: 4px; border: 1px solid #EAD2D8;
   flex-shrink: 0;
 }
-.lt-qr-text { display: grid; gap: 0.2rem; }
-.lt-qr-text strong { font-size: 0.84rem; color: var(--ink); line-height: 1.3; }
-.lt-qr-text small { font-size: 0.75rem; color: var(--ink-muted); line-height: 1.35; }
+.live-ticket .lt-qr-text { display: grid; gap: 0.18rem; }
+.live-ticket .lt-qr-text strong { font-size: 0.8rem; color: #1F1B1D; line-height: 1.3; }
+.live-ticket .lt-qr-text small { font-size: 0.72rem; color: #6B565C; line-height: 1.35; }
 
-.lt-actions {
-  display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.1rem;
+.live-ticket .lt-actions {
+  width: 100%;
+  display: flex; gap: 0.55rem; flex-wrap: wrap; margin-top: 0.75rem;
 }
-.lt-actions .btn { flex: 1; }
+.live-ticket .lt-actions .btn { flex: 1; }
 
 /* =========================================================
    CINÉMATHÈQUE DE NOËL (5 FILMS 1080P HD)
@@ -1266,6 +1412,170 @@ html[data-theme="night"] .hero {
   max-width: 92vw; text-align: center;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Portefeuille multi-billets sur cet appareil */
+.saved-tickets-bar {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.1rem;
+  display: grid; gap: 0.6rem;
+}
+.stb-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.5rem; flex-wrap: wrap;
+}
+.stb-head strong {
+  font-size: 0.82rem; font-weight: 700; color: var(--ink);
+}
+.stb-clear {
+  background: none; border: none; padding: 0.15rem 0.4rem;
+  font-size: 0.74rem; font-weight: 600; color: var(--ink-muted);
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.stb-clear:hover { color: var(--primary); }
+.stb-list {
+  display: flex; flex-wrap: wrap; gap: 0.45rem;
+}
+.stb-chip {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: var(--surface); color: var(--ink);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 999px; padding: 0.36rem 0.78rem;
+  font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.stb-chip:hover, .stb-chip.active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.stb-chip b { font-weight: 800; color: var(--primary); }
+
+/* Indicateur subtil quand la musique joue */
+.music-fab:not(.paused) {
+  border-color: var(--primary);
+  box-shadow: 0 10px 28px rgba(200, 16, 46, 0.28), 0 0 0 4px rgba(200, 16, 46, 0.12);
+}
+
+/* =========================================================
+   POLISSAGE MOBILE HAUTE QUALITÉ (SMARTPHONES & TABLETTES)
+   ========================================================= */
+@media (max-width: 920px) {
+  .ticket-preview-col { position: static; }
+}
+
+@media (max-width: 640px) {
+  /* Éviter le zoom automatique sur iOS Safari lors de la saisie */
+  .field input,
+  .field select,
+  .field textarea,
+  .people-pill input {
+    font-size: 16px;
+  }
+
+  /* Cibles tactiles confortables (≥ 44px) */
+  .btn { min-height: 44px; }
+  .btn-sm { min-height: 38px; }
+
+  /* Intro & Carte d'invitation mobile */
+  .intro { padding: 0.7rem; align-items: flex-start; }
+  .intro-card { padding: 1.2rem 0.9rem 1.15rem; border-radius: 22px; gap: 0.8rem; }
+  .elw-card { padding: 1.8rem 1.45rem 1.65rem; border-radius: 12px; gap: 0.28rem; }
+  .elw-frame-inner { top: 9px; right: 16px; bottom: 16px; left: 9px; }
+  .elw-frame-outer { top: 16px; right: 9px; bottom: 9px; left: 16px; }
+  .elw-corner { width: 24px; height: 24px; }
+  .elw-corner-tl { top: 9px; left: 9px; }
+  .elw-corner-br { bottom: 9px; right: 9px; }
+  .elw-diamond { width: 6px; height: 6px; box-shadow: 0 0 0 4px #FFFFFF; }
+  .elw-diamond-l { left: 6.5px; }
+  .elw-diamond-r { right: 6.5px; }
+  .elw-star { width: 46px; height: 60px; }
+  .elw-body { font-size: 0.85rem; line-height: 1.55; }
+  .elw-contact-block { font-size: 0.72rem; }
+  .elw-wordmark { margin-bottom: -1.3rem; padding: 0.08rem 0.7rem; }
+  .iw-actions { flex-direction: column; }
+  .iw-actions .btn { width: 100%; }
+
+  /* Navbar & Sections */
+  .nav-inner { padding: 0.55rem 0.9rem; }
+  .nav-brand { font-size: 0.98rem; }
+  .nav-brand img { width: 30px; height: 30px; }
+  .section { padding: 3rem 0.95rem; }
+  .section-header { margin-bottom: 1.85rem; }
+
+  /* Hero équilibré au-dessus de la ligne de flottaison */
+  .hero { padding: 1.9rem 0.95rem 2.6rem; }
+  .hero-badges { gap: 0.4rem; margin-bottom: 0.85rem; }
+  .badge-soft, .badge-ticket { font-size: 0.73rem; padding: 0.32rem 0.75rem; }
+  .hero-title { font-size: 2.05rem; margin-bottom: 0.8rem; }
+  .hero-lead { font-size: 0.94rem; line-height: 1.65; margin-bottom: 1.15rem; }
+
+  /* Compte à rebours aligné en 4 colonnes égales sans retour à la ligne bancal */
+  .countdown {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0.45rem; width: 100%; max-width: 380px; margin: 0 auto 1.25rem;
+  }
+  .cd-box { min-width: 0; padding: 0.55rem 0.3rem; border-radius: 14px; }
+  .cd-box span { font-size: 1.32rem; }
+  .cd-box small { font-size: 0.6rem; letter-spacing: 0.06em; }
+
+  .hero-cta-group { flex-direction: column; width: 100%; }
+  .hero-cta-group .btn { width: 100%; }
+  .hero-frame { border-width: 3px; border-radius: 20px; }
+  .hero-frame-caption {
+    flex-direction: column; align-items: flex-start; gap: 0.45rem;
+    padding: 1.1rem 0.9rem 0.8rem; font-size: 0.85rem;
+  }
+  .hero-float-card { padding: 0.75rem 0.9rem; border-radius: 16px; }
+
+  /* Formulaire & Billet mobile */
+  .rsvp-box { padding: 1.15rem 0.95rem; border-radius: 22px; }
+  .form-group-card { padding: 0.95rem; }
+  .live-ticket.elw-ticket-card { padding: 1.7rem 1.35rem 1.6rem; border-radius: 14px; }
+  .lt-qr-box { flex-direction: column; text-align: center; }
+  .lt-actions { flex-direction: column; }
+  .lt-actions .btn { width: 100%; }
+  .done-actions { flex-direction: column; width: 100%; }
+  .done-actions .btn { width: 100%; }
+
+  /* Cinémathèque & Galerie mobile */
+  .cinema-showcase { padding: 0.95rem; border-radius: 22px; gap: 1rem; }
+  .cp-item { grid-template-columns: 96px 1fr; gap: 0.65rem; padding: 0.45rem; }
+  .hd-carousel { aspect-ratio: 4 / 3; max-height: 360px; border-radius: 20px; border-width: 3px; }
+  .hdc-caption { padding: 1.6rem 0.95rem 0.9rem; gap: 0.55rem; }
+  .hdc-nav { width: 34px; height: 34px; top: 38%; }
+  .hdc-prev { left: 0.5rem; }
+  .hdc-next { right: 0.5rem; }
+
+  /* Programme mobile */
+  .timeline::before, .timeline::after { left: 28px; }
+  .tl-item { gap: 0.75rem; }
+  .tl-time { flex: 0 0 58px; font-size: 0.76rem; padding: 0.28rem 0.25rem; }
+  .tl-card { padding: 0.9rem 1rem; }
+  .place-body { padding: 1.05rem 1rem; }
+  .place-actions .btn { flex: 1; }
+
+  /* Mur photo & Livre d'or mobile */
+  .soft-panel { padding: 1.15rem 0.95rem; border-radius: 22px; }
+  .wall-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+
+  /* Boutons flottants & dégagement du footer (safe-area) */
+  .cta-float {
+    left: 0.85rem; bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.68rem 1.05rem; font-size: 0.82rem;
+  }
+  .music-fab {
+    right: 0.85rem; bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    width: 48px; height: 48px;
+  }
+  .music-panel {
+    right: 0.85rem; bottom: calc(4.4rem + env(safe-area-inset-bottom, 0px));
+    width: calc(100vw - 1.7rem);
+  }
+  .footer { padding: 2.6rem 1rem calc(5.5rem + env(safe-area-inset-bottom, 0px)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
