@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=34" />
+  <link rel="stylesheet" href="styles.css?v=36" />
 </head>
 <body>
 
@@ -135,9 +135,11 @@
           <p class="elw-place-line">Salle des fêtes d'Aboisso</p>
 
           <div class="elw-contact-block">
-            <p><strong>Personnes à contacter :</strong></p>
-            <p>Président Kpadonou (Président du District) : <a href="tel:+2250574152955">05 74 15 29 55</a></p>
-            <p>Les missionnaires : <a href="tel:+2250715268282">07 15 26 82 82</a> / <a href="tel:+2250715268585">07 15 26 85 85</a></p>
+            <p class="elw-contact-title"><strong>Personnes à contacter :</strong></p>
+            <p class="elw-contact-name">Président Kpadonou (Président du District)</p>
+            <p class="elw-contact-tel"><a href="tel:+2250574152955">05 74 15 29 55</a></p>
+            <p class="elw-contact-name">Les missionnaires</p>
+            <p class="elw-contact-tel"><a href="tel:+2250715268282">07 15 26 82 82</a> / <a href="tel:+2250715268585">07 15 26 85 85</a></p>
           </div>
 
           <div class="elw-wordmark" aria-label="ÉclairerLeMonde.org">
@@ -210,32 +212,32 @@
         </div>
 
         <div class="hero-cta-group">
-          <a class="btn btn-primary btn-lg" href="#rsvp">🎟️ Obtenir mon billet (en 30s)</a>
-          <a class="btn btn-soft btn-lg" href="#videos-noel">🎬 Voir les films de Noël</a>
+          <a class="btn btn-primary btn-lg" href="#rsvp">🎟️ Confirmer ma présence</a>
+          <a class="btn btn-soft btn-lg" href="#videos-noel">🎬 Voir les vidéos de Noël</a>
         </div>
 
         <div class="hero-cal">
-          <span>Ajouter à mon agenda :</span>
+          <span>Noter dans mon calendrier :</span>
           <a id="btn-gcal" target="_blank" rel="noopener">Google Agenda</a>
           <span>·</span>
-          <a id="btn-ics" download="noel-aboisso-24-dec-2026.ics">Calendrier Apple / Outlook (.ics)</a>
+          <a id="btn-ics" download="noel-aboisso-24-dec-2026.ics">Calendrier du téléphone</a>
         </div>
       </div>
 
-      <!-- Visuel Hero Cinématographique HD -->
+      <!-- Visuel Hero -->
       <div class="hero-visual">
         <div class="hero-frame">
           <img src="assets/hd-scene-02.jpg" alt="Scène de la Nativité : Marie et Joseph auprès de l'Enfant Jésus dans la crèche" width="1280" height="720" fetchpriority="high" />
           <div class="hero-frame-caption">
             <span>« Gloire à Dieu dans les lieux Très-Hauts, et paix sur la terre » (Luc 2:14)</span>
-            <a href="#videos-noel" class="hfc-play" aria-label="Regarder le film de Noël">▶ Regarder</a>
+            <a href="#videos-noel" class="hfc-play" aria-label="Regarder la vidéo de Noël">▶ Regarder</a>
           </div>
         </div>
         <div class="hero-float-card">
           <span class="hfc-icon" aria-hidden="true">📍</span>
           <div>
             <strong>Salle des fêtes de la Mairie d'Aboisso</strong>
-            <small>Entrée gratuite et ouverte à tous. N'hésitez pas à inviter un proche !</small>
+            <small>Entrée gratuite et ouverte à tous. Venez en famille ou avec un ami de l'Église !</small>
           </div>
         </div>
       </div>
@@ -248,7 +250,7 @@
       <div class="section-header">
         <span class="kicker">La bonne nouvelle d'une grande joie · Luc 2:1-20</span>
         <h2 class="title">Pourquoi nous célébrons Sa naissance</h2>
-        <p class="subtitle">Le premier cadeau de Noël, tout simple, a été fait par un Père à tous ses enfants, à nous tous. Il a fait cadeau de son Fils, le Christ. <strong>Il est le cadeau.</strong></p>
+        <p class="subtitle">Le premier cadeau de Noël, tout simple, a été fait par notre Père céleste à tous ses enfants, à nous tous. Il a fait cadeau de son Fils, Jésus-Christ. <strong>Il est le cadeau.</strong></p>
       </div>
 
       <div class="bento-4">
@@ -290,21 +292,21 @@
       </div>
     </section>
 
-    <!-- ============ INSCRIPTION ULTRA-SIMPLE EN 1 ÉCRAN (RSVP) ============ -->
+    <!-- ============ INSCRIPTION SIMPLE & FRATERNELLE ============ -->
     <section class="section section-soft" id="rsvp">
       <div class="section-header">
-        <span class="kicker">Inscription simple &amp; rapide · 30 secondes</span>
-        <h2 class="title">Réservez votre billet gratuit 🎟️</h2>
-        <p class="subtitle"><strong>Entrée gratuite et ouverte à tous.</strong> Venez seul, en famille ou avec un proche que vous souhaitez inviter (ami, voisin, parent ou membre moins actif).</p>
+        <span class="kicker">Inscription simple &amp; rapide</span>
+        <h2 class="title">Confirmez votre présence 🎟️</h2>
+        <p class="subtitle"><strong>Entrée gratuite et ouverte à tous.</strong> Venez seul, en famille ou avec un proche que vous invitez (ami de l'Église, voisin, parent ou membre moins pratiquant).</p>
       </div>
 
       <div class="rsvp-layout">
         <!-- Colonne gauche : Formulaire unique tout-en-un -->
         <div class="rsvp-box reveal">
-          <!-- Portefeuille multi-billets sur cet appareil (permet d'inscrire plusieurs personnes sans perdre les billets précédents) -->
+          <!-- Cartes enregistrées sur ce téléphone -->
           <div id="saved-tickets-bar" class="saved-tickets-bar hidden" aria-live="polite">
             <div class="stb-head">
-              <strong id="stb-title">🎟️ Billets enregistrés sur cet appareil</strong>
+              <strong id="stb-title">🎟️ Cartes enregistrées sur ce téléphone</strong>
               <button class="stb-clear" id="stb-clear" type="button" title="Effacer la liste sur ce téléphone uniquement">Effacer de ce téléphone</button>
             </div>
             <div class="stb-list" id="stb-list"></div>
@@ -313,24 +315,24 @@
           <!-- État : Juste après une inscription -->
           <div id="rsvp-done" class="rsvp-done hidden" aria-live="polite">
             <div class="done-icon">🎟️</div>
-            <h3 id="done-title">Votre billet est prêt !</h3>
+            <h3 id="done-title">Votre carte d'invitation est prête !</h3>
             <p id="done-desc">Votre inscription est bien enregistrée pour le <strong>jeudi 24 décembre 2026</strong>.</p>
             <div class="done-actions">
               <button class="btn btn-primary" id="new-rsvp-btn" type="button">➕ Inscrire une autre personne</button>
               <a class="btn btn-green" id="wa-self-reminder" target="_blank" rel="noopener">🔔 Rappel WhatsApp</a>
-              <button class="btn btn-soft" id="view-invite" type="button">👁️ Voir le billet QR</button>
+              <button class="btn btn-soft" id="view-invite" type="button">👁️ Voir ma carte d'invitation</button>
             </div>
             <div class="invites-share hidden" id="invites-share"></div>
           </div>
 
-          <!-- Formulaire en 1 seule vue ultra-fluide (objectif : 520+ participants !) -->
+          <!-- Formulaire en 1 seule vue ultra-fluide -->
           <form id="rsvp-form" class="rsvp-form" autocomplete="off" novalidate>
             <p class="form-error hidden" id="rsvp-error" role="alert"></p>
             <input type="hidden" id="f-presence-select" name="presence" value="present" />
 
-            <!-- Bloc 1 : Vos coordonnées -->
+            <!-- Bloc 1 : Coordonnées -->
             <div class="form-group-card">
-              <div class="fg-title"><span>1</span> Informations du participant</div>
+              <div class="fg-title"><span>1</span> Qui souhaitez-vous inscrire ?</div>
 
               <div class="field">
                 <label for="f-nom">Nom et prénom *</label>
@@ -345,10 +347,10 @@
                   <small class="field-err hidden" id="err-tel" role="alert"></small>
                 </div>
                 <div class="field">
-                  <label for="f-statut-select">Statut</label>
+                  <label for="f-statut-select">Vous êtes</label>
                   <select id="f-statut-select" name="statut">
                     <option value="membre" selected>⛪ Membre de l'Église</option>
-                    <option value="ami">🤝 Ami / Visiteur invité</option>
+                    <option value="ami">🤝 Ami de l'Église / Invité</option>
                   </select>
                 </div>
               </div>
@@ -368,19 +370,19 @@
                   <small class="field-err hidden" id="err-branche" role="alert"></small>
                 </div>
                 <div class="field">
-                  <label for="f-localite">Localité (facultatif)</label>
+                  <label for="f-localite">Quartier ou village (facultatif)</label>
                   <input id="f-localite" name="localite" type="text" placeholder="Ex. Aboisso" />
                 </div>
               </div>
             </div>
 
-            <!-- Bloc 2 : Votre Invité accompagnant & Nombre de personnes (masqué si absent) -->
+            <!-- Bloc 2 : Personnes invitées & Nombre de personnes -->
             <div class="form-group-card ticket-card" id="invite-block">
               <div class="fg-title">
                 <span>2</span>
                 <div>
-                  <strong>Qui vient avec vous ? (Invité encouragé, facultatif)</strong>
-                  <small>Si vous invitez un ami, un proche ou un membre moins actif, indiquez son nom ici (demandez son accord avant de renseigner son numéro)</small>
+                  <strong>Qui vient avec vous ? (Facultatif)</strong>
+                  <small>Si vous invitez un ami de l'Église, un proche ou un membre moins pratiquant, inscrivez son nom ici (avec son accord pour le numéro)</small>
                 </div>
               </div>
 
@@ -403,38 +405,38 @@
 
               <label class="consent-check" for="f-transport" style="margin-top:.55rem">
                 <input id="f-transport" name="need_transport" type="checkbox" />
-                <span>🚌 J'aimerais être informé(e) si un transport / regroupement est organisé depuis ma branche (Ayamé, Maféré, Rive gauche…).</span>
+                <span>🚌 J'aimerais être informé(e) si un transport est organisé depuis ma branche (Ayamé, Maféré, Rive gauche…).</span>
               </label>
             </div>
 
             <!-- Option découverte douce (Livre de Mormon / Missionnaires) -->
             <label class="consent-check" for="f-want-more">
               <input id="f-want-more" name="want_more" type="checkbox" />
-              <span>📖 <em>(Facultatif)</em> Je souhaite recevoir un exemplaire gratuit du Livre de Mormon ou en savoir plus sur l'Église de Jésus-Christ des Saints des Derniers Jours.</span>
+              <span>📖 <em>(Facultatif)</em> Je souhaite recevoir un Livre de Mormon gratuit ou discuter avec les missionnaires de l'Église.</span>
             </label>
 
             <!-- Petit mot -->
             <div class="field">
-              <label for="f-note">Petit mot (facultatif)</label>
+              <label for="f-note">Petit mot pour l'équipe d'accueil (facultatif)</label>
               <input id="f-note" name="note" type="text" maxlength="120" placeholder="Ex. Nous venons en famille avec les enfants" />
             </div>
 
             <button class="btn btn-primary btn-lg btn-wide" id="rsvp-submit-btn" type="submit">
-              🎟️ Valider et obtenir mon billet
+              🎟️ Confirmer et obtenir ma carte
             </button>
 
-            <!-- Mention Données personnelles + Contact WhatsApp d'assistance -->
+            <!-- Confidentialité en langage simple -->
             <p class="privacy-note">
-              🔒 <strong>Données personnelles :</strong> Vos informations (nom, téléphone, branche) servent uniquement à organiser cette célébration. Elles sont consultées par les responsables du district d'Aboisso, ne sont jamais cédées à des tiers et seront supprimées dans les 30 jours suivant l'événement.
+              🔒 <strong>Confidentialité :</strong> Vos coordonnées servent uniquement à la Présidence du District d'Aboisso pour bien préparer votre accueil. Elles restent confidentielles et seront effacées après la célébration.
             </p>
             <p class="contact-help">
-              Une question ou une difficulté pour vous inscrire ?
-              <a href="https://wa.me/2250574152955?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20la%20c%C3%A9l%C3%A9bration%20de%20No%C3%ABl%20%C3%A0%20Aboisso" target="_blank" rel="noopener">💬 Écrire au responsable du district sur WhatsApp (+225 05 74 15 29 55)</a>
+              Besoin d'aide pour vous inscrire ?
+              <a href="https://wa.me/2250574152955?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20la%20c%C3%A9l%C3%A9bration%20de%20No%C3%ABl%20%C3%A0%20Aboisso" target="_blank" rel="noopener">💬 Écrire au Président du District sur WhatsApp (+225 05 74 15 29 55)</a>
             </p>
           </form>
         </div>
 
-        <!-- Colonne droite : Aperçu en direct du Billet & Carte générée (Design Éclairer le Monde) -->
+        <!-- Colonne droite : Aperçu en direct de la Carte d'Invitation (Design Éclairer le Monde) -->
         <div class="ticket-preview-col reveal">
           <div class="live-ticket elw-card elw-ticket-card" id="live-ticket">
             <div class="elw-frame" aria-hidden="true">
@@ -455,7 +457,7 @@
             </div>
 
             <div class="lt-top">
-              <span class="lt-badge">✦ Billet d'invitation</span>
+              <span class="lt-badge">✦ Carte d'invitation</span>
               <span class="lt-num" id="lt-num">N° ---</span>
             </div>
 
@@ -479,11 +481,11 @@
 
             <div class="lt-guests">
               <div class="lt-row">
-                <small>Participant</small>
+                <small>Frère, sœur ou ami invité</small>
                 <strong id="lt-name">Votre nom apparaîtra ici</strong>
               </div>
               <div class="lt-row" id="lt-companion-row">
-                <small>🤝 Invité(s) accompagnant(s)</small>
+                <small>🤝 Invité(s) avec vous</small>
                 <strong id="lt-companion" class="lt-highlight">Seul(e) ou avec un proche invité</strong>
               </div>
             </div>
@@ -495,21 +497,24 @@
             <p class="elw-place-line">Salle des fêtes d'Aboisso</p>
 
             <div class="lt-qr-box" id="lt-qr-box">
-              <img id="i-qr" alt="Code QR de vérification de votre billet" width="76" height="76" class="hidden" />
+              <img id="i-qr" alt="Code d'accueil de votre carte d'invitation" width="76" height="76" class="hidden" />
               <div class="lt-qr-text">
-                <strong id="lt-status">Remplissez le formulaire pour activer votre billet QR</strong>
-                <small>Entrée gratuite · Ce billet fonctionne même hors connexion le jour J.</small>
+                <strong id="lt-status">Remplissez le formulaire pour créer votre carte d'invitation</strong>
+                <small>Entrée gratuite · Votre carte reste disponible même sans connexion Internet le jour J.</small>
               </div>
             </div>
 
             <div class="lt-actions hidden" id="lt-actions">
-              <button class="btn btn-primary btn-sm" id="dl-invite" type="button">⬇️ Télécharger (PNG)</button>
+              <button class="btn btn-primary btn-sm" id="dl-invite" type="button">⬇️ Enregistrer ma carte</button>
               <button class="btn btn-green btn-sm" id="wa-invite-img" type="button">📤 Partager sur WhatsApp</button>
             </div>
 
             <div class="elw-contact-block elw-contact-compact">
-              <p><strong>Personnes à contacter :</strong> Président Kpadonou (Président du District) : <a href="tel:+2250574152955">05 74 15 29 55</a></p>
-              <p>Les missionnaires : <a href="tel:+2250715268282">07 15 26 82 82</a> / <a href="tel:+2250715268585">07 15 26 85 85</a></p>
+              <p class="elw-contact-title"><strong>Personnes à contacter :</strong></p>
+              <p class="elw-contact-name">Président Kpadonou (Président du District)</p>
+              <p class="elw-contact-tel"><a href="tel:+2250574152955">05 74 15 29 55</a></p>
+              <p class="elw-contact-name">Les missionnaires</p>
+              <p class="elw-contact-tel"><a href="tel:+2250715268282">07 15 26 82 82</a> / <a href="tel:+2250715268585">07 15 26 85 85</a></p>
             </div>
 
             <div class="elw-wordmark" aria-label="ÉclairerLeMonde.org">
@@ -520,12 +525,12 @@
       </div>
     </section>
 
-    <!-- ============ CINÉMATHÈQUE DE NOËL (5 FILMS — ZÉRO CHARGEMENT AVANT CLIC) ============ -->
+    <!-- ============ VIDÉOS DE NOËL DE L'ÉGLISE ============ -->
     <section class="section" id="videos-noel">
       <div class="section-header">
-        <span class="kicker">Cinémathèque de Noël</span>
-        <h2 class="title">Regardez les films de la Nativité 🎬</h2>
-        <p class="subtitle">Aucune vidéo ne se télécharge avant votre clic afin d'économiser votre forfait mobile. Vous pouvez aussi les regarder sur la Bibliothèque d'Évangile de l'Église.</p>
+        <span class="kicker">Vidéos de Noël de l'Église</span>
+        <h2 class="title">Regardez les récits de la Nativité 🎬</h2>
+        <p class="subtitle">Appuyez sur une vidéo pour la regarder quand vous le souhaitez. Retrouvez aussi tous ces récits sur la Bibliothèque de l'Évangile.</p>
       </div>
 
       <div class="cinema-showcase reveal">
@@ -543,12 +548,12 @@
             <h3 id="vid-title">Il est le cadeau</h3>
             <p id="vid-desc">Découvrez comment l'amour d'un Père céleste s'est manifesté par le don de son Fils unique.</p>
             <div class="cm-links">
-              <a class="link-btn" href="https://www.churchofjesuschrist.org/comeuntochrist/fr/light-the-world" target="_blank" rel="noopener">🌐 Voir sur le site officiel de l'Église (connexion adaptée) →</a>
+              <a class="link-btn" href="https://www.churchofjesuschrist.org/comeuntochrist/fr/light-the-world" target="_blank" rel="noopener">🌐 Regarder sur la Bibliothèque de l'Évangile →</a>
             </div>
           </div>
         </div>
 
-        <div class="cinema-playlist" id="cinema-playlist" role="list" aria-label="Sélectionner un film">
+        <div class="cinema-playlist" id="cinema-playlist" role="list" aria-label="Sélectionner une vidéo">
           <button class="cp-item active" type="button"
                   data-src="assets/il-est-le-cadeau-fra-1080p.mp4"
                   data-poster="assets/hd-scene-02.jpg"
@@ -557,7 +562,7 @@
                   data-title="Il est le cadeau"
                   data-desc="Découvrez comment l'amour d'un Père céleste s'est manifesté par le don de son Fils unique.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-02.jpg" alt="Aperçu du film Il est le cadeau" width="320" height="180" loading="lazy" />
+              <img src="assets/hd-scene-02.jpg" alt="Aperçu de la vidéo Il est le cadeau" width="320" height="180" loading="lazy" />
               <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">2:47</span>
             </div>
@@ -575,7 +580,7 @@
                   data-title="Un Sauveur est né"
                   data-desc="Célébrons la naissance du Fils de Dieu qui apporte la paix, l'espérance et la délivrance.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-03.jpg" alt="Aperçu du film Un Sauveur est né" width="320" height="180" loading="lazy" />
+              <img src="assets/hd-scene-03.jpg" alt="Aperçu de la vidéo Un Sauveur est né" width="320" height="180" loading="lazy" />
               <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">2:00</span>
             </div>
@@ -593,7 +598,7 @@
                   data-title="La bonne nouvelle d’une grande joie : La naissance de Jésus-Christ"
                   data-desc="Le récit complet de la naissance de Jésus à Bethléem, de l'annonce aux bergers jusqu'au chant des armées célestes.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-06.jpg" alt="Aperçu du film La bonne nouvelle d'une grande joie" width="320" height="180" loading="lazy" />
+              <img src="assets/hd-scene-06.jpg" alt="Aperçu de la vidéo La bonne nouvelle d'une grande joie" width="320" height="180" loading="lazy" />
               <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">5:01</span>
             </div>
@@ -611,7 +616,7 @@
                   data-title="Le premier esprit de Noël"
                   data-desc="L'histoire touchante de Joseph, l'humble charpentier à qui Dieu a confié la responsabilité d'élever le Christ sur la terre.">
             <div class="cp-thumb">
-              <img src="assets/hd-scene-12.jpg" alt="Aperçu du film Le premier esprit de Noël sur Joseph" width="320" height="180" loading="lazy" />
+              <img src="assets/hd-scene-12.jpg" alt="Aperçu de la vidéo Le premier esprit de Noël sur Joseph" width="320" height="180" loading="lazy" />
               <span class="cp-play" aria-hidden="true">▶</span>
               <span class="cp-dur">6:16</span>
             </div>
@@ -642,12 +647,12 @@
       </div>
     </section>
 
-    <!-- ============ GALERIE HD ANIMÉE (Scènes des vidéos) ============ -->
+    <!-- ============ IMAGES DE LA NATIVITÉ ============ -->
     <section class="section section-soft" id="galerie-hd">
       <div class="section-header">
-        <span class="kicker">Galerie Cinématographique HD</span>
-        <h2 class="title">Tableaux animés de la Nativité ✨</h2>
-        <p class="subtitle">Scènes haute définition extraites des films de Noël. Cliquez sur une image pour l'agrandir ou lancer le film correspondant.</p>
+        <span class="kicker">Images de la Nativité</span>
+        <h2 class="title">La naissance du Sauveur en images ✨</h2>
+        <p class="subtitle">Contemplez les beaux moments de la naissance de Jésus-Christ. Touchez une image pour l'agrandir ou regarder la vidéo.</p>
       </div>
 
       <div class="hd-carousel reveal" id="hd-carousel">
@@ -667,7 +672,7 @@
       <div class="section-header">
         <span class="kicker">Jeudi 24 Décembre 2026 · 10h00 – 15h00</span>
         <h2 class="title">Programme &amp; Lieu de la célébration</h2>
-        <p class="subtitle">Voici le déroulé complet de notre journée festive à la Salle des fêtes de la mairie d'Aboisso.</p>
+        <p class="subtitle">Voici le déroulement de notre belle journée de Noël à la Salle des fêtes de la mairie d'Aboisso.</p>
       </div>
 
       <div class="prog-place-grid">
@@ -677,47 +682,47 @@
             <div class="tl-time">10h00</div>
             <div class="tl-card">
               <h3>🤝 Accueil des familles &amp; des invités</h3>
-              <p>Installation chaleureuse dans la salle, vérification rapide des billets et remise du programme.</p>
+              <p>Accueil fraternel à l'entrée, installation chaleureuse dans la salle et remise du programme.</p>
             </div>
           </li>
           <li class="tl-item reveal">
             <div class="tl-time">10h30</div>
             <div class="tl-card">
               <h3>🌟 Moment spirituel · « Un Sauveur est né »</h3>
-              <p>Prières, cantiques de louange et message de Noël consacré à la naissance de Jésus-Christ (Luc 2:1-20).</p>
+              <p>Prières, cantiques de Noël et message consacré à la naissance de Jésus-Christ (Luc 2:1-20).</p>
             </div>
           </li>
           <li class="tl-item reveal">
             <div class="tl-time">11h30</div>
             <div class="tl-card">
               <h3>🎭 Théâtre de la Nativité &amp; Chorales</h3>
-              <p>Représentation vivante de la crèche et chants des branches en français et en langue locale.</p>
+              <p>Représentation vivante de la Nativité et chants des branches en français et en langue locale.</p>
             </div>
           </li>
           <li class="tl-item reveal">
             <div class="tl-time">12h45</div>
             <div class="tl-card">
               <h3>🍽️ Repas fraternel</h3>
-              <p>Partage convivial autour du repas avec vos invités et les missionnaires du district d'Aboisso.</p>
+              <p>Repas fraternel partagé avec les familles, les amis de l'Église et les missionnaires du district d'Aboisso.</p>
             </div>
           </li>
           <li class="tl-item reveal">
             <div class="tl-time">13h30</div>
             <div class="tl-card">
               <h3>🎁 Activités &amp; joie des enfants</h3>
-              <p>Animations, jeux, chants des enfants et distribution de petites attentions de Noël.</p>
+              <p>Chants de la Primaire, jeux joyeux et petites attentions de Noël pour les enfants.</p>
             </div>
           </li>
           <li class="tl-item reveal">
             <div class="tl-time">14h30</div>
             <div class="tl-card">
-              <h3>📸 Grande photo souvenir de Noël &amp; Mot de la fin</h3>
-              <p>Photo de famille par branche, remerciements, prière de clôture et fin de la rencontre à <strong>15h00</strong>.</p>
+              <h3>📸 Grande photo de famille &amp; Prière de clôture</h3>
+              <p>Photo souvenir par branche, remerciements, prière de clôture et fin de la rencontre à <strong>15h00</strong>.</p>
             </div>
           </li>
         </ol>
 
-        <!-- Carte du Lieu & Dress Code -->
+        <!-- Carte du Lieu & Tenue -->
         <div class="place-stack" id="lieu">
           <div class="place-card reveal">
             <div class="place-map">
@@ -730,21 +735,21 @@
               <h3>📍 Salle des fêtes · Mairie d'Aboisso</h3>
               <p>Aboisso, Région du Sud-Comoé — <strong>Jeudi 24 décembre 2026 (10h00 – 15h00)</strong></p>
               <div class="place-actions">
-                <a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://maps.app.goo.gl/zKuSVfn95ZYdcqCQA">🧭 Google Maps</a>
-                <a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="https://waze.com/ul?q=Mairie%20d%27Aboisso%2C%20C%C3%B4te%20d%27Ivoire">🚗 Waze</a>
+                <a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://maps.app.goo.gl/zKuSVfn95ZYdcqCQA">🧭 Itinéraire Google Maps</a>
+                <a class="btn btn-soft btn-sm" target="_blank" rel="noopener" href="https://waze.com/ul?q=Mairie%20d%27Aboisso%2C%20C%C3%B4te%20d%27Ivoire">🚗 Itinéraire Waze</a>
                 <button class="btn btn-soft btn-sm" id="copy-address" type="button">📋 Copier l'adresse</button>
               </div>
             </div>
           </div>
 
           <div class="dress-card reveal">
-            <strong>✨ Tenue suggérée (sans contrainte)</strong>
-            <p>Une touche de <em>blanc lumière</em>, de <em>rose poudré</em> ou de <em>bordeaux/carmin</em>. Les enfants sont les bienvenus en habits de fête !</p>
+            <strong>✨ Tenue suggérée (en toute simplicité)</strong>
+            <p>Une touche de <em>blanc lumière</em>, de <em>rose doux</em> ou de <em>rouge bordeaux</em>. Venez comme vous êtes, les enfants sont les bienvenus en habits de fête !</p>
           </div>
 
           <div class="dress-card reveal">
             <strong>📞 Contact &amp; Renseignements</strong>
-            <p>Présidence du District d'Aboisso — Pour toute question sur l'événement, le transport ou l'accueil des invités :</p>
+            <p>Présidence du District d'Aboisso — Pour toute question sur la célébration, le transport ou l'accueil des invités :</p>
             <div style="margin-top:0.55rem">
               <a class="btn btn-green btn-sm" href="https://wa.me/2250574152955?text=Bonjour%2C%20j%27ai%20une%20question%20sur%20la%20c%C3%A9l%C3%A9bration%20de%20No%C3%ABl%20du%2024%20d%C3%A9cembre%20%C3%A0%20Aboisso" target="_blank" rel="noopener">💬 Nous écrire sur WhatsApp</a>
             </div>
@@ -752,75 +757,89 @@
 
           <div class="dress-card reveal">
             <strong>⛪ Découvrir nos réunions du dimanche</strong>
-            <p>Vous êtes toujours le bienvenu aux réunions dominicales des branches du District d'Aboisso (Aboisso 1, Aboisso 2, Ayamé, Maféré, Rive gauche) — entrée libre chaque dimanche.</p>
+            <p>Vous êtes toujours le bienvenu aux réunions de Sainte-Cène des branches du District d'Aboisso (Aboisso 1, Aboisso 2, Ayamé, Maféré, Rive gauche) — entrée libre chaque dimanche.</p>
             <div style="margin-top:0.55rem;display:flex;gap:0.5rem;flex-wrap:wrap">
               <a class="btn btn-soft btn-sm" href="https://www.churchofjesuschrist.org/comeuntochrist/fr" target="_blank" rel="noopener">🌐 Venez au Christ</a>
-              <a class="btn btn-soft btn-sm" href="https://maps.churchofjesuschrist.org/" target="_blank" rel="noopener">📍 Trouver une église</a>
+              <a class="btn btn-soft btn-sm" href="https://maps.churchofjesuschrist.org/" target="_blank" rel="noopener">📍 Trouver une chapelle</a>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ============ MUR PHOTO & VŒUX DE NOËL (AVEC PRÉ-MODÉRATION, CONSENTEMENT & SIGNALEMENT) ============ -->
+    <!-- ============ MUR PHOTO « ÉCLAIRER LE MONDE » & VOS VŒUX DE NOËL ============ -->
     <section class="section section-soft" id="mur-photo">
       <div class="section-header">
-        <span class="kicker">Communauté &amp; Partage</span>
+        <span class="kicker">Fraternité &amp; Partage</span>
         <h2 class="title">Le mur des sourires &amp; vos vœux 📸</h2>
-        <p class="subtitle">Partagez une photo ou un message de Noël avant la rencontre du 24 décembre ! Pour la sécurité des familles et des enfants, chaque publication est vérifiée par l'équipe du district avant affichage.</p>
+        <p class="subtitle">Prenez un selfie ou ajoutez une photo avec votre petit mot (« J'y serai, et toi ? ») pour inviter vos proches ! Pour protéger les familles et les enfants, chaque publication est vérifiée par la Présidence du District avant affichage.</p>
       </div>
 
       <div class="community-grid">
-        <!-- Ajout Photo -->
-        <form id="wall-form" class="soft-panel reveal" novalidate>
-          <h3>📸 Ajouter ma photo « Je serai là ! »</h3>
+        <!-- Ajout Photo / Selfie (Design Éclairer le Monde) -->
+        <form id="wall-form" class="soft-panel wall-elw-panel reveal" novalidate>
+          <h3>🤳 Créer ma photo « J'y serai, et toi ? »</h3>
           <p class="wall-count hidden" id="wall-count"><strong id="wall-count-n">0</strong> <span id="wall-count-txt">photos partagées</span></p>
-          <div class="wall-upload" id="wall-drop" role="button" tabindex="0" aria-label="Choisir une photo (JPG, PNG ou WebP, 5 Mo maximum)">
+          <div class="wall-upload" id="wall-drop" role="button" tabindex="0" aria-label="Prendre un selfie ou choisir une photo">
             <img id="wall-preview" class="wall-preview hidden" alt="Aperçu de votre photo avant publication" />
             <div class="wall-placeholder" id="wall-placeholder">
-              <span class="wp-emoji" aria-hidden="true">📷</span>
-              <p>Touchez pour choisir ou prendre une photo</p>
-              <small>Formats JPG, PNG ou WebP · Maximum 5 Mo</small>
+              <span class="wp-emoji" aria-hidden="true">🤳</span>
+              <p>Prenez un selfie ou choisissez votre photo</p>
+              <small>Votre photo sera joliment encadrée aux couleurs « Éclairer le Monde »</small>
             </div>
             <input id="wall-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden />
           </div>
           <div class="wall-actions-row">
+            <button class="btn btn-primary btn-sm" id="btn-selfie" type="button">🤳 Selfie</button>
             <button class="btn btn-soft btn-sm" id="btn-camera" type="button">📸 Caméra</button>
             <button class="btn btn-soft btn-sm" id="btn-choose" type="button">🖼️ Galerie</button>
           </div>
+
           <div class="field-row">
             <div class="field">
               <label for="w-nom">Votre nom *</label>
               <input id="w-nom" type="text" required maxlength="40" placeholder="Ex. Sœur Adjoua" />
             </div>
             <div class="field">
-              <label for="w-msg">Petit mot</label>
-              <input id="w-msg" type="text" maxlength="80" placeholder="Ex. À jeudi 24 avec notre invité !" />
+              <label for="w-msg">Petit mot sur la photo</label>
+              <input id="w-msg" type="text" maxlength="80" value="J'y serai, et toi ?" placeholder="Ex. J'y serai, et toi ?" />
             </div>
           </div>
+
+          <!-- Petits mots accrocheurs en 1 clic -->
+          <div class="slogan-chips" aria-label="Suggestions de petits mots">
+            <button class="slogan-chip active" type="button" data-slogan="J'y serai, et toi ?">✨ J'y serai, et toi ?</button>
+            <button class="slogan-chip" type="button" data-slogan="Ne rate pas cet événement !">🎉 Ne rate pas cet événement !</button>
+            <button class="slogan-chip" type="button" data-slogan="Ne te laisse pas raconter cette belle fête !">❤️ Ne te laisse pas raconter cette belle fête !</button>
+            <button class="slogan-chip" type="button" data-slogan="Viens célébrer Jésus-Christ avec nous !">🌟 Viens célébrer Jésus-Christ !</button>
+          </div>
+
+          <!-- Téléchargement immédiat de sa propre photo encadrée (pour statut WhatsApp / Facebook) -->
+          <button class="btn btn-green btn-wide hidden" id="btn-dl-my-photo" type="button">⬇️ Enregistrer ma photo encadrée « Éclairer le Monde »</button>
+
           <label class="consent-check" for="w-consent">
             <input id="w-consent" type="checkbox" required />
-            <span>J'accepte que ma photo et mon nom soient affichés sur ce site après validation par l'équipe du district (pour les photos d'enfants, seuls les parents ou tuteurs sont autorisés à les publier). *</span>
+            <span>J'accepte que ma photo et mon nom soient affichés sur ce site après validation par les dirigeants du district (pour les photos d'enfants, seuls les parents ou tuteurs sont autorisés à les partager). *</span>
           </label>
-          <p class="form-error hidden" id="wall-error" role="alert">Veuillez choisir une photo, indiquer votre nom et cocher la case d'accord 🙏</p>
-          <button class="btn btn-primary btn-wide" id="wall-submit-btn" type="submit">✨ Envoyer ma photo (après validation)</button>
+          <p class="form-error hidden" id="wall-error" role="alert">Veuillez prendre un selfie ou choisir une photo, indiquer votre nom et cocher la case d'accord 🙏</p>
+          <button class="btn btn-primary btn-wide" id="wall-submit-btn" type="submit">✨ Publier sur le mur des sourires</button>
         </form>
 
-        <!-- Livre d'or (Vœux) -->
+        <!-- Vos vœux de Noël uniquement -->
         <div class="soft-panel reveal" id="mots-doux">
-          <h3>💌 Vos vœux &amp; témoignages de Noël</h3>
+          <h3>💌 Vos vœux de Noël</h3>
           <form id="guestbook-form" class="gb-inline-form" novalidate>
             <div class="field">
               <label for="g-nom">Votre nom *</label>
               <input id="g-nom" type="text" required maxlength="40" placeholder="Ex. Famille Kouamé" />
             </div>
             <div class="field">
-              <label for="g-msg">Votre message <span id="g-count">0/200</span></label>
-              <textarea id="g-msg" rows="2" maxlength="200" placeholder="Votre joie de célébrer la naissance du Sauveur…"></textarea>
+              <label for="g-msg">Vos vœux <span id="g-count">0/200</span></label>
+              <textarea id="g-msg" rows="2" maxlength="200" placeholder="Ex. Joyeux Noël à tous nos frères, sœurs et amis du district d'Aboisso !"></textarea>
             </div>
             <label class="consent-check" for="g-consent">
               <input id="g-consent" type="checkbox" required />
-              <span>J'accepte que mon nom et mon message soient publiés sur cette page après validation. *</span>
+              <span>J'accepte que mon nom et mes vœux soient affichés sur cette page après validation. *</span>
             </label>
             <button class="btn btn-soft btn-wide" id="gb-submit-btn" type="submit">✍️ Envoyer mes vœux</button>
           </form>
@@ -828,15 +847,15 @@
         </div>
       </div>
 
-      <!-- Grille des Polaroïds du Mur Photo -->
+      <!-- Grille des Cartes Photos Éclairer le Monde -->
       <div class="wall-grid" id="wall-grid"></div>
       <div class="wall-more-wrap hidden" id="wall-more-wrap">
         <button class="btn btn-soft" id="wall-more-btn" type="button">✨ Voir plus de photos</button>
       </div>
       <p class="wall-empty hidden" id="wall-empty">Soyez la première personne à afficher votre sourire sur le mur ✨</p>
 
-      <!-- Modale Caméra -->
-      <div class="cam-modal hidden" id="cam-modal" role="dialog" aria-modal="true" aria-label="Prendre une photo">
+      <!-- Modale Caméra (Selfie + Caméra arrière avec bascule en direct) -->
+      <div class="cam-modal hidden" id="cam-modal" role="dialog" aria-modal="true" aria-label="Prendre une photo ou un selfie">
         <div class="cam-box">
           <div class="cam-stage">
             <video id="cam-video" autoplay playsinline muted></video>
@@ -844,13 +863,14 @@
             <div class="cam-guide" aria-hidden="true"></div>
           </div>
           <div class="cam-actions">
-            <button class="btn btn-primary" id="btn-capture" type="button">📸 Capturer</button>
+            <button class="btn btn-primary" id="btn-capture" type="button">📸 Prendre la photo</button>
+            <button class="btn btn-soft" id="btn-cam-flip" type="button">🔄 Tourner</button>
             <button class="btn btn-soft" id="btn-cam-close" type="button">Annuler</button>
           </div>
         </div>
       </div>
 
-      <!-- Lightbox Photo / Galerie HD -->
+      <!-- Aperçu en grand -->
       <div class="wall-lightbox hidden" id="wall-lightbox" role="dialog" aria-modal="true" aria-label="Aperçu en grand">
         <button class="wl-close" id="wl-close" type="button" aria-label="Fermer">✕</button>
         <figure class="wl-figure">
@@ -917,8 +937,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="assets/shared.js?v=34" defer></script>
+  <script src="assets/shared.js?v=36" defer></script>
   <script src="assets/qrcode-generator.js" defer></script>
-  <script src="script.js?v=34" defer></script>
+  <script src="script.js?v=36" defer></script>
 </body>
 </html>

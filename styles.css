@@ -392,9 +392,14 @@ button, input, select, textarea { font-family: inherit; }
 }
 .elw-contact-block {
   margin-top: 0.5rem;
-  font-size: 0.78rem; color: #3A3235; line-height: 1.5;
+  font-size: 0.78rem; color: #3A3235; line-height: 1.42;
 }
 .elw-contact-block strong { color: #161213; font-weight: 800; }
+.elw-contact-title { margin-bottom: 0.25rem; }
+.elw-contact-name { font-weight: 700; color: #1F1B1D; margin-top: 0.25rem; }
+.elw-contact-tel { font-weight: 600; color: #CC092F; letter-spacing: 0.01em; }
+.elw-contact-tel a { color: #CC092F; text-decoration: none; }
+.elw-contact-tel a:hover { text-decoration: underline; }
 .elw-contact-compact { margin-top: 0.55rem; font-size: 0.74rem; }
 
 /* Signature ÉclairerLeMonde.org incrustée sur la bordure inférieure */
@@ -1198,6 +1203,11 @@ html[data-theme="night"] .hero {
   border-radius: var(--radius-xl); padding: 1.6rem;
   box-shadow: var(--shadow-card); display: grid; gap: 0.95rem;
 }
+.wall-elw-panel {
+  background: #FFFFFF;
+  border: 1.5px solid rgba(204, 9, 47, 0.28);
+  box-shadow: 0 14px 36px rgba(45, 18, 25, 0.08), inset 0 0 0 5px #FFFFFF, inset 0 0 0 6.5px rgba(204, 9, 47, 0.14);
+}
 .soft-panel h3 {
   font-family: var(--font-serif); font-size: 1.3rem; color: var(--ink);
 }
@@ -1207,18 +1217,37 @@ html[data-theme="night"] .hero {
 .wall-upload {
   position: relative; width: 100%; aspect-ratio: 16 / 9; min-height: 180px;
   border-radius: var(--radius-md); cursor: pointer;
-  background: var(--surface-2); border: 2px dashed var(--border-strong);
+  background: var(--surface-2); border: 2px dashed rgba(204, 9, 47, 0.35);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
   transition: border-color 0.25s, background 0.25s;
 }
-.wall-upload:hover { border-color: var(--primary); background: var(--primary-soft); }
+.wall-upload:hover { border-color: #CC092F; background: var(--primary-soft); }
 .wall-placeholder { text-align: center; padding: 1rem; }
 .wp-emoji { font-size: 2.2rem; display: block; margin-bottom: 0.3rem; }
 .wall-placeholder p { font-weight: 700; font-size: 0.92rem; color: var(--ink); }
 .wall-placeholder small { font-size: 0.78rem; color: var(--ink-muted); }
 .wall-preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.wall-actions-row { display: flex; gap: 0.55rem; }
-.wall-actions-row .btn { flex: 1; }
+.wall-actions-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.wall-actions-row .btn { flex: 1 1 100px; }
+
+/* Petits mots accrocheurs en 1 clic */
+.slogan-chips {
+  display: flex; flex-wrap: wrap; gap: 0.42rem;
+}
+.slogan-chip {
+  background: #FFF6F8; color: #52202B;
+  border: 1.25px solid rgba(204, 9, 47, 0.25);
+  border-radius: 999px; padding: 0.34rem 0.75rem;
+  font-size: 0.76rem; font-weight: 600; cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+.slogan-chip:hover {
+  border-color: #CC092F; background: #FDE9EE; color: #CC092F;
+}
+.slogan-chip.active {
+  background: #CC092F; color: #FFFFFF; border-color: #CC092F;
+  box-shadow: 0 4px 12px rgba(204, 9, 47, 0.22);
+}
 
 .gb-inline-form { display: grid; gap: 0.75rem; }
 .gb-inline-form label span { float: right; font-weight: 500; color: var(--ink-muted); }
@@ -1240,43 +1269,109 @@ html[data-theme="night"] .hero {
 }
 .gb-report:hover, .wc-report:hover { color: var(--primary); background: var(--primary-soft); }
 .wc-report {
-  position: absolute; bottom: 0.35rem; right: 0.35rem; z-index: 3;
-  font-size: 0.7rem; opacity: 0.75;
+  position: absolute; bottom: 0.65rem; right: 0.7rem; z-index: 4;
+  font-size: 0.68rem; opacity: 0.7;
 }
 .gb-empty { font-size: 0.86rem; color: var(--ink-muted); font-style: italic; text-align: center; padding: 0.8rem; }
 
-/* Grille des Polaroïds */
+/* Grille des Cartes Photos « Éclairer le Monde » */
 .wall-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1.2rem; margin-top: 2rem;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
+  gap: 1.35rem; margin-top: 2rem;
 }
 .wall-more-wrap { text-align: center; margin-top: 1.4rem; }
 .wall-empty { text-align: center; font-size: 0.9rem; color: var(--ink-muted); font-style: italic; margin-top: 1.4rem; }
 
 .wall-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 0.5rem 0.5rem 2.1rem;
-  box-shadow: var(--shadow-card); position: relative; cursor: pointer;
+  position: relative;
+  background: #FFFFFF;
+  color: #1F1B1D;
+  border-radius: 12px;
+  padding: 1.15rem 1.05rem 1.05rem;
+  box-shadow: 0 12px 32px rgba(45, 18, 25, 0.10), 0 1px 4px rgba(45, 18, 25, 0.06);
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 0.35rem;
+  cursor: pointer; overflow: hidden;
   transition: transform 0.3s var(--ease), box-shadow 0.3s;
 }
-.wall-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
-.wc-ph { border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: var(--surface-2); }
-.wall-card img { width: 100%; height: 100%; object-fit: cover; }
+.wall-card:hover { transform: translateY(-5px); box-shadow: 0 18px 42px rgba(45, 18, 25, 0.16); }
+.wall-card > *:not(.wc-frame) { position: relative; z-index: 2; }
+
+/* Double cadre rouge miniature fidèle aux cartes Éclairer le Monde */
+.wc-frame {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+}
+.wc-frame-inner {
+  position: absolute;
+  top: 7px; right: 13px; bottom: 13px; left: 7px;
+  border: 1.25px solid #CC092F;
+}
+.wc-frame-outer {
+  position: absolute;
+  top: 13px; right: 7px; bottom: 7px; left: 13px;
+  border: 1.25px solid #CC092F;
+}
+.wc-corner {
+  position: absolute; width: 18px; height: 18px; z-index: 2;
+}
+.wc-corner-tl { top: 7px; left: 7px; }
+.wc-corner-br { bottom: 7px; right: 7px; }
+.wc-diamond {
+  position: absolute; width: 5px; height: 5px;
+  background: #CC092F; transform: rotate(45deg);
+  box-shadow: 0 0 0 4px #FFFFFF; z-index: 3;
+}
+.wc-diamond-l { left: 4.5px; top: 28%; }
+.wc-diamond-r { right: 4.5px; bottom: 26%; }
+
+.wc-head {
+  display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+  margin-top: 0.1rem;
+}
+.wc-star { width: 16px; height: 22px; flex-shrink: 0; }
+.wc-kicker {
+  font-size: 0.62rem; font-weight: 800; color: #CC092F;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.wc-ph {
+  width: 100%; border-radius: 8px; overflow: hidden; aspect-ratio: 1;
+  background: var(--surface-2);
+  border: 1.5px solid rgba(204, 9, 47, 0.22);
+}
+.wall-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wall-card .wc-msg {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.84rem; font-weight: 800; color: #CC092F;
+  line-height: 1.25; margin-top: 0.2rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .wall-card .wc-name {
-  position: absolute; left: 0.5rem; right: 0.5rem; bottom: 0.45rem;
-  font-weight: 700; font-size: 0.82rem; color: var(--ink);
-  text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 700; font-size: 0.8rem; color: #1F1B1D;
+  max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.wall-card .wc-msg { display: none; }
+.wc-wordmark {
+  display: inline-block;
+  margin-top: 0.2rem;
+  margin-bottom: -0.78rem;
+  background: #FFFFFF;
+  padding: 0.04rem 0.55rem;
+  font-size: 0.66rem; color: #CC092F; letter-spacing: -0.01em;
+}
+.wc-wordmark b { font-weight: 800; }
+.wc-wordmark span { font-weight: 300; }
+
 .wc-dl, .wc-like {
-  position: absolute; top: 0.75rem; z-index: 3;
-  width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+  position: absolute; top: 2.35rem; z-index: 4;
+  width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.82rem; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  font-size: 0.82rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s;
 }
-.wc-dl { right: 0.75rem; background: var(--primary); color: #FFFFFF; }
-.wc-like { left: 0.75rem; background: #FFFFFF; color: var(--ink); }
-.wc-like.on { color: var(--primary); }
+.wc-dl:hover, .wc-like:hover { transform: scale(1.08); }
+.wc-dl { right: 1.35rem; background: #CC092F; color: #FFFFFF; }
+.wc-like { left: 1.35rem; background: #FFFFFF; color: var(--ink); }
+.wc-like.on { color: #CC092F; }
 .wc-like b { font-size: 0.65rem; margin-left: 2px; }
 
 /* Modales Caméra & Lightbox */
@@ -1294,8 +1389,9 @@ html[data-theme="night"] .hero {
   position: relative; width: 100%; aspect-ratio: 1;
   border-radius: 16px; overflow: hidden; background: #140409; margin-bottom: 0.9rem;
 }
-.cam-stage video { width: 100%; height: 100%; object-fit: cover; }
-.cam-actions { display: flex; gap: 0.6rem; justify-content: center; }
+.cam-stage video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+.cam-stage video.is-selfie { transform: scaleX(-1); }
+.cam-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; justify-content: center; }
 .wl-close {
   position: absolute; top: 1.2rem; right: 1.2rem;
   width: 42px; height: 42px; border-radius: 50%; border: none;
@@ -1557,9 +1653,28 @@ html[data-theme="night"] .hero {
   .place-body { padding: 1.05rem 1rem; }
   .place-actions .btn { flex: 1; }
 
-  /* Mur photo & Livre d'or mobile */
+  /* Mur photo & Vos vœux mobile */
   .soft-panel { padding: 1.15rem 0.95rem; border-radius: 22px; }
-  .wall-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .wall-grid { grid-template-columns: repeat(2, 1fr); gap: 0.72rem; }
+  .wall-card { padding: 0.9rem 0.75rem 0.9rem; gap: 0.25rem; }
+  .wc-frame-inner { top: 5px; right: 10px; bottom: 10px; left: 5px; }
+  .wc-frame-outer { top: 10px; right: 5px; bottom: 5px; left: 10px; }
+  .wc-corner { width: 14px; height: 14px; }
+  .wc-corner-tl { top: 5px; left: 5px; }
+  .wc-corner-br { bottom: 5px; right: 5px; }
+  .wc-diamond { width: 4px; height: 4px; box-shadow: 0 0 0 3px #FFFFFF; }
+  .wc-diamond-l { left: 3.5px; }
+  .wc-diamond-r { right: 3.5px; }
+  .wc-kicker { font-size: 0.54rem; }
+  .wc-star { width: 13px; height: 18px; }
+  .wall-card .wc-msg { font-size: 0.72rem; }
+  .wall-card .wc-name { font-size: 0.72rem; }
+  .wc-wordmark { font-size: 0.56rem; margin-bottom: -0.68rem; padding: 0.02rem 0.4rem; }
+  .wc-dl, .wc-like { top: 1.95rem; width: 28px; height: 28px; font-size: 0.74rem; }
+  .wc-dl { right: 0.95rem; }
+  .wc-like { left: 0.95rem; }
+  .wc-report { bottom: 0.55rem; right: 0.5rem; font-size: 0.62rem; }
+  .slogan-chip { font-size: 0.72rem; padding: 0.3rem 0.65rem; }
 
   /* Boutons flottants & dégagement du footer (safe-area) */
   .cta-float {

@@ -675,7 +675,120 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 })();
 
 /* =========================================================
-   INSCRIPTION ULTRA-SIMPLE EN 1 ÉCRAN + BILLET EN DIRECT
+   AIDES GRAPHIQUES PARTAGÉES « ÉCLAIRER LE MONDE » (CANVAS)
+   ========================================================= */
+function wrapText(x, text, cx, y, maxW, lineH) {
+  const words = String(text || "").split(" ");
+  let line = "", yy = y;
+  for (const w of words) {
+    const test = line ? line + " " + w : w;
+    if (x.measureText(test).width > maxW && line) {
+      x.fillText(line, cx, yy);
+      line = w; yy += lineH;
+    } else line = test;
+  }
+  if (line) x.fillText(line, cx, yy);
+  return yy;
+}
+
+/* Étoile géométrique Éclairer le Monde */
+function drawLightTheWorldStar(x, cx, cy, scale = 1) {
+  x.save();
+  x.translate(cx, cy);
+  x.scale(scale, scale);
+  x.strokeStyle = "#CC092F";
+  x.lineWidth = 4.2;
+  x.lineCap = "butt";
+  const segs = [
+    [0, -44, 0, 62],
+    [0, 71, 0, 80],
+    [-34, 0, 26, 0],
+    [33, 0, 41, 0],
+    [0, 0, -18, -18],
+    [-23, -23, -31, -31],
+    [0, 0, 24, -24],
+    [0, 0, -16, 16],
+    [0, 0, 26, 26],
+  ];
+  for (const [x1, y1, x2, y2] of segs) {
+    x.beginPath();
+    x.moveTo(x1, y1);
+    x.lineTo(x2, y2);
+    x.stroke();
+  }
+  x.restore();
+}
+
+/* Double cadre géométrique rouge Éclairer le Monde (2 tracés entrelacés exacts) */
+function drawElwFrame(x, W, H) {
+  const RED = "#CC092F";
+  const r = 46;
+  x.save();
+  x.strokeStyle = RED;
+  x.lineWidth = 2.2;
+
+  /* Tracé A : coin concave haut-gauche, angles droits ailleurs */
+  const ax1 = 44, ay1 = 30, ax2 = W - 62, ay2 = H - 48;
+  x.beginPath();
+  x.moveTo(ax1 + r, ay1);
+  x.lineTo(ax2, ay1);
+  x.lineTo(ax2, ay2);
+  x.lineTo(ax1, ay2);
+  x.lineTo(ax1, ay1 + r);
+  x.arc(ax1, ay1, r, Math.PI / 2, 0, true);
+  x.stroke();
+
+  /* Tracé B : coin concave bas-droite, angles droits ailleurs */
+  const bx1 = 62, by1 = 48, bx2 = W - 44, by2 = H - 30;
+  x.beginPath();
+  x.moveTo(bx1, by1);
+  x.lineTo(bx2, by1);
+  x.lineTo(bx2, by2 - r);
+  x.arc(bx2, by2, r, -Math.PI / 2, Math.PI, true);
+  x.lineTo(bx1, by2);
+  x.closePath();
+  x.stroke();
+
+  /* Losanges rouges interrompant les lignes verticales gauche et droite */
+  const drawDiamond = (dx, dy) => {
+    x.save();
+    x.translate(dx, dy);
+    x.fillStyle = "#FFFFFF";
+    x.fillRect(-10, -22, 20, 44);
+    x.rotate(Math.PI / 4);
+    x.fillStyle = RED;
+    x.fillRect(-6, -6, 12, 12);
+    x.restore();
+  };
+  drawDiamond(ax1, 252);
+  drawDiamond(bx2, H - 236);
+
+  /* Signature ÉclairerLeMonde.org incrustée sur les bordures inférieures */
+  x.fillStyle = "#FFFFFF";
+  x.fillRect(W / 2 - 150, H - 62, 300, 44);
+  x.textAlign = "left";
+  x.fillStyle = RED;
+  const parts = [
+    { txt: "Éclairer", font: "800 28px 'Plus Jakarta Sans', sans-serif" },
+    { txt: "Le", font: "300 28px 'Plus Jakarta Sans', sans-serif" },
+    { txt: "Monde.org", font: "800 28px 'Plus Jakarta Sans', sans-serif" },
+  ];
+  let totalW = 0;
+  for (const p of parts) {
+    x.font = p.font;
+    totalW += x.measureText(p.txt).width;
+  }
+  let px = (W - totalW) / 2;
+  for (const p of parts) {
+    x.font = p.font;
+    x.fillText(p.txt, px, H - 30);
+    px += x.measureText(p.txt).width;
+  }
+  x.restore();
+}
+
+/* =========================================================
+   INSCRIPTION ULTRA-SIMPLE EN 1 ÉCRAN + CARTE EN DIRECT
    ========================================================= */
 (function initRsvp() {
   const form = $("#rsvp-form");
@@ -756,7 +869,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     }
     btn.classList.remove("hidden");
     const link = inviteLink(d);
-    const msg = `🔔 *Rappel — Noël à Aboisso (Billet N°${d.num})*\n📅 Jeudi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n👤 Participant : ${d.nom}\n🤝 Accompagnement : ${getCompanionText(d)}\n🎟️ Lien de mon billet QR : ${link}`;
+    const msg = `🔔 *Rappel — Noël à Aboisso (Invitation N°${d.num})*\n📅 Jeudi 24 décembre 2026 · 10h00 – 15h00\n📍 Salle des fêtes de la mairie d'Aboisso\n👤 Participant : ${d.nom}\n🤝 Accompagnement : ${getCompanionText(d)}\n🎟️ Ma carte d'invitation : ${link}`;
     const num = telKey(d.tel) ? normalizePhone(d.tel) : "";
     btn.href = num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
@@ -974,7 +1087,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     if (ltName) ltName.textContent = "Votre nom apparaîtra ici";
     ltCompanionRow?.classList.remove("hidden");
     if (ltCompanion) ltCompanion.textContent = "Seul(e) ou avec un proche invité";
-    if (ltStatus) ltStatus.textContent = "Remplissez le formulaire pour activer votre billet QR";
+    if (ltStatus) ltStatus.textContent = "Remplissez le formulaire pour créer votre carte d'invitation";
     if (ltQrImg) {
       ltQrImg.removeAttribute("src");
       ltQrImg.classList.add("hidden");
@@ -983,7 +1096,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     document.querySelectorAll(".stb-chip.active").forEach((c) => c.classList.remove("active"));
   }
 
-  /* Portefeuille des billets enregistrés sur cet appareil (permet d'inscrire plusieurs personnes sans perdre leurs billets) */
+  /* Portefeuille des cartes enregistrées sur cet appareil (permet d'inscrire plusieurs personnes sans perdre leurs cartes) */
   function renderSavedTicketsBar(activeNum = null) {
     const bar = $("#saved-tickets-bar");
     const listBox = $("#stb-list");
@@ -997,8 +1110,8 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     }
     if (titleEl) {
       titleEl.textContent = savedList.length > 1
-        ? `🎟️ ${savedList.length} billets enregistrés sur ce téléphone`
-        : "🎟️ 1 billet enregistré sur ce téléphone";
+        ? `🎟️ ${savedList.length} invitations enregistrées sur ce téléphone`
+        : "🎟️ 1 invitation enregistrée sur ce téléphone";
     }
     listBox.innerHTML = "";
     savedList.forEach((item) => {
@@ -1011,7 +1124,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
         last = item;
         showInvite(item);
         renderSavedTicketsBar(item.num);
-        toast(`🎟️ Billet N°${item.num} de ${item.nom} affiché`);
+        toast(`🎟️ Carte N°${item.num} de ${item.nom} affichée`);
       });
       listBox.appendChild(chip);
     });
@@ -1019,14 +1132,14 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   }
 
   $("#stb-clear")?.addEventListener("click", () => {
-    if (!confirm("Effacer l'historique des billets de ce téléphone ? (Les inscriptions restent bien enregistrées sur le serveur.)")) return;
+    if (!confirm("Effacer les cartes affichées sur ce téléphone ? (Vos inscriptions restent bien gardées pour l'accueil.)")) return;
     clearSavedRsvps();
     last = null;
     done.classList.add("hidden");
     form.classList.remove("hidden");
     resetLiveTicketPreview();
     renderSavedTicketsBar();
-    toast("🧹 Historique effacé sur ce téléphone — prêt pour une nouvelle inscription.");
+    toast("🧹 Liste vidée sur ce téléphone — prêt pour une nouvelle inscription.");
   });
 
   /* État initial : le formulaire reste toujours vierge et prêt pour inscrire une nouvelle personne,
@@ -1146,15 +1259,15 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       if (j.entry && j.entry.num) data.num = j.entry.num;
       if (j.entry && j.entry.ticket_code) data.ticket_code = j.entry.ticket_code;
       if (j.duplicate) {
-        toast(`ℹ️ Cette personne était déjà inscrite : voici son billet N°${data.num}`);
+        toast(`ℹ️ Cette personne était déjà inscrite : voici sa carte N°${data.num}`);
       } else {
-        toast("🎟️ Billet validé et enregistré !");
+        toast("🎟️ Votre inscription est confirmée !");
       }
     } catch {
       /* Toujours bloquer en cas d'échec réseau afin de ne jamais créer un billet fictif absent du serveur */
       showFormError(
         navigator.onLine
-          ? "Le serveur met un instant à répondre. Patientez quelques secondes puis appuyez de nouveau sur « Valider » (vos informations saisies sont conservées)."
+          ? "La connexion met un instant à répondre. Patientez quelques secondes puis appuyez de nouveau sur « Confirmer » (vos informations saisies sont conservées)."
           : "Pas de connexion Internet. Vérifiez votre réseau et réessayez (vos informations saisies sont conservées)."
       );
       return;
@@ -1184,117 +1297,7 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
     showInvite(data);
   });
 
-  /* ---------- Génération de la Carte d'Invitation HD (Design Éclairer le Monde — Canvas 2x) ---------- */
-  function wrapText(x, text, cx, y, maxW, lineH) {
-    const words = String(text || "").split(" ");
-    let line = "", yy = y;
-    for (const w of words) {
-      const test = line ? line + " " + w : w;
-      if (x.measureText(test).width > maxW && line) {
-        x.fillText(line, cx, yy);
-        line = w; yy += lineH;
-      } else line = test;
-    }
-    if (line) x.fillText(line, cx, yy);
-    return yy;
-  }
-
-  /* Étoile géométrique Éclairer le Monde */
-  function drawLightTheWorldStar(x, cx, cy, scale = 1) {
-    x.save();
-    x.translate(cx, cy);
-    x.scale(scale, scale);
-    x.strokeStyle = "#CC092F";
-    x.lineWidth = 4.2;
-    x.lineCap = "butt";
-    const segs = [
-      [0, -44, 0, 62],
-      [0, 71, 0, 80],
-      [-34, 0, 26, 0],
-      [33, 0, 41, 0],
-      [0, 0, -18, -18],
-      [-23, -23, -31, -31],
-      [0, 0, 24, -24],
-      [0, 0, -16, 16],
-      [0, 0, 26, 26],
-    ];
-    for (const [x1, y1, x2, y2] of segs) {
-      x.beginPath();
-      x.moveTo(x1, y1);
-      x.lineTo(x2, y2);
-      x.stroke();
-    }
-    x.restore();
-  }
-
-  /* Double cadre géométrique rouge Éclairer le Monde (2 tracés entrelacés exacts) */
-  function drawElwFrame(x, W, H) {
-    const RED = "#CC092F";
-    const r = 46;
-    x.save();
-    x.strokeStyle = RED;
-    x.lineWidth = 2.2;
-
-    /* Tracé A : coin concave haut-gauche, angles droits ailleurs */
-    const ax1 = 44, ay1 = 30, ax2 = W - 62, ay2 = H - 48;
-    x.beginPath();
-    x.moveTo(ax1 + r, ay1);
-    x.lineTo(ax2, ay1);
-    x.lineTo(ax2, ay2);
-    x.lineTo(ax1, ay2);
-    x.lineTo(ax1, ay1 + r);
-    x.arc(ax1, ay1, r, Math.PI / 2, 0, true);
-    x.stroke();
-
-    /* Tracé B : coin concave bas-droite, angles droits ailleurs */
-    const bx1 = 62, by1 = 48, bx2 = W - 44, by2 = H - 30;
-    x.beginPath();
-    x.moveTo(bx1, by1);
-    x.lineTo(bx2, by1);
-    x.lineTo(bx2, by2 - r);
-    x.arc(bx2, by2, r, -Math.PI / 2, Math.PI, true);
-    x.lineTo(bx1, by2);
-    x.closePath();
-    x.stroke();
-
-    /* Losanges rouges interrompant les lignes verticales gauche et droite */
-    const drawDiamond = (dx, dy) => {
-      x.save();
-      x.translate(dx, dy);
-      x.fillStyle = "#FFFFFF";
-      x.fillRect(-10, -22, 20, 44);
-      x.rotate(Math.PI / 4);
-      x.fillStyle = RED;
-      x.fillRect(-6, -6, 12, 12);
-      x.restore();
-    };
-    drawDiamond(ax1, 252);
-    drawDiamond(bx2, H - 236);
-
-    /* Signature ÉclairerLeMonde.org incrustée sur les bordures inférieures */
-    x.fillStyle = "#FFFFFF";
-    x.fillRect(W / 2 - 150, H - 62, 300, 44);
-    x.textAlign = "left";
-    x.fillStyle = RED;
-    const parts = [
-      { txt: "Éclairer", font: "800 28px 'Plus Jakarta Sans', sans-serif" },
-      { txt: "Le", font: "300 28px 'Plus Jakarta Sans', sans-serif" },
-      { txt: "Monde.org", font: "800 28px 'Plus Jakarta Sans', sans-serif" },
-    ];
-    let totalW = 0;
-    for (const p of parts) {
-      x.font = p.font;
-      totalW += x.measureText(p.txt).width;
-    }
-    let px = (W - totalW) / 2;
-    for (const p of parts) {
-      x.font = p.font;
-      x.fillText(p.txt, px, H - 30);
-      px += x.measureText(p.txt).width;
-    }
-    x.restore();
-  }
-
+  /* ---------- Génération de la Carte d'Invitation (Design Éclairer le Monde — Canvas 2x) ---------- */
   async function buildInviteCanvas(d) {
     if (document.fonts && document.fonts.ready) {
       try { await document.fonts.ready; } catch {}
@@ -1368,18 +1371,26 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
 
     x.fillStyle = "#362F32";
     x.font = "500 21px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Salle des fêtes d'Aboisso", W / 2, 728);
+    x.fillText("Salle des fêtes d'Aboisso", W / 2, 718);
 
-    /* Personnes à contacter */
+    /* Personnes à contacter (chaque numéro sous le nom) */
     x.fillStyle = "#1A1517";
     x.font = "800 16px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Personnes à contacter :", W / 2, 932);
-    x.fillStyle = "#2E272A";
-    x.font = "600 16px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Président Kpadonou (Président du District) : 05 74 15 29 55", W / 2, 958);
-    x.fillStyle = "#52464B";
-    x.font = "600 16px 'Plus Jakarta Sans', sans-serif";
-    x.fillText("Les missionnaires : 07 15 26 82 82 / 07 15 26 85 85", W / 2, 984);
+    x.fillText("Personnes à contacter :", W / 2, 898);
+
+    x.fillStyle = "#1F1B1D";
+    x.font = "700 16px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Président Kpadonou (Président du District)", W / 2, 922);
+    x.fillStyle = "#CC092F";
+    x.font = "700 16px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("05 74 15 29 55", W / 2, 944);
+
+    x.fillStyle = "#1F1B1D";
+    x.font = "700 16px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Les missionnaires", W / 2, 970);
+    x.fillStyle = "#CC092F";
+    x.font = "700 16px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("07 15 26 82 82 / 07 15 26 85 85", W / 2, 992);
 
     return new Promise((resolve) => {
       const done = () => resolve(c);
@@ -1387,12 +1398,12 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
       if (qrData) {
         const img = new Image();
         img.onload = () => {
-          const qy = 746;
+          const qy = 732;
           x.fillStyle = "#FFFFFF";
-          drawRoundRect(x, W / 2 - 78, qy, 156, 156, 14); x.fill();
+          drawRoundRect(x, W / 2 - 70, qy, 140, 140, 14); x.fill();
           x.strokeStyle = "#EAD2D8"; x.lineWidth = 2;
-          drawRoundRect(x, W / 2 - 78, qy, 156, 156, 14); x.stroke();
-          x.drawImage(img, W / 2 - 66, qy + 12, 132, 132);
+          drawRoundRect(x, W / 2 - 70, qy, 140, 140, 14); x.stroke();
+          x.drawImage(img, W / 2 - 60, qy + 10, 120, 120);
           done();
         };
         img.onerror = done;
@@ -1406,26 +1417,26 @@ document.querySelectorAll("[data-copy-link]").forEach((btn) => {
   $("#dl-invite")?.addEventListener("click", async () => {
     const d = currentInvite ?? getLastRsvp();
     if (!d) return;
-    toast("📤 Préparation de votre billet HD…");
+    toast("📤 Préparation de votre carte d'invitation…");
     const c = await buildInviteCanvas(d);
     const a = document.createElement("a");
-    a.download = `billet-noel-aboisso-${d.num}.png`;
+    a.download = `carte-noel-aboisso-${d.num}.png`;
     a.href = c.toDataURL("image/png");
     a.click();
-    toast("⬇️ Billet téléchargé !");
+    toast("⬇️ Carte d'invitation enregistrée !");
   });
 
   $("#wa-invite-img")?.addEventListener("click", async () => {
     const d = currentInvite ?? getLastRsvp();
     if (!d) return;
-    toast("📤 Préparation du billet pour WhatsApp…");
+    toast("📤 Préparation de la carte pour WhatsApp…");
     const c = await buildInviteCanvas(d);
     const blob = await new Promise((r) => c.toBlob(r, "image/png"));
-    const file = new File([blob], `billet-noel-aboisso-${d.num}.png`, { type: "image/png" });
-    const msg = `✦ Un Sauveur est né · Il est le Cadeau ✦\nVoici notre billet (N°${d.num}) pour la fête de Noël du jeudi 24 décembre 2026 (10h00–15h00) à la salle des fêtes de la mairie d'Aboisso 🎄`;
+    const file = new File([blob], `carte-noel-aboisso-${d.num}.png`, { type: "image/png" });
+    const msg = `✦ Un Sauveur est né · Il est le Cadeau ✦\nVoici notre carte d'invitation (N°${d.num}) pour la célébration de Noël du jeudi 24 décembre 2026 (10h00–15h00) à la salle des fêtes de la mairie d'Aboisso 🎄`;
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: "Billet Noël à Aboisso", text: msg });
+        await navigator.share({ files: [file], title: "Carte d'invitation · Noël à Aboisso", text: msg });
         return;
       } catch {}
     }
@@ -1610,13 +1621,14 @@ async function reportCommunityItem(type, id) {
 })();
 
 /* =========================================================
-   MUR PHOTO — « Je serai là ! » (AVEC CONSENTEMENT, LIMITE 5 Mo & SIGNALEMENT)
+   MUR DES SOURIRES « ÉCLAIRER LE MONDE » (SELFIE, CAMÉRA, SLOGANS & TÉLÉCHARGEMENT)
    ========================================================= */
 (function initPhotoWall() {
   const KEY = "noel-aboisso-wall";
   const PAGE_SIZE = 24;
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 Mo max
   const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const DEFAULT_SLOGAN = "J'y serai, et toi ?";
 
   const form = $("#wall-form");
   const grid = $("#wall-grid");
@@ -1629,18 +1641,49 @@ async function reportCommunityItem(type, id) {
   const placeholder = $("#wall-placeholder");
   const error = $("#wall-error");
   const consent = $("#w-consent");
+  const msgInput = $("#w-msg");
+  const dlMyPhotoBtn = $("#btn-dl-my-photo");
   const camModal = $("#cam-modal");
   const camVideo = $("#cam-video");
   const camCanvas = $("#cam-canvas");
   if (!form || !grid || !drop || !fileInput) return;
 
   const DEFAULT_WALL_SEEDS = [
-    { id: "seed-1", nom: "Présidence du District", msg: "Soyez les bienvenus à Aboisso le 24 décembre !", photo: "assets/photo-event.jpg", at: "2026-11-14T09:00:00.000Z" },
-    { id: "seed-2", nom: "Chorales & Jeunes d'Aboisso", msg: "En répétition pour les cantiques de la Nativité 🎶", photo: "assets/nativite-famille.jpg", at: "2026-11-15T11:30:00.000Z" },
-    { id: "seed-3", nom: "Équipe d'Accueil & Missionnaires", msg: "Nous vous attendons dès 10h00 avec votre invité !", photo: "assets/sapin-noel.jpg", at: "2026-11-17T16:00:00.000Z" },
+    { id: "seed-1", nom: "Présidence du District", msg: "J'y serai, et toi ?", photo: "assets/photo-event.jpg", at: "2026-11-14T09:00:00.000Z" },
+    { id: "seed-2", nom: "Chorales & Jeunes d'Aboisso", msg: "Ne rate pas cet événement !", photo: "assets/nativite-famille.jpg", at: "2026-11-15T11:30:00.000Z" },
+    { id: "seed-3", nom: "Missionnaires & Accueil", msg: "Ne te laisse pas raconter cette belle fête !", photo: "assets/sapin-noel.jpg", at: "2026-11-17T16:00:00.000Z" },
   ];
 
+  const WC_FRAME_HTML = `
+    <div class="wc-frame" aria-hidden="true">
+      <div class="wc-frame-inner"></div>
+      <div class="wc-frame-outer"></div>
+      <svg class="wc-corner wc-corner-tl" viewBox="0 0 32 32" fill="none">
+        <path d="M0 0 H32 A32 32 0 0 1 0 32 Z" fill="#FFFFFF"/>
+        <path d="M32 0.75 A31.25 31.25 0 0 1 0.75 32" stroke="#CC092F" stroke-width="1.6"/>
+      </svg>
+      <svg class="wc-corner wc-corner-br" viewBox="0 0 32 32" fill="none">
+        <path d="M32 32 H0 A32 32 0 0 1 32 0 Z" fill="#FFFFFF"/>
+        <path d="M0 31.25 A31.25 31.25 0 0 1 31.25 0" stroke="#CC092F" stroke-width="1.6"/>
+      </svg>
+      <span class="wc-diamond wc-diamond-l"></span>
+      <span class="wc-diamond wc-diamond-r"></span>
+    </div>`;
+
+  const WC_STAR_SVG = `<svg class="wc-star" viewBox="-42 -48 84 134" fill="none" stroke="#CC092F" stroke-width="5.2" stroke-linecap="butt" aria-hidden="true">
+    <line x1="0" y1="-44" x2="0" y2="62"/>
+    <line x1="0" y1="71" x2="0" y2="80"/>
+    <line x1="-34" y1="0" x2="26" y2="0"/>
+    <line x1="33" y1="0" x2="41" y2="0"/>
+    <line x1="0" y1="0" x2="-18" y2="-18"/>
+    <line x1="-23" y1="-23" x2="-31" y2="-31"/>
+    <line x1="0" y1="0" x2="24" y2="-24"/>
+    <line x1="0" y1="0" x2="-16" y2="16"/>
+    <line x1="0" y1="0" x2="26" y2="26"/>
+  </svg>`;
+
   let camStream = null;
+  let currentFacingMode = "user";
   let photoData = null;
   let serverEntries = null;
   let visibleCount = PAGE_SIZE;
@@ -1668,7 +1711,6 @@ async function reportCommunityItem(type, id) {
       return parsed.length ? parsed : DEFAULT_WALL_SEEDS;
     } catch { return DEFAULT_WALL_SEEDS; }
   };
-  const save = (arr) => { try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch {} };
   const entries = () => serverEntries ?? load();
 
   (async () => {
@@ -1678,10 +1720,36 @@ async function reportCommunityItem(type, id) {
     } catch {}
   })();
 
+  /* Suggestions de petits mots accrocheurs en 1 clic */
+  const sloganChips = Array.from(document.querySelectorAll(".slogan-chip[data-slogan]"));
+  function syncSloganChips(val) {
+    const clean = String(val || "").trim();
+    sloganChips.forEach((chip) => {
+      chip.classList.toggle("active", chip.dataset.slogan === clean);
+    });
+  }
+  sloganChips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      if (!msgInput) return;
+      msgInput.value = chip.dataset.slogan || DEFAULT_SLOGAN;
+      syncSloganChips(msgInput.value);
+    });
+  });
+  msgInput?.addEventListener("input", () => syncSloganChips(msgInput.value));
+
+  function showPhotoPreview(dataUrl) {
+    photoData = dataUrl;
+    preview.src = photoData;
+    preview.classList.remove("hidden");
+    placeholder.classList.add("hidden");
+    dlMyPhotoBtn?.classList.remove("hidden");
+    error?.classList.add("hidden");
+  }
+
   function canvasToCompressedDataURL(canvas) {
-    const webp = canvas.toDataURL("image/webp", 0.76);
+    const webp = canvas.toDataURL("image/webp", 0.78);
     if (webp.startsWith("data:image/webp")) return webp;
-    return canvas.toDataURL("image/jpeg", 0.74);
+    return canvas.toDataURL("image/jpeg", 0.76);
   }
 
   function resizeImage(file) {
@@ -1710,42 +1778,55 @@ async function reportCommunityItem(type, id) {
     const f = fileInput.files[0];
     if (!f) return;
     if (f.type && !ALLOWED_TYPES.includes(f.type)) {
-      toast("Format non supporté : choisissez une image JPG, PNG ou WebP.");
+      toast("Veuillez choisir une photo classique depuis votre appareil.");
       fileInput.value = "";
       return;
     }
     if (f.size > MAX_FILE_BYTES) {
-      toast("Cette photo dépasse 5 Mo. Choisissez une photo plus légère.");
+      toast("Cette photo est un peu trop lourde (maximum 5 Mo). Choisissez une autre photo.");
       fileInput.value = "";
       return;
     }
     try {
-      photoData = await resizeImage(f);
-      preview.src = photoData;
-      preview.classList.remove("hidden");
-      placeholder.classList.add("hidden");
-      error?.classList.add("hidden");
-    } catch { toast("Impossible de lire cette image 😕"); }
+      const resized = await resizeImage(f);
+      showPhotoPreview(resized);
+    } catch { toast("Impossible d'ouvrir cette photo 😕"); }
   });
 
   async function stopCamera() {
     if (camStream) { camStream.getTracks().forEach((t) => t.stop()); camStream = null; }
   }
-  async function openCamera() {
+  async function openCamera(facingMode = "user") {
+    currentFacingMode = facingMode;
+    camVideo?.classList.toggle("is-selfie", currentFacingMode === "user");
     camModal.classList.remove("hidden");
+    await stopCamera();
     try {
-      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: currentFacingMode } },
+        audio: false,
+      });
       camVideo.srcObject = camStream;
     } catch {
-      await stopCamera();
-      camModal.classList.add("hidden");
-      fileInput.capture = "environment";
-      choosePhoto();
-      setTimeout(() => fileInput.removeAttribute("capture"), 1000);
+      try {
+        camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        camVideo.srcObject = camStream;
+      } catch {
+        await stopCamera();
+        camModal.classList.add("hidden");
+        fileInput.setAttribute("capture", currentFacingMode);
+        choosePhoto();
+        setTimeout(() => fileInput.removeAttribute("capture"), 1000);
+      }
     }
   }
   function closeCamera() { stopCamera(); camModal.classList.add("hidden"); }
-  $("#btn-camera")?.addEventListener("click", (e) => { e.preventDefault(); openCamera(); });
+  $("#btn-selfie")?.addEventListener("click", (e) => { e.preventDefault(); openCamera("user"); });
+  $("#btn-camera")?.addEventListener("click", (e) => { e.preventDefault(); openCamera("environment"); });
+  $("#btn-cam-flip")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    openCamera(currentFacingMode === "user" ? "environment" : "user");
+  });
   $("#btn-cam-close")?.addEventListener("click", closeCamera);
 
   $("#btn-capture")?.addEventListener("click", () => {
@@ -1753,53 +1834,136 @@ async function reportCommunityItem(type, id) {
     if (!v.videoWidth) return;
     const side = Math.min(v.videoWidth, v.videoHeight);
     camCanvas.width = camCanvas.height = 500;
-    camCanvas.getContext("2d").drawImage(v, (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side, 0, 0, 500, 500);
-    photoData = canvasToCompressedDataURL(camCanvas);
-    preview.src = photoData;
-    preview.classList.remove("hidden");
-    placeholder.classList.add("hidden");
+    const ctx = camCanvas.getContext("2d");
+    ctx.save();
+    if (currentFacingMode === "user") {
+      ctx.translate(500, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(v, (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side, 0, 0, 500, 500);
+    ctx.restore();
+    showPhotoPreview(canvasToCompressedDataURL(camCanvas));
     closeCamera();
+    toast("🤳 Superbe photo ! Vous pouvez l'enregistrer ou la publier sur le mur ✨", 4000);
   });
 
+  /* Téléchargement immédiat de la photo encadrée (avant même la publication) */
+  dlMyPhotoBtn?.addEventListener("click", () => {
+    if (!photoData) {
+      toast("Prenez d'abord un selfie ou choisissez une photo 📸");
+      return;
+    }
+    drawFramedPhoto({
+      photo: photoData,
+      nom: $("#w-nom")?.value.trim() || "Noël à Aboisso",
+      msg: msgInput?.value.trim() || DEFAULT_SLOGAN,
+    });
+  });
+
+  /* Carte Photo Souvenir téléchargeable — Design officiel « Éclairer le Monde » (Canvas 2x) */
   async function drawFramedPhoto(e) {
     if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch {} }
-    const W = 760, H = 980;
+    toast("📤 Préparation de votre photo encadrée…");
+    const scale = 2;
+    const W = 760, H = 1080;
+    const RED = "#CC092F";
     const c = document.createElement("canvas");
-    c.width = W; c.height = H;
+    c.width = W * scale; c.height = H * scale;
     const x = c.getContext("2d");
+    x.scale(scale, scale);
 
-    drawRoundRect(x, 0, 0, W, H, 30); x.fillStyle = "#C8102E"; x.fill();
-    drawRoundRect(x, 16, 16, W - 32, H - 32, 18); x.fillStyle = "#FDFBF9"; x.fill();
+    /* Fond blanc pur + double cadre géométrique rouge Éclairer le Monde */
+    x.fillStyle = "#FFFFFF";
+    x.fillRect(0, 0, W, H);
+    drawElwFrame(x, W, H);
+    drawLightTheWorldStar(x, W / 2, 108, 0.65);
 
-    const px = 64, py = 64, pw = W - 128;
-    const img = new Image();
-    img.crossOrigin = "anonymous";
+    /* En-tête fidèle à la carte d'invitation */
+    x.textAlign = "center";
+    x.fillStyle = RED;
+    x.font = "600 22px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Célébrez la naissance de", W / 2, 194);
+    x.font = "800 44px 'Plus Jakarta Sans', sans-serif";
+    x.fillText("Jésus-Christ", W / 2, 236);
+
+    const pw = 440;
+    const px = (W - pw) / 2;
+    const py = 258;
+    const slogan = String(e.msg || "").trim() || DEFAULT_SLOGAN;
+    const nom = String(e.nom || "").trim();
+
+    const drawFooter = () => {
+      x.textAlign = "center";
+      x.fillStyle = RED;
+      x.font = "800 32px 'Plus Jakarta Sans', sans-serif";
+      const lastY = wrapText(x, `« ${slogan} »`, W / 2, py + pw + 54, W - 180, 40);
+
+      let cursorY = lastY + 40;
+      if (nom) {
+        x.fillStyle = "#1F1B1D";
+        x.font = "700 25px 'Plus Jakarta Sans', sans-serif";
+        x.fillText(nom, W / 2, cursorY);
+        cursorY += 22;
+      }
+
+      /* Fine barre rouge décorative */
+      x.strokeStyle = "#E8B8C2";
+      x.lineWidth = 2;
+      x.beginPath();
+      x.moveTo(W / 2 - 70, cursorY);
+      x.lineTo(W / 2 + 70, cursorY);
+      x.stroke();
+
+      const evY = Math.max(cursorY + 34, 886);
+      x.fillStyle = RED;
+      x.font = "700 20px 'Plus Jakarta Sans', sans-serif";
+      x.fillText("Jeudi 24 décembre 2026 · 10h00 – 15h00", W / 2, evY);
+
+      x.fillStyle = "#2D2326";
+      x.font = "500 18px 'Plus Jakarta Sans', sans-serif";
+      x.fillText("Salle des fêtes de la mairie d'Aboisso · Entrée gratuite", W / 2, evY + 30);
+
+      x.fillStyle = "#5F4B51";
+      x.font = "600 16px 'Plus Jakarta Sans', sans-serif";
+      x.fillText("L'Église de Jésus-Christ des Saints des Derniers Jours", W / 2, evY + 64);
+      x.fillStyle = "#7A6369";
+      x.font = "500 15px 'Plus Jakarta Sans', sans-serif";
+      x.fillText("District d'Aboisso", W / 2, evY + 86);
+    };
+
     const finish = () => {
       const a = document.createElement("a");
-      a.download = `noel-aboisso-${(e.nom || "photo").replace(/\s+/g, "-").toLowerCase()}.png`;
+      a.download = `noel-aboisso-${(nom || "souvenir").replace(/\s+/g, "-").toLowerCase()}.png`;
       a.href = c.toDataURL("image/png");
       a.click();
+      toast("⬇️ Photo encadrée enregistrée ! Partagez-la à vos proches ✨");
     };
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
     img.onload = () => {
+      /* Cadre photo net aux couleurs Éclairer le Monde */
       x.save();
-      drawRoundRect(x, px, py, pw, pw, 12); x.clip();
+      drawRoundRect(x, px, py, pw, pw, 16);
+      x.clip();
       const side = Math.min(img.width, img.height);
       x.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, px, py, pw, pw);
       x.restore();
-      x.textAlign = "center";
-      x.fillStyle = "#2D1219";
-      x.font = "italic 600 38px 'Playfair Display', Georgia, serif";
-      x.fillText("Il est le Cadeau · Noël à Aboisso", W / 2, py + pw + 75);
-      if (e.nom) {
-        x.font = "700 26px 'Plus Jakarta Sans', sans-serif";
-        x.fillText(e.nom, W / 2, py + pw + 115);
-      }
-      x.fillStyle = "#654E55";
-      x.font = "500 18px 'Plus Jakarta Sans', sans-serif";
-      x.fillText("Jeudi 24 Décembre 2026 · Mairie d'Aboisso", W / 2, py + pw + 150);
+
+      x.save();
+      drawRoundRect(x, px, py, pw, pw, 16);
+      x.strokeStyle = RED;
+      x.lineWidth = 3;
+      x.stroke();
+      x.restore();
+
+      drawFooter();
       finish();
     };
-    img.onerror = finish;
+    img.onerror = () => {
+      drawFooter();
+      finish();
+    };
     img.src = e.photo;
   }
 
@@ -1825,18 +1989,36 @@ async function reportCommunityItem(type, id) {
     }
 
     slice.forEach((e) => {
+      const slogan = String(e.msg || "").trim() || DEFAULT_SLOGAN;
       const fig = document.createElement("figure");
       fig.className = "wall-card";
+      fig.insertAdjacentHTML("beforeend", WC_FRAME_HTML);
+
+      const head = document.createElement("div");
+      head.className = "wc-head";
+      head.innerHTML = `${WC_STAR_SVG}<span class="wc-kicker">Jésus-Christ · Noël</span>`;
+
       const ph = document.createElement("div");
       ph.className = "wc-ph";
       const img = document.createElement("img");
       img.src = e.photo;
-      img.alt = `Photo partagée par ${e.nom || "un participant"}${e.msg ? " : " + e.msg : ""}`;
+      img.alt = `Photo partagée par ${e.nom || "un participant"} : ${slogan}`;
       img.width = 250; img.height = 250; img.loading = "lazy";
       ph.appendChild(img);
+
+      const msgEl = document.createElement("p");
+      msgEl.className = "wc-msg";
+      msgEl.textContent = `« ${slogan} »`;
+
       const cap = document.createElement("figcaption");
-      cap.className = "wc-name"; cap.textContent = e.nom;
-      fig.append(ph, cap);
+      cap.className = "wc-name";
+      cap.textContent = e.nom;
+
+      const wm = document.createElement("div");
+      wm.className = "wc-wordmark";
+      wm.innerHTML = "<b>Éclairer</b><span>Le</span><b>Monde.org</b>";
+
+      fig.append(head, ph, msgEl, cap, wm);
 
       const pid = photoId(e);
       const like = document.createElement("button");
@@ -1848,8 +2030,9 @@ async function reportCommunityItem(type, id) {
 
       const dl = document.createElement("button");
       dl.type = "button"; dl.className = "wc-dl"; dl.textContent = "⬇️";
-      dl.setAttribute("aria-label", `Télécharger la photo souvenir de ${e.nom}`);
-      dl.addEventListener("click", (ev) => { ev.stopPropagation(); drawFramedPhoto(e); });
+      dl.title = "Enregistrer cette photo encadrée";
+      dl.setAttribute("aria-label", `Enregistrer la photo encadrée de ${e.nom}`);
+      dl.addEventListener("click", (ev) => { ev.stopPropagation(); drawFramedPhoto({ ...e, msg: slogan }); });
       fig.appendChild(dl);
 
       const rep = document.createElement("button");
@@ -1859,7 +2042,7 @@ async function reportCommunityItem(type, id) {
       rep.addEventListener("click", (ev) => { ev.stopPropagation(); reportCommunityItem("photo-wall", e.id); });
       fig.appendChild(rep);
 
-      fig.addEventListener("click", () => openLightbox(e));
+      fig.addEventListener("click", () => openLightbox({ ...e, msg: slogan }));
       grid.appendChild(fig);
     });
   }
@@ -1870,7 +2053,7 @@ async function reportCommunityItem(type, id) {
   function openLightbox(e) {
     $("#wl-img").src = e.photo;
     $("#wl-name").textContent = e.nom || "";
-    $("#wl-msg").textContent = e.msg || "";
+    $("#wl-msg").textContent = e.msg ? `« ${e.msg} »` : "";
     $("#wl-msg").classList.toggle("hidden", !e.msg);
     lightbox.classList.remove("hidden");
   }
@@ -1891,7 +2074,12 @@ async function reportCommunityItem(type, id) {
     const submitBtn = $("#wall-submit-btn");
     if (submitBtn) submitBtn.disabled = true;
 
-    const payload = { nom, msg: $("#w-msg").value.trim(), photo: photoData, at: new Date().toISOString() };
+    const payload = {
+      nom,
+      msg: msgInput?.value.trim() || DEFAULT_SLOGAN,
+      photo: photoData,
+      at: new Date().toISOString(),
+    };
     let isPending = false;
     try {
       const res = await fetch("/api/photo-wall", {
@@ -1915,16 +2103,19 @@ async function reportCommunityItem(type, id) {
       if (submitBtn) submitBtn.disabled = false;
     }
     form.reset();
+    if (msgInput) msgInput.value = DEFAULT_SLOGAN;
+    syncSloganChips(DEFAULT_SLOGAN);
     photoData = null;
     fileInput.value = "";
     preview.src = "";
     preview.classList.add("hidden");
     placeholder.classList.remove("hidden");
+    dlMyPhotoBtn?.classList.add("hidden");
     render();
     toast(
       isPending
-        ? "📸 Merci ! Votre photo sera publiée sur le mur après validation par l'équipe du district."
-        : "📸 Votre photo est publiée sur le mur !",
+        ? "📸 Merci ! Votre photo apparaîtra sur le mur après validation par les dirigeants du district."
+        : "📸 Votre photo est publiée sur le mur des sourires !",
       4500
     );
   });

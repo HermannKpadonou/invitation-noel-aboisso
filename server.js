@@ -487,9 +487,9 @@ async function addGuestbook(entry) {
 }
 
 const DEFAULT_WALL_SEEDS = [
-  { id: "seed-1", nom: "Présidence du District", msg: "Soyez les bienvenus à Aboisso le 24 décembre !", approved: true, reported: false, photo: "assets/photo-event.jpg", at: "2026-11-14T09:00:00.000Z" },
-  { id: "seed-2", nom: "Chorales & Jeunes d'Aboisso", msg: "En répétition pour les cantiques de la Nativité 🎶", approved: true, reported: false, photo: "assets/nativite-famille.jpg", at: "2026-11-15T11:30:00.000Z" },
-  { id: "seed-3", nom: "Équipe d'Accueil & Missionnaires", msg: "Nous vous attendons dès 10h00 avec votre invité !", approved: true, reported: false, photo: "assets/sapin-noel.jpg", at: "2026-11-17T16:00:00.000Z" },
+  { id: "seed-1", nom: "Présidence du District", msg: "J'y serai, et toi ?", approved: true, reported: false, photo: "assets/photo-event.jpg", at: "2026-11-14T09:00:00.000Z" },
+  { id: "seed-2", nom: "Chorales & Jeunes d'Aboisso", msg: "Ne rate pas cet événement !", approved: true, reported: false, photo: "assets/nativite-famille.jpg", at: "2026-11-15T11:30:00.000Z" },
+  { id: "seed-3", nom: "Missionnaires & Accueil", msg: "Ne te laisse pas raconter cette belle fête !", approved: true, reported: false, photo: "assets/sapin-noel.jpg", at: "2026-11-17T16:00:00.000Z" },
 ];
 
 /* Liste légère des métadonnées du Mur Photo (sans renvoyer les Mo de Base64 à chaque poll) */
